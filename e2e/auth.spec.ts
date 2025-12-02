@@ -22,12 +22,12 @@ test.describe("Authentication", () => {
 
     // Check for login form elements
     await expect(
-      page.getByRole("heading", { name: /sign in|login/i })
+      page.getByRole("heading", { name: /sign in|login/i }),
     ).toBeVisible();
     await expect(page.getByLabel(/username|email/i)).toBeVisible();
     await expect(page.locator('input[type="password"]')).toBeVisible();
     await expect(
-      page.getByRole("button", { name: /sign in|login/i })
+      page.getByRole("button", { name: /sign in|login/i }),
     ).toBeVisible();
   });
 
@@ -63,71 +63,54 @@ test.describe("Authentication", () => {
   test("should logout successfully", async ({ page }) => {
     await loginWithSeededUser(page);
 
-    // Find and click logout button - this likely opens a confirmation modal
-    const logoutButton = page.getByRole("button", { name: /logout|sign out/i });
-    if (await logoutButton.isVisible({ timeout: 5000 })) {
-      // Use force: true to ignore modal backdrops and pointer event interception
-      await logoutButton.click({ force: true });
-      console.log("Clicked logout button with force");
-    } else {
-      // Try menu-based logout
-      const menuButton = page.getByRole("button", { name: /menu|profile/i });
-      if (await menuButton.isVisible({ timeout: 2000 })) {
-        await menuButton.click({ force: true });
-        const logoutText = page.getByText(/logout|sign out/i);
-        await logoutText.click({ force: true });
-        console.log("Clicked logout via menu with force");
-      } else {
-        throw new Error("Could not find logout button or menu");
-      }
-    }
+    // Wait for dashboard to fully load
+    await page.waitForLoadState("networkidle");
 
-    // Immediately look for confirmation dialog since clicking logout likely opens it synchronously
-    // Try different button selectors that might be in the confirmation modal
-    const confirmSelectors = [
-      page.getByRole("button", { name: /yes|confirm|logout|sign out|ok/i }),
-      page.getByRole("button").filter({ hasText: /yes|confirm|logout|sign out|ok/i })
+    // Find the logout button - it's at the bottom of the sidebar
+    // Try multiple selectors to handle different UI states
+    const logoutSelectors = [
+      page.getByText("Logout"),
+      page.locator('button:has-text("Logout")'),
+      page.locator('button[aria-label="Logout"]'),
     ];
 
-    let confirmed = false;
-    for (const selector of confirmSelectors) {
+    let logoutClicked = false;
+    for (const selector of logoutSelectors) {
       try {
-        // Check if button is visible immediately after modal opens
-        const confirmButton = selector.first();
-        if (await confirmButton.isVisible({ timeout: 500 })) {
-          await confirmButton.click({ force: true }); // Use force click since backdrop might intercept
-          confirmed = true;
-          console.log("Clicked logout confirmation button");
+        if (await selector.isVisible({ timeout: 2000 })) {
+          await selector.click();
+          logoutClicked = true;
+          console.log("Clicked logout button");
           break;
         }
       } catch (error) {
-        // Continue trying other selectors
         continue;
       }
     }
 
-    if (!confirmed) {
-      // If no confirmation dialog was found, assume logout was direct
-      console.log("No logout confirmation needed");
+    if (!logoutClicked) {
+      throw new Error("Could not find logout button");
     }
 
-    // Wait a bit for any async logout processing
-    await page.waitForTimeout(2000);
+    // Wait for logout to complete and redirect
+    await page.waitForTimeout(1000);
 
     // After logout, we should either:
     // 1. Be redirected to login page, or
     // 2. Stay on current page but be logged out (session cleared)
-    // Check both possibilities
     const currentURL = page.url();
     const isOnLoginPage = /\/login/.test(currentURL);
 
     if (!isOnLoginPage) {
-      // If not redirected, verify we're actually logged out by trying to access protected content
-      console.log(`Not redirected after logout. Current URL: ${currentURL}. Verifying logout worked...`);
-
+      // If not redirected immediately, verify we're actually logged out
+      console.log(
+        `Not redirected after logout. Current URL: ${currentURL}. Verifying logout worked...`,
+      );
 
       // Try to navigate to a protected route - should redirect to login if logged out
-      await page.goto('/cases');
+      await page.goto("/cases");
+      await page.waitForLoadState("networkidle");
+
       const finalURL = page.url();
       const isRedirectedToLogin = /\/login/.test(finalURL);
 
@@ -135,8 +118,12 @@ test.describe("Authentication", () => {
         console.log("Login redirect confirmed - logout successful");
       } else {
         // If we can still access protected routes, logout failed
-        console.error(`Logout verification failed. Still have access to: ${finalURL}`);
-        throw new Error("Logout did not work - still have access to protected routes");
+        console.error(
+          `Logout verification failed. Still have access to: ${finalURL}`,
+        );
+        throw new Error(
+          "Logout did not work - still have access to protected routes",
+        );
       }
 
       console.log("Logout confirmed - protected route redirects to login");

@@ -204,17 +204,21 @@ export function AuthProvider({ children }: AuthProviderProps) {
       const sessionId = localStorage.getItem("sessionId");
 
       if (sessionId) {
+        // Try to notify backend, but don't let failures prevent logout
         await apiClient.auth.logout(sessionId);
-        localStorage.removeItem("sessionId");
       }
-
-      setUser(null);
-      setSessionId(null); // Clear sessionId from state
     } catch (err) {
+      // Log error but don't prevent logout - local state should always clear
+      console.error("Logout API call failed:", err);
       setError(
         err instanceof Error ? err.message : "An unknown error occurred",
       );
     } finally {
+      // CRITICAL: Always clear local state, even if API call fails
+      // This ensures users can always log out from the frontend
+      localStorage.removeItem("sessionId");
+      setUser(null);
+      setSessionId(null);
       setIsLoading(false);
     }
   };
