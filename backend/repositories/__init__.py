@@ -12,6 +12,11 @@ Available repositories:
 - DashboardRepository: Aggregate queries for dashboard widgets
 """
 
+from backend.repositories.base import BaseRepository
+from backend.repositories.case_repository import CaseRepository
+from backend.repositories.evidence_repository import EvidenceRepository
+from backend.repositories.deadline_repository import DeadlineRepository
+from backend.repositories.dashboard_repository import DashboardRepository
 
 __all__ = [
     "BaseRepository",

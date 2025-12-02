@@ -38,6 +38,7 @@ from backend.services.document_parser_service import DocumentParserService
 from backend.services.citation_service import CitationService
 from backend.services.security.encryption import EncryptionService
 from backend.services.audit_logger import AuditLogger
+from backend.services.date_extraction_service import DateExtractionService
 
 # Import schemas from consolidated schema file
 from backend.schemas.evidence import (
@@ -68,9 +69,17 @@ def get_document_parser_service(db: Session = Depends(get_db)) -> DocumentParser
     audit_logger = AuditLogger(db)
     return DocumentParserService(audit_logger=audit_logger, max_file_size=MAX_FILE_SIZE)
 
-def get_citation_service() -> CitationService:
-    """Get CitationService instance."""
-    return CitationService()
+def get_citation_service() -> Optional[CitationService]:
+    """Get CitationService instance. Returns None if eyecite not installed."""
+    try:
+        return CitationService()
+    except ImportError:
+        logger.warning("CitationService unavailable - eyecite not installed")
+        return None
+
+def get_date_extraction_service() -> DateExtractionService:
+    """Get DateExtractionService instance for extracting dates from documents."""
+    return DateExtractionService()
 
 def get_encryption_service() -> EncryptionService:
     """
@@ -95,6 +104,21 @@ def get_audit_logger(db: Session = Depends(get_db)) -> AuditLogger:
     return AuditLogger(db)
 
 # ===== HELPER FUNCTIONS =====
+
+def normalize_evidence_dict(evidence_dict: dict) -> dict:
+    """
+    Normalize evidence dictionary datetime fields.
+    SQLite returns datetimes as strings, so we handle both cases.
+    """
+    for dt_field in ["createdAt", "updatedAt"]:
+        if evidence_dict.get(dt_field):
+            val = evidence_dict[dt_field]
+            if hasattr(val, 'isoformat'):
+                evidence_dict[dt_field] = val.isoformat()
+            # else it's already a string, leave it
+    evidence_dict["uploadedAt"] = evidence_dict.get("createdAt")
+    return evidence_dict
+
 def verify_case_ownership(db: Session, case_id: int, user_id: int) -> bool:
     """
     Verify that a case belongs to the authenticated user.
@@ -215,10 +239,10 @@ async def save_uploaded_file(file: UploadFile, case_id: int) -> str:
         return str(file_path.absolute())
 
     except Exception as exc:
-        logger.error(f"Failed to save uploaded file: {e}")
+        logger.error(f"Failed to save uploaded file: {exc}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to save uploaded file: {str(e)}",
+            detail=f"Failed to save uploaded file: {str(exc)}",
         )
 
 # ===== ROUTES =====
@@ -291,15 +315,7 @@ async def list_all_evidence(
         result = []
         for item in evidence_items:
             evidence_dict = dict(item._mapping)
-            evidence_dict["uploadedAt"] = (
-                evidence_dict["createdAt"].isoformat() if evidence_dict.get("createdAt") else None
-            )
-            evidence_dict["createdAt"] = (
-                evidence_dict["createdAt"].isoformat() if evidence_dict.get("createdAt") else None
-            )
-            evidence_dict["updatedAt"] = (
-                evidence_dict["updatedAt"].isoformat() if evidence_dict.get("updatedAt") else None
-            )
+            normalize_evidence_dict(evidence_dict)
             result.append(evidence_dict)
 
         return result
@@ -307,7 +323,7 @@ async def list_all_evidence(
     except HTTPException:
         raise
     except Exception as exc:
-        logger.error(f"Failed to list evidence: {e}", exc_info=True)
+        logger.error(f"Failed to list evidence: {exc}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to list evidence: {str(e)}",
@@ -358,15 +374,7 @@ async def get_evidence(
 
         # Convert to dict
         evidence_dict = dict(evidence._mapping)
-        evidence_dict["uploadedAt"] = (
-            evidence_dict["createdAt"].isoformat() if evidence_dict.get("createdAt") else None
-        )
-        evidence_dict["createdAt"] = (
-            evidence_dict["createdAt"].isoformat() if evidence_dict.get("createdAt") else None
-        )
-        evidence_dict["updatedAt"] = (
-            evidence_dict["updatedAt"].isoformat() if evidence_dict.get("updatedAt") else None
-        )
+        normalize_evidence_dict(evidence_dict)
 
         return evidence_dict
 
@@ -476,15 +484,7 @@ async def create_evidence(
 
         # Convert to dict
         evidence_dict = dict(created_evidence._mapping)
-        evidence_dict["uploadedAt"] = (
-            evidence_dict["createdAt"].isoformat() if evidence_dict.get("createdAt") else None
-        )
-        evidence_dict["createdAt"] = (
-            evidence_dict["createdAt"].isoformat() if evidence_dict.get("createdAt") else None
-        )
-        evidence_dict["updatedAt"] = (
-            evidence_dict["updatedAt"].isoformat() if evidence_dict.get("updatedAt") else None
-        )
+        normalize_evidence_dict(evidence_dict)
 
         return evidence_dict
 
@@ -536,7 +536,7 @@ async def upload_evidence_file(
     user_id: int = Depends(get_current_user),
     db: Session = Depends(get_db),
     parser_service: DocumentParserService = Depends(get_document_parser_service),
-    citation_service: CitationService = Depends(get_citation_service),
+    citation_service: Optional[CitationService] = Depends(get_citation_service),
     audit_logger: AuditLogger = Depends(get_audit_logger),
 ):
     """
@@ -587,7 +587,7 @@ async def upload_evidence_file(
         """
         )
 
-        db.execute(
+        result = db.execute(
             insert_query,
             {
                 "case_id": case_id,
@@ -597,12 +597,12 @@ async def upload_evidence_file(
                 "obtained_date": obtained_date,
             },
         )
+        db.flush()  # Flush to get the ID before commit
+        
+        # Get last inserted ID using SQLite's last_insert_rowid()
+        evidence_id = db.execute(text("SELECT last_insert_rowid()")).scalar()
+        
         db.commit()
-
-        # Get the last inserted ID
-        id_query = text("SELECT last_insert_rowid()")
-        id_result = db.execute(id_query)
-        evidence_id = id_result.scalar()
 
         # Fetch created evidence
         select_query = text(
@@ -624,23 +624,18 @@ async def upload_evidence_file(
 
         created_evidence = db.execute(select_query, {"evidence_id": evidence_id}).fetchone()
         evidence_dict = dict(created_evidence._mapping)
-        evidence_dict["uploadedAt"] = (
-            evidence_dict["createdAt"].isoformat() if evidence_dict.get("createdAt") else None
-        )
-        evidence_dict["createdAt"] = (
-            evidence_dict["createdAt"].isoformat() if evidence_dict.get("createdAt") else None
-        )
-        evidence_dict["updatedAt"] = (
-            evidence_dict["updatedAt"].isoformat() if evidence_dict.get("updatedAt") else None
-        )
+        normalize_evidence_dict(evidence_dict)
 
         # Parse document (if requested)
         parsed_doc = None
         citations_list = None
 
+        logger.info(f"parse_document={parse_document}, file_path={file_path}")
+
         if parse_document:
             try:
                 parsed = await parser_service.parse_document(file_path, user_id=str(user_id))
+                logger.info(f"Parsed document, text length: {len(parsed.text) if parsed.text else 0}")
                 parsed_doc = ParsedDocumentResponse(
                     text=parsed.text,
                     filename=parsed.filename,
@@ -650,8 +645,8 @@ async def upload_evidence_file(
                     metadata=parsed.metadata.to_dict() if parsed.metadata else None,
                 )
 
-                # Extract citations (if requested)
-                if extract_citations and parsed.text:
+                # Extract citations (if requested and service available)
+                if extract_citations and parsed.text and citation_service:
                     try:
                         citations = citation_service.extract_citations(parsed.text)
                         citations_list = [
@@ -672,10 +667,21 @@ async def upload_evidence_file(
                         )
 
                     except Exception as exc:
-                        logger.warning(f"Citation extraction failed (non-critical): {e}")
+                        logger.warning(f"Citation extraction failed (non-critical): {exc}")
+
+                # Save parsed content to database
+                if parsed.text:
+                    logger.info(f"Saving content to DB for evidence {evidence_id}, text length: {len(parsed.text)}")
+                    update_content_query = text(
+                        "UPDATE evidence SET content = :content WHERE id = :evidence_id"
+                    )
+                    db.execute(update_content_query, {"content": parsed.text, "evidence_id": evidence_id})
+                    db.commit()
+                    evidence_dict["content"] = parsed.text
+                    logger.info(f"Content saved successfully for evidence {evidence_id}")
 
             except Exception as exc:
-                logger.warning(f"Document parsing failed (non-critical): {e}")
+                logger.warning(f"Document parsing failed (non-critical): {exc}")
 
         # Log audit event
         audit_logger.log(
@@ -705,7 +711,7 @@ async def upload_evidence_file(
 
     except Exception as exc:
         db.rollback()
-        logger.error(f"Failed to upload evidence file: {e}", exc_info=True)
+        logger.error(f"Failed to upload evidence file: {exc}", exc_info=True)
 
         # Log failed upload
         audit_logger.log(
@@ -715,12 +721,12 @@ async def upload_evidence_file(
             resource_id="unknown",
             action="upload",
             success=False,
-            error_message=str(e),
+            error_message=str(exc),
         )
 
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to upload evidence file: {str(e)}",
+            detail=f"Failed to upload evidence file: {str(exc)}",
         )
 
 @router.post("/{evidence_id}/parse", response_model=ParsedDocumentResponse)
@@ -782,7 +788,7 @@ async def extract_evidence_citations(
     user_id: int = Depends(get_current_user),
     db: Session = Depends(get_db),
     parser_service: DocumentParserService = Depends(get_document_parser_service),
-    citation_service: CitationService = Depends(get_citation_service),
+    citation_service: Optional[CitationService] = Depends(get_citation_service),
 ):
     """
     Extract legal citations from evidence document.
@@ -901,15 +907,7 @@ async def list_case_evidence(
         result = []
         for item in evidence_items:
             evidence_dict = dict(item._mapping)
-            evidence_dict["uploadedAt"] = (
-                evidence_dict["createdAt"].isoformat() if evidence_dict.get("createdAt") else None
-            )
-            evidence_dict["createdAt"] = (
-                evidence_dict["createdAt"].isoformat() if evidence_dict.get("createdAt") else None
-            )
-            evidence_dict["updatedAt"] = (
-                evidence_dict["updatedAt"].isoformat() if evidence_dict.get("updatedAt") else None
-            )
+            normalize_evidence_dict(evidence_dict)
             result.append(evidence_dict)
 
         return result
@@ -1031,15 +1029,7 @@ async def update_evidence(
 
         # Convert to dict
         evidence_dict = dict(updated_evidence._mapping)
-        evidence_dict["uploadedAt"] = (
-            evidence_dict["createdAt"].isoformat() if evidence_dict.get("createdAt") else None
-        )
-        evidence_dict["createdAt"] = (
-            evidence_dict["createdAt"].isoformat() if evidence_dict.get("createdAt") else None
-        )
-        evidence_dict["updatedAt"] = (
-            evidence_dict["updatedAt"].isoformat() if evidence_dict.get("updatedAt") else None
-        )
+        normalize_evidence_dict(evidence_dict)
 
         return evidence_dict
 
@@ -1047,7 +1037,7 @@ async def update_evidence(
         raise
     except Exception as exc:
         db.rollback()
-        logger.error(f"Failed to update evidence: {e}", exc_info=True)
+        logger.error(f"Failed to update evidence: {exc}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to update evidence: {str(e)}",
@@ -1100,7 +1090,7 @@ async def delete_evidence(
                 os.remove(file_path)
                 logger.info(f"Deleted evidence file: {file_path}")
             except Exception as exc:
-                logger.warning(f"Failed to delete evidence file (non-critical): {e}")
+                logger.warning(f"Failed to delete evidence file (non-critical): {exc}")
 
         # Log audit event
         audit_logger.log(
@@ -1127,11 +1117,89 @@ async def delete_evidence(
             resource_id=str(evidence_id),
             action="delete",
             success=False,
-            error_message=str(e),
+            error_message=str(exc),
         )
 
-        logger.error(f"Failed to delete evidence: {e}", exc_info=True)
+        logger.error(f"Failed to delete evidence: {exc}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to delete evidence: {str(e)}",
+            detail=f"Failed to delete evidence: {str(exc)}",
+        )
+
+
+# ===== DATE EXTRACTION ENDPOINT =====
+
+@router.get("/{evidence_id}/dates")
+async def extract_evidence_dates(
+    evidence_id: int,
+    user_id: int = Depends(get_current_user),
+    db: Session = Depends(get_db),
+    parser_service: DocumentParserService = Depends(get_document_parser_service),
+    date_service: DateExtractionService = Depends(get_date_extraction_service),
+):
+    """
+    Extract dates from evidence document.
+    
+    Returns all dates found in the document, with deadlines highlighted.
+    Useful for creating timeline entries and deadline reminders.
+    
+    Example:
+        GET /evidence/123/dates
+        
+    Returns:
+        {
+            "dates": [...],
+            "deadlines": [...],
+            "documentDate": {...},
+            "totalDates": 5,
+            "totalDeadlines": 2
+        }
+    """
+    try:
+        # Verify evidence ownership
+        verify_evidence_ownership(db, evidence_id, user_id)
+        
+        # Get evidence file path
+        query = text("SELECT file_path, content FROM evidence WHERE id = :evidence_id")
+        evidence = db.execute(query, {"evidence_id": evidence_id}).fetchone()
+        
+        if not evidence:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Evidence with ID {evidence_id} not found",
+            )
+        
+        file_path = evidence.file_path
+        content = evidence.content
+        
+        # If we already have parsed content, use it
+        if content:
+            text_content = content
+        elif file_path and os.path.exists(file_path):
+            # Parse the document to get text
+            parsed = await parser_service.parse_document(file_path, user_id=str(user_id))
+            text_content = parsed.text
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="No content available for date extraction",
+            )
+        
+        # Extract dates
+        result = date_service.extract_dates(text_content)
+        
+        logger.info(
+            f"Extracted {len(result.dates)} dates from evidence {evidence_id}, "
+            f"{len(result.deadlines)} are deadlines"
+        )
+        
+        return date_service.result_to_dict(result)
+    
+    except HTTPException:
+        raise
+    except Exception as exc:
+        logger.error(f"Failed to extract dates from evidence {evidence_id}: {exc}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to extract dates: {str(exc)}",
         )

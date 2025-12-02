@@ -179,14 +179,36 @@ export class ApiClient {
 
       // Handle HTTP errors
       if (!response.ok) {
+        // Extract error message from various formats
+        let errorMessage = "Request failed";
+
+        // FastAPI returns validation errors as an array in 'detail'
+        if (Array.isArray(responseData?.detail)) {
+          // Extract messages from FastAPI validation errors
+          // Format: [{type, loc, msg, input, ctx}, ...]
+          const messages = responseData.detail
+            .map((err: { msg?: string; loc?: string[] }) => {
+              const field = err.loc?.slice(-1)[0] || "field";
+              return `${field}: ${err.msg || "Invalid value"}`;
+            })
+            .join("; ");
+          errorMessage = messages || "Validation failed";
+        } else if (typeof responseData?.detail === "string") {
+          // Simple string detail
+          errorMessage = responseData.detail;
+        } else if (responseData?.error?.message) {
+          // Standard error format
+          errorMessage = responseData.error.message;
+        } else if (responseData?.message) {
+          // Alternative format
+          errorMessage = responseData.message;
+        }
+
         throw new ApiError(
           response.status,
-          responseData?.error?.message ||
-            responseData?.message ||
-            responseData?.detail ||
-            "Request failed",
+          errorMessage,
           responseData?.error?.code || "UNKNOWN_ERROR",
-          responseData?.error?.details,
+          responseData?.error?.details || responseData?.detail,
         );
       }
 
@@ -626,6 +648,77 @@ export class ApiClient {
           pendingCases: number;
         }>
       >("/cases/stats");
+    },
+
+    /**
+     * Get digital case file folder structure
+     * Returns organized folder view with evidence, legal research, timeline, and AI analysis
+     */
+    getFolder: async (
+      caseId: number,
+      options?: { includeLegal?: boolean },
+    ): Promise<
+      ApiResponse<{
+        caseId: number;
+        caseTitle: string;
+        caseType: string;
+        status: string;
+        createdAt: string;
+        folders: Array<{
+          id: string;
+          name: string;
+          type: "folder" | "file";
+          icon: string;
+          count?: number;
+          url?: string;
+          data?: Record<string, unknown>;
+          children?: Array<{
+            id: string;
+            name: string;
+            type: "folder" | "file";
+            icon: string;
+            count?: number;
+            url?: string;
+            data?: Record<string, unknown>;
+            children?: Array<Record<string, unknown>>;
+          }>;
+        }>;
+        stats: {
+          evidence_count: number;
+          deadline_count: number;
+          conversation_count: number;
+          legislation_count: number;
+          case_law_count: number;
+        };
+        legalResearchLoaded: boolean;
+      }>
+    > => {
+      const params: Record<string, string> = {};
+      if (options?.includeLegal !== undefined) {
+        params.include_legal = options.includeLegal.toString();
+      }
+      return this.get(`/cases/${caseId}/folder`, params);
+    },
+
+    /**
+     * Get suggested legislation for a case based on its type
+     */
+    getSuggestedLegislation: async (
+      caseId: number,
+    ): Promise<
+      ApiResponse<{
+        caseId: number;
+        caseType: string;
+        legislation: Array<{
+          title: string;
+          content?: string;
+          url: string;
+          section?: string;
+          relevance?: number;
+        }>;
+      }>
+    > => {
+      return this.get(`/cases/${caseId}/suggested-legislation`);
     },
   };
 
@@ -3102,6 +3195,141 @@ export class ApiClient {
           updatedAt: string;
         }>
       >(`/deadlines/${id}/snooze`, { hours });
+    },
+  };
+
+  // ====================
+  // Legal API
+  // ====================
+
+  public legal = {
+    /**
+     * Search for legal information (legislation and case law)
+     * Uses the backend LegalAPIService which integrates with:
+     * - legislation.gov.uk for UK statutes
+     * - caselaw.nationalarchives.gov.uk for tribunal/court decisions
+     */
+    search: async (
+      query: string,
+    ): Promise<
+      ApiResponse<{
+        legislation: Array<{
+          title: string;
+          content: string;
+          url: string;
+          section?: string;
+          relevance: number;
+        }>;
+        cases: Array<{
+          citation: string;
+          court: string;
+          date: string;
+          summary: string;
+          url: string;
+          outcome?: string;
+          relevance: number;
+        }>;
+        knowledge_base: Array<{
+          topic: string;
+          category: string;
+          content: string;
+          sources: string[];
+        }>;
+        cached: boolean;
+        timestamp: number;
+      }>
+    > => {
+      return this.get<
+        ApiResponse<{
+          legislation: Array<{
+            title: string;
+            content: string;
+            url: string;
+            section?: string;
+            relevance: number;
+          }>;
+          cases: Array<{
+            citation: string;
+            court: string;
+            date: string;
+            summary: string;
+            url: string;
+            outcome?: string;
+            relevance: number;
+          }>;
+          knowledge_base: Array<{
+            topic: string;
+            category: string;
+            content: string;
+            sources: string[];
+          }>;
+          cached: boolean;
+          timestamp: number;
+        }>
+      >("/legal/search", { query });
+    },
+
+    /**
+     * Search legislation only
+     */
+    searchLegislation: async (
+      query: string,
+    ): Promise<
+      ApiResponse<
+        Array<{
+          title: string;
+          content: string;
+          url: string;
+          section?: string;
+          relevance: number;
+        }>
+      >
+    > => {
+      return this.get<
+        ApiResponse<
+          Array<{
+            title: string;
+            content: string;
+            url: string;
+            section?: string;
+            relevance: number;
+          }>
+        >
+      >("/legal/legislation", { query });
+    },
+
+    /**
+     * Search case law only
+     */
+    searchCaseLaw: async (
+      query: string,
+      category?: string,
+    ): Promise<
+      ApiResponse<
+        Array<{
+          citation: string;
+          court: string;
+          date: string;
+          summary: string;
+          url: string;
+          outcome?: string;
+          relevance: number;
+        }>
+      >
+    > => {
+      return this.get<
+        ApiResponse<
+          Array<{
+            citation: string;
+            court: string;
+            date: string;
+            summary: string;
+            url: string;
+            outcome?: string;
+            relevance: number;
+          }>
+        >
+      >("/legal/cases", category ? { query, category } : { query });
     },
   };
 

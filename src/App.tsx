@@ -62,6 +62,11 @@ const CaseFileTreeView = lazy(() =>
     default: m.CaseFileTreeView,
   })),
 );
+const CaseFileView = lazy(() =>
+  import("./views/cases/CaseFileView.tsx").then((m) => ({
+    default: m.CaseFileView,
+  })),
+);
 
 /**
  * PageLoader - Loading fallback for lazy-loaded pages
@@ -339,6 +344,14 @@ function AppRoutes() {
           element={
             <Suspense fallback={<PageLoader />}>
               <CaseFileTreeView />
+            </Suspense>
+          }
+        />
+        <Route
+          path="/cases/:caseId/file"
+          element={
+            <Suspense fallback={<PageLoader />}>
+              <CaseFileView />
             </Suspense>
           }
         />

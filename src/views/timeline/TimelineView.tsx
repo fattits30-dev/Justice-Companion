@@ -1,13 +1,14 @@
 import { logger } from "../../utils/logger.ts";
 
 import { useState, useEffect, useMemo, useCallback } from "react";
-import { Plus, Calendar } from "lucide-react";
+import { Plus, Calendar, FileSearch } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "../../contexts/AuthContext.tsx";
 import { Button } from "../../components/ui/Button.tsx";
 import { TimelineItem } from "./components/TimelineItem.tsx";
 import { TimelineEmpty } from "./components/TimelineEmpty.tsx";
 import { AddDeadlineDialog } from "./components/AddDeadlineDialog.tsx";
+import { ExtractDatesDialog } from "./components/ExtractDatesDialog.tsx";
 import { apiClient } from "../../lib/apiClient.ts";
 import type {
   DeadlineWithCase,
@@ -31,6 +32,7 @@ export function TimelineView() {
 
   // Dialog states
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isExtractDialogOpen, setIsExtractDialogOpen] = useState(false);
   const [editingDeadline, setEditingDeadline] =
     useState<DeadlineWithCase | null>(null);
   const [deletingDeadline, setDeletingDeadline] =
@@ -156,6 +158,34 @@ export function TimelineView() {
       }
     },
     [sessionId, loadData],
+  );
+
+  // Handler for adding deadlines from extracted dates
+  const handleAddExtractedDeadline = useCallback(
+    async (date: string, title: string, description: string) => {
+      if (!sessionId || !selectedCaseId) {
+        return;
+      }
+
+      try {
+        const result = await apiClient.deadlines.create({
+          caseId: selectedCaseId,
+          title,
+          description,
+          deadlineDate: date,
+          priority: "high", // Extracted deadlines are likely important
+        });
+
+        if (result.success) {
+          await loadData();
+        }
+      } catch (err) {
+        logger.error("Failed to create deadline from extracted date", {
+          error: err as Error,
+        });
+      }
+    },
+    [sessionId, selectedCaseId, loadData],
   );
 
   const handleEditDeadline = useCallback((deadline: DeadlineWithCase) => {
@@ -342,6 +372,17 @@ export function TimelineView() {
               >
                 Add Deadline
               </Button>
+
+              {/* Extract from Evidence Button - only show when case selected */}
+              {selectedCaseId && (
+                <Button
+                  variant="secondary"
+                  icon={<FileSearch />}
+                  onClick={() => setIsExtractDialogOpen(true)}
+                >
+                  Extract from Evidence
+                </Button>
+              )}
             </div>
           </div>
         </div>
@@ -444,6 +485,17 @@ export function TimelineView() {
             </div>
           </motion.div>
         </div>
+      )}
+
+      {/* Extract Dates Dialog */}
+      {selectedCaseId && (
+        <ExtractDatesDialog
+          isOpen={isExtractDialogOpen}
+          onClose={() => setIsExtractDialogOpen(false)}
+          caseId={selectedCaseId}
+          caseTitle={cases.find((c) => c.id === selectedCaseId)?.title || ""}
+          onAddDeadline={handleAddExtractedDeadline}
+        />
       )}
     </div>
   );

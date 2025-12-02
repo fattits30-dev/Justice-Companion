@@ -169,7 +169,7 @@ function TimelineItemComponent({
 
             {/* Description */}
             {deadline.description && (
-              <p className="text-sm text-white/70 description">
+              <p className="text-sm text-white whitespace-pre-line leading-relaxed description">
                 {deadline.description}
               </p>
             )}
@@ -196,7 +196,7 @@ function TimelineItemComponent({
             {/* Actions */}
             <div className="flex items-center gap-2 pt-2 border-t border-white/10">
               <Button
-                variant="ghost"
+                variant="secondary"
                 size="sm"
                 icon={<Edit2 />}
                 onClick={() => onEdit(deadline)}
@@ -205,7 +205,7 @@ function TimelineItemComponent({
               </Button>
 
               <Button
-                variant="ghost"
+                variant="secondary"
                 size="sm"
                 icon={
                   deadline.status === "completed" ? <Circle /> : <CheckCircle />
@@ -218,7 +218,7 @@ function TimelineItemComponent({
               </Button>
 
               <Button
-                variant="ghost"
+                variant="danger"
                 size="sm"
                 icon={<Trash2 />}
                 onClick={() => onDelete(deadline)}

@@ -333,3 +333,9 @@ backend/venv/
 *.process_lock
 backend/test_logs.py
 e2e-tests/screenshots/
+
+# Playwright
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+/playwright/.auth/

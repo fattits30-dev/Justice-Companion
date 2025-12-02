@@ -26,6 +26,7 @@ Services Integrated:
 import base64
 import inspect
 import os
+from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
@@ -36,6 +37,7 @@ from backend.models.base import get_db
 from backend.routes.auth import get_current_user, get_session_manager
 from backend.services.audit_logger import AuditLogger
 from backend.services.auth.service import AuthenticationService
+from backend.services.bulk_operation_service import (
     BulkOperationOptions,
     BulkOperationResult,
     BulkOperationService,
@@ -55,6 +57,7 @@ from backend.services.security.encryption import EncryptionService
 from backend.services.auth.session_manager import SessionManager
 
 # Import schemas from consolidated schema file
+from backend.schemas.case import (
     CreateCaseRequest,
     UpdateCaseRequest,
     CreateCaseFactRequest,
@@ -890,223 +893,4 @@ async def list_case_facts(
     except Exception as exc:
         raise HTTPException(
             status_code=500, detail=f"Failed to list case facts: {str(exc)}"
-        ) from exc
-
-
-# ===== CASE TAGS (Convenience endpoint - delegates to TagService) =====
-
-
-@router.get("/{case_id}/tags")
-async def list_tags_for_case(
-    case_id: int,
-    user_id: int = Depends(resolve_current_user_id),
-    case_service: CaseService = Depends(resolve_case_service),
-    db: Session = Depends(get_db),
-):
-    """
-    List all tags for a specific case.
-
-    This is a convenience endpoint that matches RESTful conventions.
-    Internally delegates to the tag service for actual tag retrieval.
-
-    Validates that the case belongs to the authenticated user.
-
-    Example:
-        GET /cases/123/tags
-        Authorization: Bearer <session_id>
-
-    Returns:
-        List of tags attached to the case
-    """
-    try:
-        # Verify case exists and belongs to user (using service layer)
-        try:
-            await case_service.get_case_by_id(case_id, user_id)
-        except CaseNotFoundError as exc:
-            raise HTTPException(
-                status_code=404, detail="Case not found or unauthorized"
-            ) from exc
-        except HTTPException as e:
-            if e.status_code == 403:
-                raise HTTPException(
-                    status_code=404, detail="Case not found or unauthorized"
-                )
-            raise
-
-        # Get tags for this case via SQL query
-        # Using raw SQL to avoid circular dependency with TagService
-        tags_query = text(
-            """
-            SELECT
-                t.id,
-                t.user_id as userId,
-                t.name,
-                t.color,
-                t.description,
-                t.created_at as createdAt,
-                t.updated_at as updatedAt
-            FROM tags t
-            INNER JOIN case_tags ct ON t.id = ct.tag_id
-            WHERE ct.case_id = :case_id AND t.user_id = :user_id
-            ORDER BY t.name ASC
-        """
-        )
-
-        tags = db.execute(tags_query, {"case_id": case_id, "user_id": user_id}).fetchall()
-
-        # Convert to list of dicts with proper formatting
-        result = []
-        for tag in tags:
-            if tag is None:
-                continue
-            tag_dict = dict(tag._mapping)
-            tag_dict["createdAt"] = (
-                tag_dict["createdAt"].isoformat()
-                if tag_dict.get("createdAt")
-                else None
-            )
-            tag_dict["updatedAt"] = (
-                tag_dict["updatedAt"].isoformat()
-                if tag_dict.get("updatedAt")
-                else None
-            )
-            # Add usageCount as 0 (optional field, can be computed if needed)
-            tag_dict["usageCount"] = 0
-            result.append(tag_dict)
-
-        return result
-
-    except HTTPException:
-        raise
-    except Exception as exc:
-        raise HTTPException(
-            status_code=500, detail=f"Failed to list case tags: {str(exc)}"
-        ) from exc
-
-
-# ===== CASE FOLDER ENDPOINTS =====
-
-
-@router.get("/{case_id}/folder")
-async def get_case_folder(
-    case_id: int,
-    user_id: int = Depends(resolve_current_user_id),
-    db: Session = Depends(get_db),
-    include_legal: bool = Query(True, description="Include legal research (slower)"),
-):
-    """
-    Get complete digital case file folder structure.
-    
-    Returns a virtual folder structure with:
-    - Case summary
-    - Evidence (grouped by type)
-    - Legal research (legislation + case law)
-    - Timeline & Deadlines
-    - AI Analysis (chat conversations)
-    
-    The folder structure is generated on-demand from existing data.
-    Legal research is fetched from UK legal APIs based on case type.
-    """
-    from backend.services.case_folder_service import CaseFolderService
-    from backend.services.legal_api_service import LegalAPIService
-    
-    try:
-        legal_api = LegalAPIService()
-        folder_service = CaseFolderService(db, legal_api)
-        
-        folder_data = await folder_service.get_case_folder(
-            case_id=case_id,
-            user_id=user_id,
-            include_legal_research=include_legal,
-        )
-        
-        # Convert dataclass to dict for JSON response
-        return {
-            "success": True,
-            "data": {
-                "caseId": folder_data.case_id,
-                "caseTitle": folder_data.case_title,
-                "caseType": folder_data.case_type,
-                "status": folder_data.status,
-                "createdAt": folder_data.created_at.isoformat() if folder_data.created_at else None,
-                "folders": [_folder_item_to_dict(f) for f in folder_data.folders],
-                "stats": folder_data.stats,
-                "legalResearchLoaded": folder_data.legal_research_loaded,
-            },
-        }
-    except ValueError as exc:
-        raise HTTPException(status_code=404, detail=str(exc)) from exc
-    except Exception as exc:
-        raise HTTPException(
-            status_code=500, detail=f"Failed to get case folder: {str(exc)}"
-        ) from exc
-
-
-def _folder_item_to_dict(item) -> dict:
-    """Convert FolderItem dataclass to dict recursively."""
-    result = {
-        "id": item.id,
-        "name": item.name,
-        "type": item.type,
-        "icon": item.icon,
-    }
-    
-    if item.count is not None:
-        result["count"] = item.count
-    
-    if item.url is not None:
-        result["url"] = item.url
-    
-    if item.data is not None:
-        result["data"] = item.data
-    
-    if item.children is not None:
-        result["children"] = [_folder_item_to_dict(c) for c in item.children]
-    
-    return result
-
-
-@router.get("/{case_id}/suggested-legislation")
-async def get_suggested_legislation(
-    case_id: int,
-    user_id: int = Depends(resolve_current_user_id),
-    db: Session = Depends(get_db),
-):
-    """
-    Get suggested legislation for a case based on its type.
-    
-    This endpoint fetches relevant UK legislation that may apply to the case
-    based on its case type (employment, housing, consumer, etc.).
-    """
-    from backend.services.case_folder_service import CaseFolderService
-    from backend.services.legal_api_service import LegalAPIService
-    
-    try:
-        # Get case to check authorization and get type
-        case = db.query(Case).filter(
-            Case.id == case_id,
-            Case.user_id == user_id,
-        ).first()
-        
-        if not case:
-            raise HTTPException(status_code=404, detail="Case not found")
-        
-        legal_api = LegalAPIService()
-        folder_service = CaseFolderService(db, legal_api)
-        
-        legislation = await folder_service.get_suggested_legislation(case.case_type)
-        
-        return {
-            "success": True,
-            "data": {
-                "caseId": case_id,
-                "caseType": case.case_type,
-                "legislation": legislation,
-            },
-        }
-    except HTTPException:
-        raise
-    except Exception as exc:
-        raise HTTPException(
-            status_code=500, detail=f"Failed to get suggested legislation: {str(exc)}"
         ) from exc

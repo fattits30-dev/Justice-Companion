@@ -4,6 +4,7 @@ Legal Prompts Package
 System prompts for UK legal assistance.
 """
 
+from .uk_prompts import (
     UK_EMPLOYMENT_SYSTEM,
     UK_HOUSING_SYSTEM,
     UK_BENEFITS_SYSTEM,

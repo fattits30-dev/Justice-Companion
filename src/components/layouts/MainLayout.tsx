@@ -99,8 +99,9 @@ export function MainLayout() {
     };
 
     fetchCases();
-    // Refetch cases every 30 seconds to stay in sync
-    const interval = setInterval(fetchCases, 30000);
+    // Refetch cases every 5 minutes (300000ms) to stay in sync
+    // Individual pages fetch their own data on mount, so frequent polling is unnecessary
+    const interval = setInterval(fetchCases, 300000);
     return () => clearInterval(interval);
   }, []);
 
@@ -135,8 +136,9 @@ export function MainLayout() {
     };
 
     fetchCounts();
-    // Refetch counts every 30 seconds to stay in sync
-    const interval = setInterval(fetchCounts, 30000);
+    // Refetch counts every 5 minutes (300000ms) to stay in sync
+    // Individual pages fetch their own data on mount, so frequent polling is unnecessary
+    const interval = setInterval(fetchCounts, 300000);
     return () => clearInterval(interval);
   }, []);
 

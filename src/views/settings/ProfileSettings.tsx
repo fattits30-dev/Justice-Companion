@@ -393,10 +393,16 @@ export function ProfileSettingsTab() {
           </div>
 
           {/* Last Updated */}
-          {profile && (
+          {profile && profile.updatedAt && (
             <div className="pt-4 border-t border-white/10">
               <p className="text-sm text-white/40">
-                Last updated: {new Date(profile.updatedAt).toLocaleString()}
+                Last updated:{" "}
+                {(() => {
+                  const date = new Date(profile.updatedAt);
+                  return isNaN(date.getTime())
+                    ? "Unknown"
+                    : date.toLocaleString();
+                })()}
               </p>
             </div>
           )}

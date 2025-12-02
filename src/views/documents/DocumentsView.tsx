@@ -180,7 +180,9 @@ export function DocumentsView() {
         }
 
         const data = await response.json();
-        const uploadedEvidence = data.evidence as Evidence;
+        // Handle wrapped response from middleware
+        const responseData = data.data || data;
+        const uploadedEvidence = responseData.evidence as Evidence;
 
         setEvidence((previous) => [uploadedEvidence, ...previous]);
         setShowUploadDialog(false);

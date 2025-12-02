@@ -20,6 +20,7 @@ from backend.models.base import Base
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from backend.models.user import User
 
 class BackupFrequency(str, Enum):
     """Backup frequency options."""

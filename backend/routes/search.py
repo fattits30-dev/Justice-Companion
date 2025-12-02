@@ -14,6 +14,7 @@ Routes:
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from typing import Optional, List, Dict, Any
+from datetime import datetime
 from sqlalchemy.orm import Session
 import re
 
@@ -30,6 +31,7 @@ from backend.services.security.encryption import EncryptionService
 from backend.services.audit_logger import AuditLogger
 
 # Import schemas from consolidated schema file
+from backend.schemas.search import (
     SearchFilters,
     SearchRequest,
     SaveSearchRequest,
