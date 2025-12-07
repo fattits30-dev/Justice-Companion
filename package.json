@@ -54,6 +54,7 @@
     "reflect-metadata": "^0.2.2",
     "sonner": "^1.7.1",
     "tailwind-merge": "^2.5.4",
+    "tsyringe": "^4.10.0",
     "uuid": "^11.0.3",
     "workbox-window": "^7.4.0",
     "zod": "^3.24.1"

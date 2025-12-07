@@ -4,6 +4,10 @@ import { registerSW } from "virtual:pwa-register";
 import App from "./App.tsx";
 import "./index.css";
 import { ErrorBoundary, initSentry } from "./lib/sentry.ts";
+import { initializeContainer } from "./di/container.ts";
+
+// Initialize DI container before app starts
+initializeContainer();
 
 // Initialize Sentry error monitoring before rendering
 initSentry();

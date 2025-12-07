@@ -15,12 +15,14 @@ import type {
 } from "../types/profile.ts";
 import { ProfileStorageKey } from "../types/profile.ts";
 import { logger } from "../lib/logger.ts";
+import { singleton } from "tsyringe";
 
 /**
  * Profile Service Implementation
  *
  * Handles all profile-related operations including storage, retrieval, and validation.
  */
+@singleton()
 export class ProfileService implements IProfileService {
   // Cache for computed values
   private extendedProfileCache: ExtendedUserProfile | null = null;
@@ -313,6 +315,3 @@ export class ProfileService implements IProfileService {
     };
   }
 }
-
-// Export singleton instance
-export const profileService = new ProfileService();
