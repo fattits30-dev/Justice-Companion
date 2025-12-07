@@ -99,13 +99,15 @@ def test_user(test_db):
 
     # Insert user directly with SQL (including password_salt)
     test_db.execute(text("""
-        INSERT INTO users (username, email, password_hash, password_salt, created_at, updated_at)
-        VALUES (:username, :email, :password_hash, :password_salt, :created_at, :updated_at)
+        INSERT INTO users (username, email, password_hash, password_salt, role, is_active, created_at, updated_at)
+        VALUES (:username, :email, :password_hash, :password_salt, :role, :is_active, :created_at, :updated_at)
     """), {
         "username": "testuser",
         "email": "test@example.com",
         "password_hash": "hashed_password",
         "password_salt": "test_salt_12345678901234567890123456789012",  # 32 char salt
+        "role": "user",
+        "is_active": True,
         "created_at": now,
         "updated_at": now
     })

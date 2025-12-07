@@ -248,6 +248,7 @@ class ExportService:
         pdf_generator: Optional[Any] = None,
         docx_generator: Optional[Any] = None,
         export_dir: Optional[str] = None,
+        case_fact_repo: Optional[Any] = None,
     ):
         """
         Initialize export service with dependencies.
@@ -265,6 +266,7 @@ class ExportService:
             pdf_generator: Optional PDF generator (defaults to PDFGenerator)
             docx_generator: Optional DOCX generator (defaults to DOCXGenerator)
             export_dir: Optional custom export directory (defaults to ./exports)
+            case_fact_repo: Optional case fact repository (defaults to None)
         """
         self.db = db
         self.case_repo = case_repo
@@ -273,6 +275,7 @@ class ExportService:
         self.document_repo = document_repo
         self.note_repo = note_repo
         self.user_repo = user_repo
+        self.case_fact_repo = case_fact_repo
         self.encryption_service = encryption_service
         self.audit_logger = audit_logger
 
@@ -509,11 +512,37 @@ class ExportService:
                     }
                 )
 
-        # Gather facts (placeholder - empty for now)
+        # Gather facts using CaseFactRepository if available
         facts_list: List[Dict[str, Any]] = []
-        if options.include_facts:
-            # TODO: Implement facts repository when available
-            pass
+        if options.include_facts and self.case_fact_repo:
+            try:
+                raw_facts = self.case_fact_repo.get_facts_by_case_id(
+                    case_id=case_id, user_id=user_id
+                )
+                for fact in raw_facts:
+                    # Convert fact model to dict for export
+                    fact_dict = fact.to_dict() if hasattr(fact, "to_dict") else {
+                        "id": fact.id,
+                        "caseId": fact.case_id,
+                        "factContent": fact.fact_content,
+                        "factCategory": fact.fact_category,
+                        "importance": fact.importance,
+                        "createdAt": (
+                            fact.created_at.isoformat() if fact.created_at else None
+                        ),
+                        "updatedAt": (
+                            fact.updated_at.isoformat() if fact.updated_at else None
+                        ),
+                    }
+                    # Decrypt fact content if encrypted
+                    if "factContent" in fact_dict:
+                        fact_dict["factContent"] = await self._decrypt_field(
+                            fact_dict.get("factContent")
+                        )
+                    facts_list.append(fact_dict)
+            except Exception:
+                # Silently continue with empty facts list if repository fails
+                pass
 
         # Gather documents if requested
         documents_list: List[Dict[str, Any]] = []

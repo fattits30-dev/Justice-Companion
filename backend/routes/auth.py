@@ -563,12 +563,14 @@ async def get_session(
                 detail="Session not found or expired",
             )
 
-        # Get user for this session
-        user = auth_service.validate_session(session_id)
+        # Get user from database (SessionValidationResult only has user_id and username)
+        from backend.models.user import User
+        user = db.query(User).filter(User.id == validation_result.user_id).first()
 
         if not user:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User not found",
             )
 
         return {
@@ -991,3 +993,4 @@ async def reset_password(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Password reset failed: {str(exc)}",
         ) from exc
+

@@ -10,6 +10,10 @@ from fastapi.testclient import TestClient
 
 import backend.routes.auth as auth_routes
 from backend.services.auth.service import AuthenticationError
+from backend.tests.utils.test_credentials import build_password
+
+DETERMINISTIC_PASSWORD = build_password("seed-user")
+
 
 def _build_response_payload() -> Dict[str, Any]:
     return {
@@ -23,11 +27,13 @@ def _build_response_payload() -> Dict[str, Any]:
         "session": {"id": "session-123", "user_id": 1, "expires_at": "2099-01-01"},
     }
 
+
 def _create_client(auth_service: Any) -> TestClient:
     app = FastAPI()
     app.include_router(auth_routes.router)
     app.dependency_overrides[auth_routes.get_auth_service] = lambda: auth_service
     return TestClient(app)
+
 
 def test_seed_user_returns_404_when_disabled(monkeypatch: pytest.MonkeyPatch):
     """Returns 404 when test routes are disabled."""
@@ -40,12 +46,13 @@ def test_seed_user_returns_404_when_disabled(monkeypatch: pytest.MonkeyPatch):
         json={
             "username": "demo",
             "email": "demo@example.com",
-            "password": "Password123!",
+            "password": build_password("seed-user-disabled"),
         },
     )
 
     assert response.status_code == 404
     auth_service.register.assert_not_called()
+
 
 def test_seed_user_registers_when_enabled(monkeypatch: pytest.MonkeyPatch):
     """Registers and logs in the seeded user when route is enabled."""
@@ -60,13 +67,14 @@ def test_seed_user_registers_when_enabled(monkeypatch: pytest.MonkeyPatch):
         json={
             "username": "e2e-test",
             "email": "e2e-test@example.com",
-            "password": "E2eTestPass123!",
+            "password": DETERMINISTIC_PASSWORD,
         },
     )
 
     assert response.status_code == 200
     assert response.json()["user"]["username"] == "e2e-test"
     auth_service.register.assert_awaited_once()
+
 
 def test_seed_user_updates_existing_user_on_conflict(monkeypatch: pytest.MonkeyPatch):
     """Updates credentials when the deterministic user already exists."""
@@ -114,7 +122,7 @@ def test_seed_user_updates_existing_user_on_conflict(monkeypatch: pytest.MonkeyP
         json={
             "username": "e2e-test",
             "email": "e2e-test@example.com",
-            "password": "E2eTestPass123!",
+            "password": DETERMINISTIC_PASSWORD,
         },
     )
 
@@ -122,12 +130,12 @@ def test_seed_user_updates_existing_user_on_conflict(monkeypatch: pytest.MonkeyP
     assert response.json()["user"]["email"] == "e2e-test@example.com"
     auth_service.login.assert_awaited_once_with(
         username="e2e-test",
-        password="E2eTestPass123!",
+        password=DETERMINISTIC_PASSWORD,
         remember_me=False,
         ip_address="testclient",
         user_agent="testclient",
     )
     auth_service.reset_user_credentials.assert_called_once_with(
-        existing_user, password="E2eTestPass123!", email="e2e-test@example.com"
+        existing_user, password=DETERMINISTIC_PASSWORD, email="e2e-test@example.com"
     )
     auth_service.db.commit.assert_called()

@@ -1,5 +1,5 @@
 import { validate as uuidValidate, version as uuidVersion } from "uuid";
-import { logger } from "../utils/logger.ts";
+import { logger } from "../lib/logger.ts";
 
 /**
  * Service for securely persisting session IDs across app restarts

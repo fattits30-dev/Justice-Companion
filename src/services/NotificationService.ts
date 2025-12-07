@@ -1,4 +1,4 @@
-import { logger } from "../utils/logger.ts";
+import { logger } from "../lib/logger.ts";
 import { NotificationRepository } from "../repositories/NotificationRepository.ts";
 import { NotificationPreferencesRepository } from "../repositories/NotificationPreferencesRepository.ts";
 import { AuditLogger } from "./AuditLogger.ts";

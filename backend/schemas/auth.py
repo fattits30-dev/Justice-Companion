@@ -106,7 +106,7 @@ class SeedTestUserRequest(BaseModel):
 
     username: str = Field(default="e2e-test", min_length=3, max_length=50)
     email: EmailStr = Field(default="e2e-test@example.com")
-    password: str = Field(default="E2eTestPass123!", min_length=12)
+    password: str = Field(..., min_length=12)
     remember_me: Optional[bool] = False
 
 
@@ -147,7 +147,9 @@ class ResetPasswordRequest(BaseModel):
         }
     )
 
-    token: str = Field(..., min_length=32, max_length=128, description="Password reset token")
+    token: str = Field(
+        ..., min_length=32, max_length=128, description="Password reset token"
+    )
     new_password: str = Field(..., min_length=12, description="New password")
 
 

@@ -12,7 +12,7 @@ import {
 import { Card } from "../../components/ui/Card.tsx";
 import { Button } from "../../components/ui/Button.tsx";
 import { toast } from "sonner";
-import { logger } from "../../utils/logger.ts";
+import { logger } from "../../lib/logger.ts";
 import { apiClient } from "../../lib/apiClient.ts";
 
 interface UserProfile {
@@ -51,8 +51,26 @@ export function ProfileSettingsTab() {
 
   // Load profile on mount
   useEffect(() => {
+    logger.info('[ProfileSettings] Component mounted, loading profile...');
     loadProfile();
+
+    return () => {
+      logger.info('[ProfileSettings] Component unmounting');
+    };
   }, []);
+
+  // Debug: Log state changes
+  useEffect(() => {
+    logger.info('[ProfileSettings] State update:', {
+      loading,
+      hasProfile: !!profile,
+      profileId: profile?.id,
+      isEditing,
+      firstName,
+      lastName,
+      email
+    });
+  }, [loading, profile, isEditing, firstName, lastName, email]);
 
   // Track changes
   useEffect(() => {
@@ -71,9 +89,11 @@ export function ProfileSettingsTab() {
   const loadProfile = async () => {
     try {
       setLoading(true);
+      logger.info('[ProfileSettings] Loading profile...');
 
       // Use apiClient instead of legacy window.justiceAPI
       const response = await apiClient.profile.get();
+      logger.info('[ProfileSettings] Profile response:', response);
 
       if (response.success && response.data) {
         // apiClient.profile.get() returns ApiResponse with data
@@ -125,12 +145,17 @@ export function ProfileSettingsTab() {
           email: em,
           phone: ph,
         });
+
+        logger.info('[ProfileSettings] Profile loaded successfully');
       } else {
+        logger.error('[ProfileSettings] Profile load failed:', response);
         toast.error("Failed to load profile");
+        setProfile(null);
       }
     } catch (error) {
-      logger.error("Failed to load profile:", error);
+      logger.error("[ProfileSettings] Failed to load profile:", error);
       toast.error("Failed to load profile");
+      setProfile(null);
     } finally {
       setLoading(false);
     }
@@ -227,6 +252,34 @@ export function ProfileSettingsTab() {
     return (
       <div className="flex items-center justify-center py-12">
         <div className="w-8 h-8 border-2 border-purple-500 border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  if (!profile) {
+    return (
+      <div className="space-y-6 w-full">
+        <div>
+          <h2 className="text-2xl font-bold text-white mb-2">Profile</h2>
+          <p className="text-white/60">Manage your personal information</p>
+        </div>
+        <Card className="bg-white/5 border-white/10 backdrop-blur-md">
+          <div className="p-6 text-center">
+            <AlertCircle className="w-12 h-12 text-yellow-400 mx-auto mb-4" />
+            <h3 className="text-lg font-semibold text-white mb-2">
+              Unable to Load Profile
+            </h3>
+            <p className="text-white/60 mb-4">
+              There was an error loading your profile data.
+            </p>
+            <Button
+              onClick={loadProfile}
+              className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white"
+            >
+              Try Again
+            </Button>
+          </div>
+        </Card>
       </div>
     );
   }

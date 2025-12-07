@@ -7,7 +7,7 @@ import { getDb } from "./db/database.ts";
 import { EncryptionService } from "./services/EncryptionService.ts";
 import { AuditLogger } from "./services/AuditLogger.ts";
 import { initializeServiceContainer } from "./services/ServiceContainer.ts";
-import { logger } from "./utils/logger.ts";
+import { logger } from "./lib/logger.ts";
 
 // Import all repositories
 import { CaseRepository } from "./repositories/CaseRepository.ts";

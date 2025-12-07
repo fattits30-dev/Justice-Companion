@@ -8,19 +8,36 @@ import { ErrorBoundary, initSentry } from "./lib/sentry.ts";
 // Initialize Sentry error monitoring before rendering
 initSentry();
 
-// Register service worker for PWA capabilities
+// Register service worker for PWA capabilities (production only)
 if (typeof window !== "undefined") {
-  registerSW({
-    immediate: true,
-    onRegistered(worker: ServiceWorkerRegistration | undefined) {
-      if (worker) {
-        console.log("Service worker registered", worker);
-      }
-    },
-    onRegisterError(error: Error) {
-      console.error("Service worker registration failed", error);
-    },
-  });
+  const isDevelopment = import.meta.env.DEV;
+
+  if (isDevelopment) {
+    // Unregister service worker in development to avoid cache issues
+    navigator.serviceWorker?.getRegistrations().then((registrations) => {
+      registrations.forEach((registration) => {
+        registration.unregister();
+        console.log("[Dev] Service worker unregistered");
+      });
+    });
+    // Clear all caches
+    caches?.keys().then((names) => {
+      names.forEach((name) => caches.delete(name));
+    });
+  } else {
+    // Production: Register service worker
+    registerSW({
+      immediate: true,
+      onRegistered(worker: ServiceWorkerRegistration | undefined) {
+        if (worker) {
+          console.log("Service worker registered", worker);
+        }
+      },
+      onRegisterError(error: Error) {
+        console.error("Service worker registration failed", error);
+      },
+    });
+  }
 }
 
 const rootElement = document.getElementById("root");

@@ -66,22 +66,24 @@ def test_user_fixture(db_session):
     """Create test user with valid session."""
     # Create user
     user = User(
+        username="testuser",
         email="test@example.com",
         password_hash="hashed_password",
         password_salt="test_salt_value",
-        full_name="Test User",
-        security_question_1_hash="hash1",
-        security_question_2_hash="hash2"
+        role="user",
+        is_active=True
     )
     db_session.add(user)
     db_session.commit()
     db_session.refresh(user)
 
     # Create session
+    from datetime import datetime, timedelta
     auth_service = AuthenticationService(db=db_session)
     session = UserSession(
-        session_id="test-session-id-123",
+        id="test-session-id-123",
         user_id=user.id,
+        expires_at=datetime.utcnow() + timedelta(days=1),
         ip_address="127.0.0.1",
         user_agent="pytest"
     )
@@ -90,27 +92,29 @@ def test_user_fixture(db_session):
 
     return {
         "user": user,
-        "session_id": session.session_id
+        "session_id": session.id
     }
 
 @pytest.fixture(name="test_user_2")
 def test_user_2_fixture(db_session):
     """Create second test user for authorization tests."""
+    from datetime import datetime, timedelta
     user = User(
+        username="testuser2",
         email="user2@example.com",
         password_hash="hashed_password",
         password_salt="test_salt_value",
-        full_name="User Two",
-        security_question_1_hash="hash1",
-        security_question_2_hash="hash2"
+        role="user",
+        is_active=True
     )
     db_session.add(user)
     db_session.commit()
     db_session.refresh(user)
 
     session = UserSession(
-        session_id="test-session-id-456",
+        id="test-session-id-456",
         user_id=user.id,
+        expires_at=datetime.utcnow() + timedelta(days=1),
         ip_address="127.0.0.1",
         user_agent="pytest"
     )
@@ -119,7 +123,7 @@ def test_user_2_fixture(db_session):
 
     return {
         "user": user,
-        "session_id": session.session_id
+        "session_id": session.id
     }
 
 # ===== TEST: CREATE TEMPLATE =====

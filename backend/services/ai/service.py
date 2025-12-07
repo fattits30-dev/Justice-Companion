@@ -34,6 +34,18 @@ logger = logging.getLogger(__name__)
 
 from fastapi import HTTPException
 
+# Timeout utilities
+from backend.utils.timeout_config import (
+    TimeoutConfig,
+    DEFAULT_TIMEOUT_CONFIG,
+    get_timeout_for_operation,
+    AITimeoutError,
+)
+from backend.utils.timeout_wrapper import run_with_timeout
+
+# Response caching
+from backend.utils.response_cache import AIResponseCache, get_global_cache
+
 # Type aliases for provider types
 AIProviderType = Literal[
     "openai",
@@ -140,6 +152,7 @@ class AIProviderConfig(BaseModel):
     temperature: Optional[float] = Field(0.7, ge=0.0, le=2.0, description="Temperature (0.0-2.0)")
     max_tokens: Optional[int] = Field(4096, ge=1, description="Maximum tokens to generate")
     top_p: Optional[float] = Field(0.9, ge=0.0, le=1.0, description="Top-p sampling (0.0-1.0)")
+    timeout: Optional[float] = Field(None, ge=1.0, description="Request timeout in seconds (None = use operation defaults)")
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -561,16 +574,34 @@ class UnifiedAIService:
         print(response)
     """
 
-    def __init__(self, config: AIProviderConfig, audit_logger=None):
+    def __init__(
+        self,
+        config: AIProviderConfig,
+        audit_logger=None,
+        timeout_config: Optional[TimeoutConfig] = None,
+        response_cache: Optional[AIResponseCache] = None,
+        enable_cache: bool = True,
+    ):
         """
         Initialize unified AI service.
 
         Args:
             config: AI provider configuration
             audit_logger: Optional audit logger instance
+            timeout_config: Optional timeout configuration (defaults to DEFAULT_TIMEOUT_CONFIG)
+            response_cache: Optional response cache (defaults to global cache if enable_cache=True)
+            enable_cache: Whether to enable response caching (default: True)
         """
         self.config = config
         self.audit_logger = audit_logger
+        self.timeout_config = timeout_config or DEFAULT_TIMEOUT_CONFIG
+        self.enable_cache = enable_cache
+        self.response_cache = response_cache if enable_cache else None
+
+        # Use global cache if caching enabled but no cache provided
+        if self.enable_cache and self.response_cache is None:
+            self.response_cache = get_global_cache()
+
         self.client: Any = None
         self._initialize_client()
 
@@ -699,6 +730,28 @@ class UnifiedAIService:
             "current_model": self.config.model,
             "endpoint": self.config.endpoint or metadata.default_endpoint,
         }
+
+    def _get_timeout(self, operation: str) -> float:
+        """
+        Get timeout for specific operation.
+
+        Args:
+            operation: Operation name (e.g., 'chat', 'stream_chat', 'document_extraction')
+
+        Returns:
+            Timeout in seconds
+
+        Priority:
+        1. Config-specific timeout (AIProviderConfig.timeout)
+        2. Operation-specific timeout with provider multiplier
+        3. Default timeout
+        """
+        return get_timeout_for_operation(
+            operation=operation,
+            provider=self.config.provider,
+            config=self.timeout_config,
+            custom_timeout=self.config.timeout,
+        )
 
     async def stream_chat(
         self,
@@ -884,7 +937,9 @@ class UnifiedAIService:
                 except StopIteration:
                     break
         finally:
-            executor.shutdown(wait=False)
+            # FIXED: wait=True ensures threads complete before shutdown
+            # Prevents thread leaks under high load
+            executor.shutdown(wait=True)
 
     async def _stream_openai_compatible_chat(
         self, messages: List[ChatMessage]
@@ -931,30 +986,78 @@ class UnifiedAIService:
 
     async def chat(self, messages: List[ChatMessage]) -> str:
         """
-        Non-streaming chat completion.
+        Non-streaming chat completion with caching.
 
         Args:
             messages: Chat messages
 
         Returns:
-            Complete response text
+            Complete response text (from cache or AI provider)
 
         Raises:
             HTTPException: If client not configured or chat fails
+            AITimeoutError: If operation exceeds timeout
         """
         if not self.client:
             raise HTTPException(
                 status_code=500, detail=f"{self.config.provider} client not configured"
             )
 
-        try:
-            if self.config.provider == "anthropic":
-                return await self._chat_anthropic_non_streaming(messages)
-            elif self.config.provider in ["huggingface", "qwen"]:
-                return await self._chat_qwen_non_streaming(messages)
-            else:
-                return await self._chat_openai_compatible_non_streaming(messages)
+        # Check cache first
+        if self.enable_cache and self.response_cache:
+            messages_dict = [{"role": msg.role, "content": msg.content} for msg in messages]
+            cached_response = self.response_cache.get(
+                messages=messages_dict,
+                provider=self.config.provider,
+                model=self.config.model,
+            )
+            if cached_response:
+                logger.info(
+                    f"Cache HIT for {self.config.provider}/{self.config.model} "
+                    f"({len(messages)} messages)"
+                )
+                return cached_response
 
+        try:
+            # Get timeout for chat operation
+            timeout = self._get_timeout('chat')
+            logger.debug(f"Chat operation with {self.config.provider} has {timeout}s timeout")
+
+            # Route to provider-specific method with timeout
+            if self.config.provider == "anthropic":
+                coro = self._chat_anthropic_non_streaming(messages)
+            elif self.config.provider in ["huggingface", "qwen"]:
+                coro = self._chat_qwen_non_streaming(messages)
+            else:
+                coro = self._chat_openai_compatible_non_streaming(messages)
+
+            # Apply timeout wrapper
+            response = await run_with_timeout(
+                coro=coro,
+                timeout=timeout,
+                operation_name="chat",
+                provider=self.config.provider,
+            )
+
+            # Cache the response
+            if self.enable_cache and self.response_cache:
+                messages_dict = [{"role": msg.role, "content": msg.content} for msg in messages]
+                self.response_cache.set(
+                    messages=messages_dict,
+                    provider=self.config.provider,
+                    model=self.config.model,
+                    response=response,
+                )
+                logger.debug(
+                    f"Cached response for {self.config.provider}/{self.config.model} "
+                    f"({len(messages)} messages)"
+                )
+
+            return response
+
+        except AITimeoutError:
+            # Re-raise timeout errors without wrapping
+            raise
         except Exception as exc:
             if self.audit_logger:
                 self.audit_logger.log(

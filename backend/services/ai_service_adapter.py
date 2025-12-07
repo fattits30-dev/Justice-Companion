@@ -31,36 +31,50 @@ from backend.services.audit_logger import AuditLogger
 class AIServiceAdapter:
     """
     Adapter that wraps AIServiceClient to provide UnifiedAIService interface.
-    
+
     This allows the backend routes to call the separate ai-service
     microservice while maintaining the same interface as the old
     local AI implementation.
     """
-    
+
     def __init__(self, audit_logger: Optional[AuditLogger] = None):
         self.client = AIServiceClient()
         self.audit_logger = audit_logger
-        # Provide a config for compatibility with existing code
-        # Note: api_key is a placeholder - actual key is in ai-service's .env
-        self.config = AIProviderConfig(
-            provider="huggingface",
-            model="mistralai/Mistral-7B-Instruct-v0.2",
-            api_key="placeholder-key-in-ai-service",  # Placeholder - ai-service has the real key
+
+        provider = os.environ.get("AI_SERVICE_PROVIDER", "huggingface")
+        model = os.environ.get("AI_SERVICE_MODEL", "mistralai/Mistral-7B-Instruct-v0.2")
+        api_key = (
+            os.environ.get("AI_SERVICE_API_KEY")
+            or os.environ.get("HF_TOKEN")
+            or os.environ.get("OPENAI_API_KEY")
+            or os.environ.get("ANTHROPIC_API_KEY")
         )
-    
+
+        if not api_key:
+            raise RuntimeError(
+                "AI_MODE=service requires AI_SERVICE_API_KEY (or provider-specific token) to be set"
+            )
+
+        # Provide a config for compatibility with existing code paths that expect UnifiedAIService
+        self.config = AIProviderConfig(
+            provider=provider,
+            model=model,
+            api_key=api_key,
+        )
+
     async def chat(self, messages: List[ChatMessage]) -> str:
         """
         Generate chat completion.
-        
+
         Args:
             messages: List of ChatMessage objects
-            
+
         Returns:
             AI response text
         """
         # Convert ChatMessage to dict format
         msg_list = [{"role": m.role, "content": m.content} for m in messages]
-        
+
         try:
             response = await self.client.chat(msg_list)
             return response.get("content", "")
@@ -78,11 +92,11 @@ class AIServiceAdapter:
                     error_message=str(e),
                 )
             return f"I apologize, but I'm having trouble connecting to the AI service. Please try again. Error: {str(e)}"
-    
+
     async def stream_chat(self, messages: List[ChatMessage]) -> AsyncIterator[str]:
         """
         Stream chat completion token by token.
-        
+
         Note: The ai-service may not support streaming directly through HTTP,
         so we fall back to non-streaming and yield the full response.
         Future: Implement WebSocket or SSE support in ai-service.
@@ -90,21 +104,21 @@ class AIServiceAdapter:
         # For now, get full response and yield it
         # TODO: Implement true streaming via ai-service
         response = await self.chat(messages)
-        
+
         # Simulate streaming by yielding words
         words = response.split()
         for i, word in enumerate(words):
             if i > 0:
                 yield " "
             yield word
-    
+
     async def analyze_case(self, request: CaseAnalysisRequest) -> CaseAnalysisResponse:
         """
         Analyze a legal case.
-        
+
         Args:
             request: CaseAnalysisRequest with case details
-            
+
         Returns:
             CaseAnalysisResponse with analysis results
         """
@@ -115,7 +129,7 @@ class AIServiceAdapter:
                 documents_summary=request.documents_summary,
                 timeline_summary=request.timeline_summary,
             )
-            
+
             # Map response to CaseAnalysisResponse
             return CaseAnalysisResponse(
                 case_type=response.get("case_type", request.case_type or "general"),
@@ -125,7 +139,9 @@ class AIServiceAdapter:
                 recommended_actions=response.get("recommended_actions", []),
                 critical_deadlines=response.get("critical_deadlines", []),
                 evidence_gaps=response.get("evidence_gaps", []),
-                disclaimer=response.get("disclaimer", "This is legal information, not advice."),
+                disclaimer=response.get(
+                    "disclaimer", "This is legal information, not advice."
+                ),
             )
         except Exception as e:
             # Return minimal response on error
@@ -139,8 +155,10 @@ class AIServiceAdapter:
                 evidence_gaps=[],
                 disclaimer=f"Analysis failed: {str(e)}",
             )
-    
-    async def analyze_evidence(self, request: EvidenceAnalysisRequest) -> EvidenceAnalysisResponse:
+
+    async def analyze_evidence(
+        self, request: EvidenceAnalysisRequest
+    ) -> EvidenceAnalysisResponse:
         """
         Analyze evidence for a case.
         """
@@ -150,7 +168,7 @@ class AIServiceAdapter:
                 evidence_descriptions=request.evidence_descriptions,
                 case_type=request.case_type,
             )
-            
+
             return EvidenceAnalysisResponse(
                 overall_strength=response.get("overall_strength", "unclear"),
                 individual_assessments=response.get("individual_assessments", []),
@@ -164,8 +182,10 @@ class AIServiceAdapter:
                 gaps_identified=[],
                 recommendations=[f"Evidence analysis failed: {str(e)}"],
             )
-    
-    async def draft_document(self, request: DocumentDraftRequest) -> DocumentDraftResponse:
+
+    async def draft_document(
+        self, request: DocumentDraftRequest
+    ) -> DocumentDraftResponse:
         """
         Draft a legal document.
         """
@@ -178,7 +198,7 @@ class AIServiceAdapter:
                 tone=request.tone or "formal",
                 case_context=request.context.case_summary,
             )
-            
+
             return DocumentDraftResponse(
                 content=response.get("content", ""),
                 word_count=response.get("word_count", 0),
@@ -194,7 +214,7 @@ class AIServiceAdapter:
                 suggestions=[],
                 disclaimer=f"Draft generation failed: {str(e)}",
             )
-    
+
     async def extract_case_data_from_document(
         self,
         document: ParsedDocument,
@@ -317,17 +337,36 @@ CRITICAL: The JSON must be valid and parseable. Use null (not "null") for missin
 
             if not json_match:
                 # Try to find raw JSON object
-                json_match = re.search(r'\{[\s\S]*"title"[\s\S]*"case_type"[\s\S]*"confidence"[\s\S]*\}', ai_response)
+                json_match = re.search(
+                    r'\{[\s\S]*"title"[\s\S]*"case_type"[\s\S]*"confidence"[\s\S]*\}',
+                    ai_response,
+                )
 
             if not json_match:
                 # Fallback - detect case type from keywords
                 response_lower = ai_response.lower()
                 detected_case_type = "other"
-                if any(word in response_lower for word in ["dismissal", "employment", "redundancy", "unfair", "workplace", "employer"]):
+                if any(
+                    word in response_lower
+                    for word in [
+                        "dismissal",
+                        "employment",
+                        "redundancy",
+                        "unfair",
+                        "workplace",
+                        "employer",
+                    ]
+                ):
                     detected_case_type = "employment"
-                elif any(word in response_lower for word in ["eviction", "landlord", "tenant", "rent", "housing"]):
+                elif any(
+                    word in response_lower
+                    for word in ["eviction", "landlord", "tenant", "rent", "housing"]
+                ):
                     detected_case_type = "housing"
-                elif any(word in response_lower for word in ["refund", "consumer", "goods", "service"]):
+                elif any(
+                    word in response_lower
+                    for word in ["refund", "consumer", "goods", "service"]
+                ):
                     detected_case_type = "consumer"
 
                 return DocumentExtractionResponse(
@@ -353,7 +392,9 @@ CRITICAL: The JSON must be valid and parseable. Use null (not "null") for missin
 
             # Extract parts
             analysis_text = ai_response[: json_match.start()].strip()
-            json_str = json_match.group(1) if json_match.lastindex else json_match.group(0)
+            json_str = (
+                json_match.group(1) if json_match.lastindex else json_match.group(0)
+            )
 
             try:
                 parsed_json = json.loads(json_str)
@@ -390,14 +431,18 @@ CRITICAL: The JSON must be valid and parseable. Use null (not "null") for missin
                         camel_key = key_mapping.get(field_name, field_name)
                         extracted_from[camel_key] = ExtractionSource(
                             source=field_data.get("source", "document"),
-                            text=field_data.get("text", "")
+                            text=field_data.get("text", ""),
                         )
 
                 return DocumentExtractionResponse(
                     analysis=analysis_text or ai_response,
                     suggested_case_data=SuggestedCaseData(
-                        document_ownership_mismatch=parsed_json.get("document_ownership_mismatch", False),
-                        document_claimant_name=parsed_json.get("document_claimant_name"),
+                        document_ownership_mismatch=parsed_json.get(
+                            "document_ownership_mismatch", False
+                        ),
+                        document_claimant_name=parsed_json.get(
+                            "document_claimant_name"
+                        ),
                         title=parsed_json.get("title", f"Case - {document.filename}"),
                         case_type=parsed_json.get("case_type", "other"),
                         description=parsed_json.get("description", ""),
@@ -457,10 +502,12 @@ CRITICAL: The JSON must be valid and parseable. Use null (not "null") for missin
             )
 
 
-def get_ai_service_adapter(audit_logger: Optional[AuditLogger] = None) -> AIServiceAdapter:
+def get_ai_service_adapter(
+    audit_logger: Optional[AuditLogger] = None,
+) -> AIServiceAdapter:
     """
     Factory function for creating AIServiceAdapter.
-    
+
     Usage in dependency injection:
         ai_service = Depends(get_ai_service_adapter)
     """

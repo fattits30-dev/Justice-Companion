@@ -1,6 +1,6 @@
 import { Component, ErrorInfo, ReactNode } from "react";
 import { AlertCircle } from "lucide-react";
-import { logger } from "../utils/logger.ts";
+import { logger } from "../lib/logger.ts";
 
 interface ErrorBoundaryProps {
   children: ReactNode;

@@ -46,7 +46,7 @@ import { Badge } from "../../components/ui/Badge.tsx";
 import { SkeletonCard } from "../../components/ui/Skeleton.tsx";
 import { apiClient } from "../../lib/apiClient.ts";
 import { useAuth } from "../../contexts/AuthContext.tsx";
-import { logger } from "../../utils/logger.ts";
+import { logger } from "../../lib/logger.ts";
 
 // Types
 interface CaseDetails {

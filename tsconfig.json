@@ -13,18 +13,16 @@
     "strict": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
-    "types": ["vitest/globals", "vite/client"],
+    "types": [
+      "vitest/globals",
+      "vite/client",
+      "@testing-library/jest-dom/vitest"
+    ],
     "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"]
     }
   },
   "include": ["src"],
-  "exclude": [
-    "node_modules",
-    "e2e",
-    "tests",
-    "src/**/*.test.ts",
-    "src/**/*.test.tsx"
-  ]
+  "exclude": ["node_modules", "e2e", "tests"]
 }

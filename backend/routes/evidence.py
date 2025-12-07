@@ -82,20 +82,14 @@ def get_date_extraction_service() -> DateExtractionService:
     return DateExtractionService()
 
 def get_encryption_service() -> EncryptionService:
-    """
-    Get encryption service instance with encryption key.
-
-    Priority:
-    1. ENCRYPTION_KEY_BASE64 environment variable
-    2. Generate temporary key (WARNING: data will be lost on restart)
-    """
+    """Get encryption service instance with encryption key."""
     key_base64 = os.getenv("ENCRYPTION_KEY_BASE64")
 
     if not key_base64:
-        # WARNING: Generating temporary key - data will be lost on restart
-        key = EncryptionService.generate_key()
-        key_base64 = base64.b64encode(key).decode("utf-8")
-        logger.warning("No ENCRYPTION_KEY_BASE64 found. Using temporary key.")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="ENCRYPTION_KEY_BASE64 environment variable is required. Server misconfigured."
+        )
 
     return EncryptionService(key_base64)
 
@@ -326,7 +320,7 @@ async def list_all_evidence(
         logger.error(f"Failed to list evidence: {exc}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to list evidence: {str(e)}",
+            detail=f"Failed to list evidence: {str(exc)}",
         )
 
 @router.get("/{evidence_id}", response_model=EvidenceResponse)
@@ -381,10 +375,10 @@ async def get_evidence(
     except HTTPException:
         raise
     except Exception as exc:
-        logger.error(f"Failed to get evidence: {e}", exc_info=True)
+        logger.error(f"Failed to get evidence: {exc}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to get evidence: {str(e)}",
+            detail=f"Failed to get evidence: {str(exc)}",
         )
 
 @router.post("", response_model=EvidenceResponse, status_code=status.HTTP_201_CREATED)
@@ -515,13 +509,13 @@ async def create_evidence(
             resource_id="unknown",
             action="upload",
             success=False,
-            error_message=str(e),
+            error_message=str(exc),
         )
 
-        logger.error(f"Failed to create evidence: {e}", exc_info=True)
+        logger.error(f"Failed to create evidence: {exc}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to create evidence: {str(e)}",
+            detail=f"Failed to create evidence: {str(exc)}",
         )
 
 @router.post("/upload", response_model=FileUploadResponse, status_code=status.HTTP_201_CREATED)
@@ -776,10 +770,10 @@ async def parse_evidence_document(
     except HTTPException:
         raise
     except Exception as exc:
-        logger.error(f"Failed to parse evidence document: {e}", exc_info=True)
+        logger.error(f"Failed to parse evidence document: {exc}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to parse document: {str(e)}",
+            detail=f"Failed to parse document: {str(exc)}",
         )
 
 @router.get("/{evidence_id}/citations", response_model=CitationListResponse)
@@ -859,10 +853,10 @@ async def extract_evidence_citations(
     except HTTPException:
         raise
     except Exception as exc:
-        logger.error(f"Failed to extract citations: {e}", exc_info=True)
+        logger.error(f"Failed to extract citations: {exc}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to extract citations: {str(e)}",
+            detail=f"Failed to extract citations: {str(exc)}",
         )
 
 @router.get("/case/{case_id}", response_model=List[EvidenceResponse])
@@ -915,10 +909,10 @@ async def list_case_evidence(
     except HTTPException:
         raise
     except Exception as exc:
-        logger.error(f"Failed to list case evidence: {e}", exc_info=True)
+        logger.error(f"Failed to list case evidence: {exc}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to list evidence: {str(e)}",
+            detail=f"Failed to list evidence: {str(exc)}",
         )
 
 @router.put("/{evidence_id}", response_model=EvidenceResponse)
@@ -1040,7 +1034,7 @@ async def update_evidence(
         logger.error(f"Failed to update evidence: {exc}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to update evidence: {str(e)}",
+            detail=f"Failed to update evidence: {str(exc)}",
         )
 
 @router.delete(

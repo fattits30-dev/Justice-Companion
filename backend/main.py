@@ -35,6 +35,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 
+from backend.middleware.error_handler import ErrorHandlingMiddleware
+from backend.middleware.logging_middleware import LoggingMiddleware
+from backend.middleware.performance_middleware import PerformanceMiddleware
 from backend.models.base import init_db
 from backend.routes import auth_router
 from backend.routes.ai_config import router as ai_config_router
@@ -55,12 +58,25 @@ from backend.routes.templates import router as templates_router
 from backend.routes.ui import router as ui_router
 from backend.routes.legal import router as legal_router
 
-# Configure logging BEFORE any imports that create loggers
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-    handlers=[logging.StreamHandler(sys.stdout)],
-)
+# Configure structured logging BEFORE any imports that create loggers
+# This sets up JSON-formatted logging for the entire application
+from backend.utils.structured_logger import StructuredFormatter, LogLevel
+
+# Get root logger and configure with structured formatter
+root_logger = logging.getLogger()
+root_logger.setLevel(logging.INFO)
+
+# Remove any existing handlers
+for handler in root_logger.handlers[:]:
+    root_logger.removeHandler(handler)
+
+# Add structured JSON handler
+json_handler = logging.StreamHandler(sys.stdout)
+json_handler.setFormatter(StructuredFormatter(include_trace=True))
+root_logger.addHandler(json_handler)
+
+print("Structured JSON logging configured")
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -91,12 +107,15 @@ async def lifespan(app: FastAPI):
     # Initialize encryption service
     encryption_key = os.getenv("ENCRYPTION_KEY_BASE64")
     if not encryption_key:
-        print("WARNING: No ENCRYPTION_KEY_BASE64 found. Generating temporary key.")
-        print("         Data encrypted with this key will be lost on restart!")
-        encryption_key = base64.b64encode(os.urandom(32)).decode("utf-8")
+        raise RuntimeError(
+            "ENCRYPTION_KEY_BASE64 environment variable is required. "
+            "Without it, encrypted user data cannot be decrypted. "
+            "Generate a key with: python -c 'import os, base64; print(base64.b64encode(os.urandom(32)).decode())' "
+            "Then set: ENCRYPTION_KEY_BASE64=<generated_key>"
+        )
 
     encryption_service = EncryptionService(encryption_key)
-    print("EncryptionService initialized")
+    print("EncryptionService initialized with persistent key")
 
     # Initialize audit logger with a dedicated session
     audit_db = SessionLocal()
@@ -134,6 +153,7 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         print(f"Error resetting container: {e}")
 
+
 # Create FastAPI application
 app = FastAPI(
     title="Justice Companion API",
@@ -142,7 +162,21 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+# Global error handling middleware must be registered before response wrapping so
+# that all downstream errors are normalized before the success envelope is added.
+app.add_middleware(ErrorHandlingMiddleware)
+
+# Structured logging middleware with correlation ID tracking
+# Logs all requests/responses with structured JSON output
+app.add_middleware(LoggingMiddleware)
+
+# Performance monitoring middleware with metrics collection
+# Records request duration, system metrics, and provides /metrics endpoint
+app.add_middleware(PerformanceMiddleware)
+
 # Response wrapper middleware to match frontend expectations
+
+
 class ResponseWrapperMiddleware(BaseHTTPMiddleware):
     """
     Wraps all API responses in {success: true, data: {...}} format
@@ -225,8 +259,10 @@ class ResponseWrapperMiddleware(BaseHTTPMiddleware):
         # For non-200 responses, return as is
         return response
 
+
 # Add response wrapper middleware - wraps all 200 OK JSON responses for frontend
 app.add_middleware(ResponseWrapperMiddleware)
+
 
 # CORS configuration for frontend (Electron + PWA)
 # Cloud-ready: Supports both local development and production PWA
@@ -237,12 +273,17 @@ def get_allowed_origins() -> list:
     Development: Allow localhost for Electron app
     Production: Allow specific PWA domain
     """
+
     allowed_origins_env = os.getenv("ALLOWED_ORIGINS", "")
 
     if allowed_origins_env:
         # Production: Parse comma-separated origins from env var
         # Example: ALLOWED_ORIGINS=https://app.justicecompanion.com,https://justicecompanion.netlify.app
-        origins = [origin.strip() for origin in allowed_origins_env.split(",") if origin.strip()]
+        origins = [
+            origin.strip()
+            for origin in allowed_origins_env.split(",")
+            if origin.strip()
+        ]
     else:
         # Development: Default to localhost for Electron app + Docker testing
         origins = [
@@ -267,6 +308,7 @@ def get_allowed_origins() -> list:
 
     print(f"CORS allowed origins: {origins}")
     return origins
+
 
 # Add CORS middleware with environment-based origins
 allowed_origins = get_allowed_origins()
@@ -318,15 +360,42 @@ app.include_router(ai_config_router)  # AI configuration routes at /ai/*
 app.include_router(legal_router)  # Legal API routes at /legal/*
 
 # Health check endpoint
+
+
 @app.get("/health")
 async def health_check():
     """
     Health check endpoint for monitoring.
     Returns 200 OK if backend is running.
+    Includes AI provider connection status.
     """
-    return {"status": "healthy", "service": "Justice Companion Backend", "version": "1.0.0"}
+    from backend.models.base import SessionLocal
+    from backend.models.ai_provider_config import AIProviderConfig
+
+    # Check if HuggingFace is configured
+    hf_connected = False
+    try:
+        db = SessionLocal()
+        active_config = db.query(AIProviderConfig).filter(
+            AIProviderConfig.provider == "huggingface",
+            AIProviderConfig.enabled == True
+        ).first()
+        hf_connected = active_config is not None
+        db.close()
+    except Exception:
+        pass  # Silently fail - health check should always return 200
+
+    return {
+        "status": "healthy",
+        "service": "Justice Companion Backend",
+        "version": "1.0.0",
+        "hf_connected": hf_connected,
+    }
+
 
 # Root endpoint
+
+
 @app.get("/")
 async def root():
     """
@@ -339,13 +408,18 @@ async def root():
         "redoc": "/redoc",  # ReDoc documentation
     }
 
+
 if __name__ == "__main__":
     import uvicorn
 
     # Get configuration from environment
     port = int(os.getenv("PORT", "8000"))
-    host = os.getenv("HOST", "127.0.0.1")  # Cloud platforms use 0.0.0.0, local uses 127.0.0.1
-    reload = os.getenv("RELOAD", "true").lower() == "true"  # Auto-reload in development only
+    host = os.getenv(
+        "HOST", "127.0.0.1"
+    )  # Cloud platforms use 0.0.0.0, local uses 127.0.0.1
+    reload = (
+        os.getenv("RELOAD", "true").lower() == "true"
+    )  # Auto-reload in development only
 
     print(f"Starting Justice Companion Backend on {host}:{port}")
     print(f"Environment: {'Development' if reload else 'Production'}")

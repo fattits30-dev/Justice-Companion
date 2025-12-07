@@ -10,6 +10,13 @@ import {
 } from "../test-utils/test-utils";
 import { CasesView } from "./CasesView";
 
+vi.mock("../contexts/AuthContext", () => ({
+  useAuth: () => ({
+    sessionId: "test-session-123",
+    isLoading: false,
+  }),
+}));
+
 const baseCases: Case[] = [
   {
     id: 1,
@@ -81,7 +88,7 @@ describe("CasesView", () => {
     await waitFor(() => {
       // Check if skeleton cards are rendered (loading state)
       const skeletonCards = document.querySelectorAll(
-        '[data-testid="skeleton-card"]',
+        '[data-testid="skeleton-card"]'
       );
       return skeletonCards.length > 0;
     });
@@ -114,7 +121,7 @@ describe("CasesView", () => {
     fireEvent.click(screen.getByRole("button", { name: "Retry" }));
 
     await waitFor(() =>
-      expect(screen.getByText("Employment Dispute")).toBeInTheDocument(),
+      expect(screen.getByText("Employment Dispute")).toBeInTheDocument()
     );
   });
 
@@ -128,7 +135,7 @@ describe("CasesView", () => {
 
     await screen.findByText("No cases yet");
     expect(
-      screen.getByText("Create your first case to keep everything organised."),
+      screen.getByText("Create your first case to keep everything organised.")
     ).toBeInTheDocument();
   });
 
@@ -202,7 +209,7 @@ describe("CasesView", () => {
     });
 
     fireEvent.submit(
-      within(dialog).getByRole("button", { name: "Create Case" }),
+      within(dialog).getByRole("button", { name: "Create Case" })
     );
 
     await waitFor(() =>
@@ -210,7 +217,7 @@ describe("CasesView", () => {
         title: "Consumer Rights Claim",
         description: "Faulty product dispute",
         caseType: "consumer",
-      }),
+      })
     );
 
     await screen.findByText("Consumer Rights Claim");

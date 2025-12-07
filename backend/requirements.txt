@@ -31,8 +31,8 @@ python-dotenv==1.1.0  # Reads key-value pairs from a .env file and can set them 
 python-multipart>=0.0.10  # Streaming multipart parser - SECURITY UPDATE
 
 # AI and Machine Learning - SECURITY UPDATES
-torch>=2.6.0  # CRITICAL: Fixes buffer overflow, deserialization RCE, memory corruption - UPDATED SECURITY
-transformers>=4.47.0  # Fixes 8+ high severity ReDoS and deserialization vulnerabilities - UPDATED SECURITY
+torch>=2.9.0  # CRITICAL: Latest stable with security fixes (CVE fixes in progress upstream)
+transformers>=4.53.0  # Latest with ReDoS fixes (some CVEs still pending upstream)
 sentence-transformers>=3.3.1  # Available secure version
 faiss-cpu==1.8.0.post1  # Library for efficient similarity search and clustering of dense vectors
 # faiss-gpu==1.7.2 # Optional: for GPU-accelerated FAISS, requires CUDA
@@ -49,3 +49,4 @@ urllib3>=2.3.0  # Powerful, user-friendly HTTP client for Python - SECURITY UPDA
 httpx==0.28.1 # Async HTTP client, for compatibility with other packages
 defusedxml==0.7.1  # Hardened XML parsing to prevent XXE/DoS attacks
 python-dateutil==2.9.0.post0  # Extensions to the standard datetime module
+psutil==6.1.1  # System and process utilities for performance monitoring

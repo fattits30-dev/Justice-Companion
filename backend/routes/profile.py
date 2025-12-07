@@ -16,8 +16,7 @@ Security:
 - Password strength validation (OWASP compliant)
 
 REFACTORED: Now uses service layer instead of direct database queries
-- ProfileService for single-row profile operations
-- UserProfileService for multi-user profile operations (future)
+- ProfileService for profile operations (multi-user capable)
 - AuthenticationService for password changes
 - EncryptionService for field-level encryption
 - AuditLogger for comprehensive audit trail
@@ -39,9 +38,6 @@ from backend.services.profile_service import (
     UserProfileData,
     ProfileUpdateResult,
 )
-
-# UserProfileService not needed for single-user profile (id=1)
-# from backend.services.user_profile_service import UserProfileService
 from backend.services.security.encryption import EncryptionService
 from backend.services.audit_logger import AuditLogger
 

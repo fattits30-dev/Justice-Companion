@@ -1,6 +1,3 @@
-import { logger } from "../utils/logger.ts";
-import { apiClient } from "../lib/apiClient.ts";
-
 /**
  * AuthContext - Authentication State Management
  *
@@ -24,6 +21,8 @@ import {
   useEffect,
   ReactNode,
 } from "react";
+import { logger } from "../lib/logger";
+import { apiClient } from "../lib/apiClient";
 
 // Types
 interface User {
@@ -115,6 +114,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
             email: email,
           });
           setSessionId(sessionId); // Save sessionId to state
+          apiClient.setSessionId(sessionId); // Update API client
         }
       } catch (err) {
         // Silently fail - no session to restore
@@ -182,6 +182,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         const newSessionId = response.data.session.id;
         localStorage.setItem("sessionId", newSessionId);
         setSessionId(newSessionId); // Save sessionId to state
+        apiClient.setSessionId(newSessionId); // Update API client
       }
     } catch (err) {
       setError(
@@ -217,6 +218,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       // CRITICAL: Always clear local state, even if API call fails
       // This ensures users can always log out from the frontend
       localStorage.removeItem("sessionId");
+      apiClient.setSessionId(null); // Clear API client
       setUser(null);
       setSessionId(null);
       setIsLoading(false);

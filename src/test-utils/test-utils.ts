@@ -5,10 +5,12 @@
  * Provides a centralized place for test helpers and custom render functions.
  */
 
+import type { RenderOptions } from "@testing-library/react";
 import { render as rtlRender, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import type { RenderOptions } from "@testing-library/react";
 import type { ReactElement } from "react";
+import { createElement } from "react";
+import { MemoryRouter } from "react-router-dom";
 
 /**
  * Custom render function that wraps components with providers if needed.
@@ -19,9 +21,9 @@ import type { ReactElement } from "react";
  * @returns Render result with additional utilities
  */
 export function render(ui: ReactElement<any>, options?: RenderOptions) {
-  return rtlRender(ui, options);
+  return rtlRender(createElement(MemoryRouter, null, ui), options);
 }
 
 // Re-export everything from React Testing Library
-export { screen, waitFor, userEvent };
 export * from "@testing-library/react";
+export { screen, userEvent, waitFor };

@@ -188,5 +188,10 @@
 
   // Minimal SonarLint - disable analysis on save for performance
   "sonarlint.disableTelemetry": true,
-  "sonarlint.output.showVerboseLogs": false
+  "sonarlint.output.showVerboseLogs": false,
+  "chat.mcp.serverSampling": {
+    "Justice Companion/.vscode/mcp.json: MCP_DOCKER": {
+      "allowedModels": ["copilot/auto"]
+    }
+  }
 }

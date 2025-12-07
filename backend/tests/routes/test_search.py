@@ -315,8 +315,8 @@ def test_rebuild_index(client, test_db, auth_headers):
     """Test rebuilding search index for user."""
     # Insert test user and case
     test_db.execute(text("""
-        INSERT INTO users (id, username, password_hash)
-        VALUES (1, 'testuser', 'hash')
+        INSERT INTO users (id, username, email, password_hash, password_salt, role, is_active)
+        VALUES (1, 'testuser', 'test@example.com', 'hash', 'salt', 'user', 1)
     """))
     test_db.execute(text("""
         INSERT INTO cases (id, user_id, title, description, status, case_type, created_at)
@@ -532,8 +532,8 @@ def test_full_search_workflow(client, test_db, auth_headers):
     """Test complete search workflow: index -> search -> save -> execute."""
     # 1. Insert test data
     test_db.execute(text("""
-        INSERT INTO users (id, username, password_hash)
-        VALUES (1, 'testuser', 'hash')
+        INSERT INTO users (id, username, email, password_hash, password_salt, role, is_active)
+        VALUES (1, 'testuser', 'test@example.com', 'hash', 'salt', 'user', 1)
     """))
     test_db.execute(text("""
         INSERT INTO cases (id, user_id, title, description, status, case_type, created_at)

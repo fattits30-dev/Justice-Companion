@@ -1,20 +1,22 @@
-import { logger } from "../../utils/logger.ts";
+import { logger } from "../../lib/logger.ts";
 
-import { useState, useEffect, useMemo, useCallback } from "react";
-import { Plus, Calendar, FileSearch } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
-import { useAuth } from "../../contexts/AuthContext.tsx";
+import { AnimatePresence, motion } from "framer-motion";
+import { Calendar, FileSearch, Plus } from "lucide-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Button } from "../../components/ui/Button.tsx";
-import { TimelineItem } from "./components/TimelineItem.tsx";
-import { TimelineEmpty } from "./components/TimelineEmpty.tsx";
-import { AddDeadlineDialog } from "./components/AddDeadlineDialog.tsx";
-import { ExtractDatesDialog } from "./components/ExtractDatesDialog.tsx";
-import { apiClient } from "../../lib/apiClient.ts";
+import { VirtualizedList } from "../../components/virtualization/VirtualizedList.tsx";
+import { useAuth } from "../../contexts/AuthContext.tsx";
 import type {
-  DeadlineWithCase,
   CreateDeadlineInput,
+  DeadlineWithCase,
   UpdateDeadlineInput,
 } from "../../domains/timeline/entities/Deadline.ts";
+import { useWindowSize } from "../../hooks/useWindowSize.ts";
+import { apiClient } from "../../lib/apiClient.ts";
+import { AddDeadlineDialog } from "./components/AddDeadlineDialog.tsx";
+import { ExtractDatesDialog } from "./components/ExtractDatesDialog.tsx";
+import { TimelineEmpty } from "./components/TimelineEmpty.tsx";
+import { TimelineItem } from "./components/TimelineItem.tsx";
 
 interface Case {
   id: number;
@@ -24,6 +26,7 @@ interface Case {
 
 export function TimelineView() {
   const { sessionId, isLoading: authLoading } = useAuth();
+  const { height: windowHeight } = useWindowSize();
   const [deadlines, setDeadlines] = useState<DeadlineWithCase[]>([]);
   const [cases, setCases] = useState<Case[]>([]);
   const [selectedCaseId, setSelectedCaseId] = useState<number | null>(null);
@@ -91,7 +94,7 @@ export function TimelineView() {
             caseTitle: caseData?.title || "Unknown Case",
             caseStatus: caseData?.status || "active",
           };
-        },
+        }
       );
 
       setDeadlines(deadlinesWithCase);
@@ -128,6 +131,16 @@ export function TimelineView() {
     return filtered;
   }, [deadlines, selectedCaseId]);
 
+  const shouldVirtualizeTimeline = filteredDeadlines.length > 15;
+
+  const timelineListHeight = useMemo(() => {
+    if (!windowHeight) {
+      return 840;
+    }
+    const availableHeight = windowHeight - 360;
+    return Math.min(900, Math.max(420, availableHeight));
+  }, [windowHeight]);
+
   // Handlers - all wrapped in useCallback to preserve memo benefits
   const handleAddDeadline = useCallback(
     async (input: CreateDeadlineInput) => {
@@ -157,7 +170,7 @@ export function TimelineView() {
         };
       }
     },
-    [sessionId, loadData],
+    [sessionId, loadData]
   );
 
   // Handler for adding deadlines from extracted dates
@@ -185,7 +198,7 @@ export function TimelineView() {
         });
       }
     },
-    [sessionId, selectedCaseId, loadData],
+    [sessionId, selectedCaseId, loadData]
   );
 
   const handleEditDeadline = useCallback((deadline: DeadlineWithCase) => {
@@ -211,7 +224,7 @@ export function TimelineView() {
         };
         const result = await apiClient.deadlines.update(
           editingDeadline.id,
-          apiInput,
+          apiInput
         );
 
         if (result.success) {
@@ -233,7 +246,7 @@ export function TimelineView() {
         };
       }
     },
-    [editingDeadline, sessionId, loadData],
+    [editingDeadline, sessionId, loadData]
   );
 
   const handleCompleteDeadline = useCallback(
@@ -261,7 +274,7 @@ export function TimelineView() {
         });
       }
     },
-    [sessionId, loadData],
+    [sessionId, loadData]
   );
 
   const handleDeleteDeadline = useCallback((deadline: DeadlineWithCase) => {
@@ -296,6 +309,24 @@ export function TimelineView() {
     // Navigate to case detail view using existing routing
     window.location.href = `/cases/${caseId}`;
   }, []);
+
+  const renderTimelineItem = useCallback(
+    (deadline: DeadlineWithCase) => (
+      <TimelineItem
+        deadline={deadline}
+        onEdit={handleEditDeadline}
+        onComplete={handleCompleteDeadline}
+        onDelete={handleDeleteDeadline}
+        onCaseClick={handleCaseClick}
+      />
+    ),
+    [
+      handleCaseClick,
+      handleCompleteDeadline,
+      handleDeleteDeadline,
+      handleEditDeadline,
+    ]
+  );
 
   // Get userId from first deadline or default to 1
   const userId = deadlines[0]?.userId || 1;
@@ -345,7 +376,7 @@ export function TimelineView() {
                 value={selectedCaseId || ""}
                 onChange={(e) =>
                   setSelectedCaseId(
-                    e.target.value ? Number.parseInt(e.target.value, 10) : null,
+                    e.target.value ? Number.parseInt(e.target.value, 10) : null
                   )
                 }
                 className="
@@ -393,6 +424,17 @@ export function TimelineView() {
         <div className="max-w-4xl mx-auto px-6 py-8">
           {filteredDeadlines.length === 0 ? (
             <TimelineEmpty onAddClick={() => setIsAddDialogOpen(true)} />
+          ) : shouldVirtualizeTimeline ? (
+            <VirtualizedList
+              items={filteredDeadlines}
+              renderItem={renderTimelineItem}
+              itemKey={(deadline) => deadline.id}
+              className="space-y-0 w-full"
+              estimatedItemHeight={260}
+              minHeight={420}
+              maxHeight={timelineListHeight}
+              virtualizationThreshold={16}
+            />
           ) : (
             <motion.div layout className="space-y-0">
               <AnimatePresence>

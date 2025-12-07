@@ -372,19 +372,52 @@ class DocumentParserService:
         try:
             # Use BytesIO to read from buffer
             from io import BytesIO
+            from concurrent.futures import ThreadPoolExecutor, as_completed
 
             pdf_file = BytesIO(buffer)
 
             # Parse PDF
             reader = pypdf.PdfReader(pdf_file)
+            page_count = len(reader.pages)
 
-            # Extract text from all pages
-            text_parts = []
-            for page in reader.pages:
-                text_parts.append(page.extract_text())
+            # Extract text from all pages (parallel for multi-page docs)
+            if page_count <= 3:
+                # Sequential for small PDFs (overhead not worth it)
+                text_parts = [page.extract_text() for page in reader.pages]
+            else:
+                # Parallel extraction for larger PDFs
+                logger.debug(f"Extracting {page_count} pages in parallel")
+
+                def extract_page_text(page_num: int) -> tuple:
+                    """Extract text from a single page."""
+                    return (page_num, reader.pages[page_num].extract_text())
+
+                # Process pages in parallel
+                page_results = []
+                with ThreadPoolExecutor() as executor:
+                    future_to_page = {
+                        executor.submit(extract_page_text, i): i
+                        for i in range(page_count)
+                    }
+
+                    for future in as_completed(future_to_page):
+                        try:
+                            page_num, text = future.result()
+                            page_results.append((page_num, text))
+                        except Exception as exc:
+                            page_num = future_to_page[future]
+                            logger.warning(
+                                f"Page {page_num} extraction failed: {exc}, using empty string"
+                            )
+                            page_results.append((page_num, ""))
+
+                # Sort by page number and extract text
+                page_results.sort(key=lambda x: x[0])
+                text_parts = [text for _, text in page_results]
+
+                logger.debug(f"Parallel extraction complete: {page_count} pages")
 
             text = "\n".join(text_parts)
-            page_count = len(reader.pages)
 
             # Extract metadata
             metadata_dict: Dict[str, Any] = {}

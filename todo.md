@@ -1,0 +1,4 @@
+- [ ] Explore codebase to understand app functionality
+- [ ] Determine required MCPs based on app features
+- [ ] Read current cline_mcp_settings.js file
+- [ ] Add recommended MCPs to settings file

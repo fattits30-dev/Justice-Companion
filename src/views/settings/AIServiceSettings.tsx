@@ -98,8 +98,8 @@ export function AIServiceSettingsTab() {
   const checkAIHealth = async () => {
     setIsChecking(true);
     try {
-      // Call ai-service directly for health check
-      const response = await fetch("http://localhost:8001/health");
+      // Call backend API for health check (port 8000, not 8001)
+      const response = await fetch("http://localhost:8000/health");
       if (response.ok) {
         const data = await response.json();
         setAiHealth(data);

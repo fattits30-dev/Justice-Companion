@@ -47,6 +47,7 @@ from sqlalchemy.orm import Session
 from backend.models.ai_provider_config import AIProviderConfig
 from backend.services.security.encryption import EncryptionService
 
+
 class AIProviderType(str, Enum):
     """Supported AI provider types."""
 
@@ -62,6 +63,7 @@ class AIProviderType(str, Enum):
     PERPLEXITY = "perplexity"
     EMBERTON = "emberton"
 
+
 class AIProviderMetadata(BaseModel):
     """Provider metadata information."""
 
@@ -71,6 +73,7 @@ class AIProviderMetadata(BaseModel):
     default_model: str
     max_context_tokens: int
     available_models: List[str]
+
 
 class AIProviderConfigInput(BaseModel):
     """Input model for creating/updating AI provider configuration."""
@@ -102,6 +105,7 @@ class AIProviderConfigInput(BaseModel):
             raise ValueError("Model name cannot be empty")
         return v.strip()
 
+
 class AIProviderConfigOutput(BaseModel):
     """Output model for AI provider configuration (with decrypted API key)."""
 
@@ -119,8 +123,8 @@ class AIProviderConfigOutput(BaseModel):
     created_at: datetime
     updated_at: datetime
 
-    class Config:
-        orm_mode = True
+    model_config = {"from_attributes": True}
+
 
 class AIProviderConfigSummary(BaseModel):
     """Summary model for AI provider configuration (without API key)."""
@@ -138,8 +142,8 @@ class AIProviderConfigSummary(BaseModel):
     created_at: datetime
     updated_at: datetime
 
-    class Config:
-        orm_mode = True
+    model_config = {"from_attributes": True}
+
 
 class ValidationResult(BaseModel):
     """Result of configuration validation."""
@@ -147,11 +151,13 @@ class ValidationResult(BaseModel):
     valid: bool
     errors: List[str]
 
+
 class TestResult(BaseModel):
     """Result of provider connection test."""
 
     success: bool
     error: Optional[str] = None
+
 
 # Provider metadata dictionary (matching TypeScript AI_PROVIDER_METADATA)
 AI_PROVIDER_METADATA: Dict[AIProviderType, AIProviderMetadata] = {
@@ -316,6 +322,7 @@ AI_PROVIDER_METADATA: Dict[AIProviderType, AIProviderMetadata] = {
         ],
     ),
 }
+
 
 class AIProviderConfigService:
     """
@@ -939,9 +946,37 @@ class AIProviderConfigService:
             if not config:
                 return TestResult(success=False, error="Provider not configured")
 
-            # TODO: Implement actual provider test using UnifiedAIService
-            # For now, just verify configuration exists
-            return TestResult(success=True, error=None)
+            # Import SDK here to avoid circular imports
+            from backend.services.ai.sdk import (
+                AIClientConfig,
+                AIClientSDK,
+                ChatMessage,
+                MessageRole,
+            )
+
+            # Create SDK client with decrypted API key
+            decrypted_key = self.encryption_service.decrypt(config.api_key)
+            sdk_config = AIClientConfig(
+                provider=provider.value,
+                api_key=decrypted_key,
+                model=config.model,
+                max_tokens=50,  # Minimal tokens for test
+                temperature=0.1,
+            )
+            client = AIClientSDK(sdk_config)
+
+            # Send a simple test message
+            test_message = ChatMessage(
+                role=MessageRole.USER,
+                content="Hello, respond with just 'OK' to confirm connection.",
+            )
+            response = await client.chat([test_message])
+
+            # Check if we got a response
+            if response and len(response) > 0:
+                return TestResult(success=True, error=None)
+            else:
+                return TestResult(success=False, error="Empty response from provider")
 
         except Exception as exc:
             return TestResult(success=False, error=str(exc))

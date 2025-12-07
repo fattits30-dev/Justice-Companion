@@ -1,8 +1,12 @@
+import * as matchers from "@testing-library/jest-dom/matchers";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { AuthProvider } from "../../contexts/AuthContext";
 import { apiClient } from "../../lib/apiClient";
 import { render, screen, waitFor, within } from "../../test-utils/test-utils";
 import { TimelineView } from "./TimelineView";
+
+expect.extend(matchers);
 vi.mock("../../lib/apiClient.ts", () => ({
   apiClient: {
     auth: {
@@ -110,7 +114,7 @@ const createMutationResponse = (deadline = createMockDeadline()) => ({
 });
 const setDeadlinesResponse = (deadlines) => {
   vi.mocked(apiClient.deadlines.list).mockResolvedValue(
-    createDeadlinesResponse(deadlines),
+    createDeadlinesResponse(deadlines)
   );
 };
 const setDeadlinesError = (message) => {
@@ -125,6 +129,9 @@ const setDeadlinesError = (message) => {
 const setCasesResponse = (cases) => {
   vi.mocked(apiClient.cases.list).mockResolvedValue(createCasesResponse(cases));
 };
+
+const renderTimeline = () =>
+  render(<TimelineView />, { wrapper: AuthProvider });
 beforeEach(() => {
   vi.clearAllMocks();
   localStorage.setItem("sessionId", mockSessionId);
@@ -148,10 +155,10 @@ beforeEach(() => {
   setDeadlinesResponse([]);
   setCasesResponse([]);
   vi.mocked(apiClient.deadlines.create).mockResolvedValue(
-    createMutationResponse(),
+    createMutationResponse()
   );
   vi.mocked(apiClient.deadlines.update).mockResolvedValue(
-    createMutationResponse(),
+    createMutationResponse()
   );
   vi.mocked(apiClient.deadlines.delete).mockResolvedValue({
     success: true,
@@ -163,29 +170,29 @@ describe("TimelineView", () => {
     it("should render timeline header with title and actions", async () => {
       setDeadlinesResponse([]);
       setCasesResponse([]);
-      render(<TimelineView />);
+      renderTimeline();
       // Wait for async auth + data loading to complete
       await waitFor(() => {
         expect(screen.getByText("Timeline Tracker")).toBeInTheDocument();
       });
       expect(
-        screen.getByRole("button", { name: /add deadline/i }),
+        screen.getByRole("button", { name: /add deadline/i })
       ).toBeInTheDocument();
     });
     it("should render empty state when no deadlines exist", async () => {
       setDeadlinesResponse([]);
       setCasesResponse([]);
-      render(<TimelineView />);
+      renderTimeline();
       await waitFor(() => {
         expect(screen.getByText(/no deadlines yet/i)).toBeInTheDocument();
       });
     });
     it("should render loading state initially", async () => {
       vi.mocked(apiClient.deadlines.list).mockReturnValue(
-        new Promise(() => {}),
+        new Promise(() => {})
       ); // Never resolves
       setCasesResponse([]);
-      render(<TimelineView />);
+      renderTimeline();
       // Wait for AuthContext to load first
       await waitFor(() => {
         expect(screen.getByText(/loading/i)).toBeInTheDocument();
@@ -194,10 +201,10 @@ describe("TimelineView", () => {
     it("should render error state when API fails", async () => {
       setDeadlinesError("Failed to fetch deadlines");
       setCasesResponse([]);
-      render(<TimelineView />);
+      renderTimeline();
       await waitFor(() => {
         expect(
-          screen.getByText(/failed to fetch deadlines/i),
+          screen.getByText(/failed to fetch deadlines/i)
         ).toBeInTheDocument();
       });
     });
@@ -223,7 +230,7 @@ describe("TimelineView", () => {
       ];
       setDeadlinesResponse(deadlines);
       setCasesResponse([]);
-      render(<TimelineView />);
+      renderTimeline();
       await waitFor(() => {
         expect(screen.getByText("Submit ET1 Form")).toBeInTheDocument();
         expect(screen.getByText("Gather Evidence")).toBeInTheDocument();
@@ -250,7 +257,7 @@ describe("TimelineView", () => {
       ];
       setDeadlinesResponse(deadlines);
       setCasesResponse([]);
-      render(<TimelineView />);
+      renderTimeline();
       await waitFor(() => {
         const items = screen.getAllByTestId(/^timeline-item-/);
         expect(items).toHaveLength(3);
@@ -273,14 +280,14 @@ describe("TimelineView", () => {
       });
       setDeadlinesResponse([deadline]);
       setCasesResponse([mockCase]);
-      render(<TimelineView />);
+      renderTimeline();
       // Wait for both deadline title and case title
       await waitFor(() => {
         expect(screen.getByText("Submit ET1 Form")).toBeInTheDocument();
         // Find the timeline item and check for case title within it
         const timelineItem = screen.getByTestId("timeline-item-1");
         expect(
-          within(timelineItem).getByText("Unfair Dismissal Case"),
+          within(timelineItem).getByText("Unfair Dismissal Case")
         ).toBeInTheDocument();
       });
     });
@@ -300,7 +307,7 @@ describe("TimelineView", () => {
       });
       setDeadlinesResponse([deadline]);
       setCasesResponse([]);
-      render(<TimelineView />);
+      renderTimeline();
       await waitFor(() => {
         const item = screen.getByTestId("timeline-item-1");
         expect(item).toHaveAttribute("data-urgency", "overdue");
@@ -313,7 +320,7 @@ describe("TimelineView", () => {
       });
       setDeadlinesResponse([deadline]);
       setCasesResponse([]);
-      render(<TimelineView />);
+      renderTimeline();
       await waitFor(() => {
         const item = screen.getByTestId("timeline-item-1");
         expect(item).toHaveAttribute("data-urgency", "urgent");
@@ -326,7 +333,7 @@ describe("TimelineView", () => {
       });
       setDeadlinesResponse([deadline]);
       setCasesResponse([]);
-      render(<TimelineView />);
+      renderTimeline();
       await waitFor(() => {
         const item = screen.getByTestId("timeline-item-1");
         expect(item).toHaveAttribute("data-urgency", "future");
@@ -340,7 +347,7 @@ describe("TimelineView", () => {
       });
       setDeadlinesResponse([deadline]);
       setCasesResponse([]);
-      render(<TimelineView />);
+      renderTimeline();
       await waitFor(() => {
         const item = screen.getByTestId("timeline-item-1");
         expect(item).toHaveAttribute("data-urgency", "completed");
@@ -352,11 +359,11 @@ describe("TimelineView", () => {
       setDeadlinesResponse([]);
       setCasesResponse([]);
       const user = userEvent.setup();
-      render(<TimelineView />);
+      renderTimeline();
       // Wait for component to load before clicking button
       await waitFor(() => {
         expect(
-          screen.getByRole("button", { name: /add deadline/i }),
+          screen.getByRole("button", { name: /add deadline/i })
         ).toBeInTheDocument();
       });
       const addButton = screen.getByRole("button", { name: /add deadline/i });
@@ -370,14 +377,14 @@ describe("TimelineView", () => {
         createMockCase({ id: 1, title: "Test Case", status: "active" }),
       ]);
       vi.mocked(apiClient.deadlines.create).mockResolvedValue(
-        createMutationResponse(),
+        createMutationResponse()
       );
       const user = userEvent.setup();
-      render(<TimelineView />);
+      renderTimeline();
       // Wait for component to load before clicking button
       await waitFor(() => {
         expect(
-          screen.getByRole("button", { name: /add deadline/i }),
+          screen.getByRole("button", { name: /add deadline/i })
         ).toBeInTheDocument();
       });
       // Open dialog
@@ -404,17 +411,17 @@ describe("TimelineView", () => {
         () => {
           // If API was called, dialog should close
           expect(vi.mocked(apiClient.deadlines.create)).toHaveBeenCalledTimes(
-            1,
+            1
           );
         },
-        { timeout: 3000 },
+        { timeout: 3000 }
       );
       expect(vi.mocked(apiClient.deadlines.create)).toHaveBeenCalledWith(
         expect.objectContaining({
           title: "New Deadline",
           deadlineDate: "2026-03-15",
           caseId: 1,
-        }),
+        })
       );
     });
   });
@@ -424,7 +431,7 @@ describe("TimelineView", () => {
       setDeadlinesResponse([deadline]);
       setCasesResponse([]);
       const user = userEvent.setup();
-      render(<TimelineView />);
+      renderTimeline();
       await waitFor(() => {
         expect(screen.getByText("Submit ET1 Form")).toBeInTheDocument();
       });
@@ -446,10 +453,10 @@ describe("TimelineView", () => {
       setDeadlinesResponse([deadline]);
       setCasesResponse([]);
       vi.mocked(apiClient.deadlines.update).mockResolvedValue(
-        createMutationResponse({ ...deadline, title: "Updated Title" }),
+        createMutationResponse({ ...deadline, title: "Updated Title" })
       );
       const user = userEvent.setup();
-      render(<TimelineView />);
+      renderTimeline();
       await waitFor(() => {
         expect(screen.getByText("Old Title")).toBeInTheDocument();
       });
@@ -468,7 +475,7 @@ describe("TimelineView", () => {
           1,
           expect.objectContaining({
             title: "Updated Title",
-          }),
+          })
         );
       });
     });
@@ -479,10 +486,10 @@ describe("TimelineView", () => {
       setDeadlinesResponse([deadline]);
       setCasesResponse([]);
       vi.mocked(apiClient.deadlines.update).mockResolvedValue(
-        createMutationResponse({ ...deadline, status: "completed" }),
+        createMutationResponse({ ...deadline, status: "completed" })
       );
       const user = userEvent.setup();
-      render(<TimelineView />);
+      renderTimeline();
       await waitFor(() => {
         expect(screen.getByText("Submit ET1 Form")).toBeInTheDocument();
       });
@@ -499,10 +506,10 @@ describe("TimelineView", () => {
       setDeadlinesResponse([deadline]);
       setCasesResponse([]);
       vi.mocked(apiClient.deadlines.update).mockResolvedValue(
-        createMutationResponse({ ...deadline, status: "upcoming" }),
+        createMutationResponse({ ...deadline, status: "upcoming" })
       );
       const user = userEvent.setup();
-      render(<TimelineView />);
+      renderTimeline();
       await waitFor(() => {
         expect(screen.getByText("Submit ET1 Form")).toBeInTheDocument();
       });
@@ -523,7 +530,7 @@ describe("TimelineView", () => {
       setDeadlinesResponse([deadline]);
       setCasesResponse([]);
       const user = userEvent.setup();
-      render(<TimelineView />);
+      renderTimeline();
       await waitFor(() => {
         expect(screen.getByText("Submit ET1 Form")).toBeInTheDocument();
       });
@@ -540,7 +547,7 @@ describe("TimelineView", () => {
         data: undefined,
       });
       const user = userEvent.setup();
-      render(<TimelineView />);
+      renderTimeline();
       await waitFor(() => {
         expect(screen.getByText("Submit ET1 Form")).toBeInTheDocument();
       });
@@ -562,7 +569,7 @@ describe("TimelineView", () => {
       setDeadlinesResponse([]);
       setCasesResponse(cases);
       const user = userEvent.setup();
-      render(<TimelineView />);
+      renderTimeline();
       await waitFor(() => {
         expect(screen.getByRole("combobox")).toBeInTheDocument();
       });
@@ -594,7 +601,7 @@ describe("TimelineView", () => {
       setDeadlinesResponse(deadlines);
       setCasesResponse(cases);
       const user = userEvent.setup();
-      render(<TimelineView />);
+      renderTimeline();
       await waitFor(() => {
         expect(screen.getByText("Deadline 1")).toBeInTheDocument();
         expect(screen.getByText("Deadline 2")).toBeInTheDocument();
@@ -615,7 +622,7 @@ describe("TimelineView", () => {
       ];
       setDeadlinesResponse(deadlines);
       setCasesResponse([]);
-      render(<TimelineView />);
+      renderTimeline();
       await waitFor(() => {
         expect(screen.getByText("Deadline 1")).toBeInTheDocument();
         expect(screen.getByText("Deadline 2")).toBeInTheDocument();
@@ -630,7 +637,7 @@ describe("TimelineView", () => {
       const deadline = createMockDeadline({ priority: "high" });
       setDeadlinesResponse([deadline]);
       setCasesResponse([]);
-      render(<TimelineView />);
+      renderTimeline();
       await waitFor(() => {
         expect(screen.getByText("High")).toBeInTheDocument();
       });
@@ -639,7 +646,7 @@ describe("TimelineView", () => {
       const deadline = createMockDeadline({ priority: "medium" });
       setDeadlinesResponse([deadline]);
       setCasesResponse([]);
-      render(<TimelineView />);
+      renderTimeline();
       await waitFor(() => {
         expect(screen.getByText("Medium")).toBeInTheDocument();
       });
@@ -648,7 +655,7 @@ describe("TimelineView", () => {
       const deadline = createMockDeadline({ priority: "low" });
       setDeadlinesResponse([deadline]);
       setCasesResponse([]);
-      render(<TimelineView />);
+      renderTimeline();
       await waitFor(() => {
         expect(screen.getByText("Low")).toBeInTheDocument();
       });
@@ -669,7 +676,7 @@ describe("TimelineView", () => {
       });
       setDeadlinesResponse([deadline]);
       setCasesResponse([]);
-      render(<TimelineView />);
+      renderTimeline();
       await waitFor(() => {
         expect(screen.getByText(/overdue by 4 days/i)).toBeInTheDocument();
       });
@@ -681,7 +688,7 @@ describe("TimelineView", () => {
       });
       setDeadlinesResponse([deadline]);
       setCasesResponse([]);
-      render(<TimelineView />);
+      renderTimeline();
       await waitFor(() => {
         expect(screen.getByText(/14 days away/i)).toBeInTheDocument();
       });
@@ -693,7 +700,7 @@ describe("TimelineView", () => {
       });
       setDeadlinesResponse([deadline]);
       setCasesResponse([]);
-      render(<TimelineView />);
+      renderTimeline();
       await waitFor(() => {
         expect(screen.getByText(/completed/i)).toBeInTheDocument();
       });
@@ -703,7 +710,7 @@ describe("TimelineView", () => {
     it("should have fixed header and scrollable content", async () => {
       setDeadlinesResponse([]);
       setCasesResponse([]);
-      const { container } = render(<TimelineView />);
+      const { container } = renderTimeline();
       // Wait for component to load
       await waitFor(() => {
         expect(screen.getByText("Timeline Tracker")).toBeInTheDocument();

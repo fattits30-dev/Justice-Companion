@@ -1,4 +1,4 @@
-import { AnimatePresence, motion } from "framer-motion";
+
 import {
   AlertTriangle,
   Bell,
@@ -125,15 +125,6 @@ export function SettingsView() {
                     <span className="font-medium whitespace-nowrap">
                       {tab.label}
                     </span>
-                    <motion.div
-                      layoutId="activeTab"
-                      className="absolute inset-0 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg -z-10"
-                      transition={{
-                        type: "spring",
-                        bounce: 0.2,
-                        duration: 0.6,
-                      }}
-                    />
                   </button>
                 );
               }
@@ -172,35 +163,89 @@ export function SettingsView() {
       {/* Tab Content */}
       <div className="flex-1 overflow-y-auto">
         <div className="px-8 py-6 flex justify-center">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={activeTab}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.3 }}
+          {activeTab === "profile" && (
+            <div
               role="tabpanel"
-              id={`${activeTab}-panel`}
-              aria-labelledby={`${activeTab}-tab`}
+              id="profile-panel"
+              aria-labelledby="profile-tab"
               className="w-full max-w-6xl"
             >
-              {activeTab === "profile" && <ProfileSettingsTab />}
-              {activeTab === "ai-provider" && <AIServiceSettingsTab />}
-              {activeTab === "appearance" && (
-                <AppearanceTab theme={theme} setTheme={setTheme} />
-              )}
-              {activeTab === "privacy" && <PrivacyTab />}
-              {activeTab === "backup" && <BackupSettingsTab />}
-              {activeTab === "data" && <DataManagementTab />}
-              {activeTab === "notifications" && (
-                <NotificationsTab
-                  enabled={notificationsEnabled}
-                  setEnabled={setNotificationsEnabled}
-                />
-              )}
-              {activeTab === "about" && <AboutTab />}
-            </motion.div>
-          </AnimatePresence>
+              <ProfileSettingsTab />
+            </div>
+          )}
+          {activeTab === "ai-provider" && (
+            <div
+              role="tabpanel"
+              id="ai-provider-panel"
+              aria-labelledby="ai-provider-tab"
+              className="w-full max-w-6xl"
+            >
+              <AIServiceSettingsTab />
+            </div>
+          )}
+          {activeTab === "appearance" && (
+            <div
+              role="tabpanel"
+              id="appearance-panel"
+              aria-labelledby="appearance-tab"
+              className="w-full max-w-6xl"
+            >
+              <AppearanceTab theme={theme} setTheme={setTheme} />
+            </div>
+          )}
+          {activeTab === "privacy" && (
+            <div
+              role="tabpanel"
+              id="privacy-panel"
+              aria-labelledby="privacy-tab"
+              className="w-full max-w-6xl"
+            >
+              <PrivacyTab />
+            </div>
+          )}
+          {activeTab === "backup" && (
+            <div
+              role="tabpanel"
+              id="backup-panel"
+              aria-labelledby="backup-tab"
+              className="w-full max-w-6xl"
+            >
+              <BackupSettingsTab />
+            </div>
+          )}
+          {activeTab === "data" && (
+            <div
+              role="tabpanel"
+              id="data-panel"
+              aria-labelledby="data-tab"
+              className="w-full max-w-6xl"
+            >
+              <DataManagementTab />
+            </div>
+          )}
+          {activeTab === "notifications" && (
+            <div
+              role="tabpanel"
+              id="notifications-panel"
+              aria-labelledby="notifications-tab"
+              className="w-full max-w-6xl"
+            >
+              <NotificationsTab
+                enabled={notificationsEnabled}
+                setEnabled={setNotificationsEnabled}
+              />
+            </div>
+          )}
+          {activeTab === "about" && (
+            <div
+              role="tabpanel"
+              id="about-panel"
+              aria-labelledby="about-tab"
+              className="w-full max-w-6xl"
+            >
+              <AboutTab />
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -689,12 +734,7 @@ function NotificationsTab({
 
           {/* Notification Types */}
           {enabled && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              className="space-y-4"
-            >
+            <div className="space-y-4">
               <h4 className="text-white font-medium">Notification Types</h4>
 
               <label className="flex items-center gap-3 cursor-pointer group">
@@ -762,7 +802,7 @@ function NotificationsTab({
                   </div>
                 </div>
               </label>
-            </motion.div>
+            </div>
           )}
 
           <Button className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white">

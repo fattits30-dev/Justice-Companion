@@ -25,11 +25,11 @@ from datetime import datetime
 
 from backend.routes.ai_config import (
     router,
-    get_auth_service,
     get_encryption_service,
     get_audit_logger,
     get_config_service
 )
+from backend.dependencies import get_auth_service
 from backend.services.ai.providers import (
     AIProviderConfigService,
     AIProviderType,
@@ -58,7 +58,7 @@ def mock_auth_service():
     mock_user = Mock()
     mock_user.id = 1
     mock_user.username = "testuser"
-    service.validate_session.return_value = mock_user
+    service.validate_session = AsyncMock(return_value=mock_user)
 
     return service
 
@@ -239,11 +239,17 @@ def valid_session_id():
 def client(mock_db, mock_auth_service, mock_encryption_service, mock_audit_logger, mock_config_service):
     """Test client with mocked dependencies."""
     from fastapi import FastAPI
+    from backend.dependencies import get_current_user_id
 
     app = FastAPI()
     app.include_router(router)
 
+    # Mock get_current_user_id to return test user ID without authentication
+    async def mock_get_current_user_id():
+        return 1
+
     # Override dependencies
+    app.dependency_overrides[get_current_user_id] = mock_get_current_user_id
     app.dependency_overrides[get_auth_service] = lambda: mock_auth_service
     app.dependency_overrides[get_encryption_service] = lambda: mock_encryption_service
     app.dependency_overrides[get_audit_logger] = lambda: mock_audit_logger

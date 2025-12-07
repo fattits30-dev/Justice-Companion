@@ -35,14 +35,35 @@ from sqlalchemy.orm import Session
 
 from backend.models.base import get_db
 from backend.routes.auth import get_current_user, get_session_manager
+
+# Import schemas from consolidated schema file
+from backend.schemas.case import (
+    VALID_CASE_STATUSES,
+    VALID_CASE_TYPES,
+    VALID_FACT_CATEGORIES,
+    VALID_IMPORTANCE_LEVELS,
+    BulkArchiveRequest,
+    BulkDeleteRequest,
+    BulkUpdateRequest,
+    CaseFactResponse,
+    CaseListResponse,
+    CreateCaseFactRequest,
+    CreateCaseRequest,
+    DeleteCaseResponse,
+    LegacyCaseResponse,
+    PaginationMetadata,
+    UpdateCaseRequest,
+)
 from backend.services.audit_logger import AuditLogger
 from backend.services.auth.service import AuthenticationService
+from backend.services.auth.session_manager import SessionManager
 from backend.services.bulk_operation_service import (
     BulkOperationOptions,
     BulkOperationResult,
     BulkOperationService,
     CaseUpdate,
 )
+from backend.services.case_fact_service import CaseFactService
 from backend.services.case_service import (
     CaseNotFoundError,
     CaseResponse,
@@ -54,26 +75,6 @@ from backend.services.case_service import (
     UpdateCaseInput,
 )
 from backend.services.security.encryption import EncryptionService
-from backend.services.auth.session_manager import SessionManager
-
-# Import schemas from consolidated schema file
-from backend.schemas.case import (
-    CreateCaseRequest,
-    UpdateCaseRequest,
-    CreateCaseFactRequest,
-    BulkDeleteRequest,
-    BulkUpdateRequest,
-    BulkArchiveRequest,
-    LegacyCaseResponse,
-    CaseFactResponse,
-    DeleteCaseResponse,
-    PaginationMetadata,
-    CaseListResponse,
-    VALID_CASE_TYPES,
-    VALID_CASE_STATUSES,
-    VALID_FACT_CATEGORIES,
-    VALID_IMPORTANCE_LEVELS,
-)
 
 router = APIRouter(prefix="/cases", tags=["cases"])
 
@@ -85,20 +86,14 @@ def get_auth_service(db: Session = Depends(get_db)) -> AuthenticationService:
 
 
 def get_encryption_service() -> EncryptionService:
-    """
-    Get encryption service instance with encryption key.
-
-    Priority:
-    1. ENCRYPTION_KEY_BASE64 environment variable
-    2. Generate temporary key (WARNING: data will be lost on restart)
-    """
+    """Get encryption service instance with encryption key."""
     key_base64 = os.getenv("ENCRYPTION_KEY_BASE64")
 
     if not key_base64:
-        # WARNING: Generating temporary key - data will be lost on restart
-        key = EncryptionService.generate_key()
-        key_base64 = base64.b64encode(key).decode("utf-8")
-        print("WARNING: No ENCRYPTION_KEY_BASE64 found. Using temporary key.")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="ENCRYPTION_KEY_BASE64 environment variable is required. Server misconfigured.",
+        )
 
     return EncryptionService(key_base64)
 
@@ -183,6 +178,40 @@ async def resolve_bulk_operation_service(
     kwargs: Dict[str, Any] = {}
     if "db" in params:
         kwargs["db"] = db
+    if "audit_logger" in params:
+        kwargs["audit_logger"] = audit_logger
+
+    result = dependency(**kwargs)
+    if inspect.isawaitable(result):
+        return await result  # type: ignore[return-value]
+    return result  # type: ignore[return-value]
+
+
+def get_case_fact_service(
+    db: Session = Depends(get_db),
+    encryption_service: EncryptionService = Depends(get_encryption_service),
+    audit_logger: AuditLogger = Depends(get_audit_logger),
+) -> CaseFactService:
+    """Get case fact service instance with dependencies."""
+    return CaseFactService(
+        db=db, encryption_service=encryption_service, audit_logger=audit_logger
+    )
+
+
+async def resolve_case_fact_service(
+    db: Session = Depends(get_db),
+    encryption_service: EncryptionService = Depends(get_encryption_service),
+    audit_logger: AuditLogger = Depends(get_audit_logger),
+) -> CaseFactService:
+    """Resolve CaseFactService while honoring patched get_case_fact_service in tests."""
+    dependency = get_case_fact_service
+    params = inspect.signature(dependency).parameters
+
+    kwargs: Dict[str, Any] = {}
+    if "db" in params:
+        kwargs["db"] = db
+    if "encryption_service" in params:
+        kwargs["encryption_service"] = encryption_service
     if "audit_logger" in params:
         kwargs["audit_logger"] = audit_logger
 
@@ -681,7 +710,7 @@ async def bulk_archive_cases(
         ) from exc
 
 
-# ===== CASE FACTS (Legacy endpoints - kept for backward compatibility) =====
+# ===== CASE FACTS (Migrated to CaseFactService) =====
 
 
 @router.post(
@@ -693,16 +722,12 @@ async def create_case_fact(
     case_id: int,
     request: CreateCaseFactRequest,
     user_id: int = Depends(resolve_current_user_id),
-    case_service: CaseService = Depends(resolve_case_service),
-    db: Session = Depends(get_db),
+    case_fact_service: CaseFactService = Depends(resolve_case_fact_service),
 ):
     """
     Create a fact associated with a case.
 
     Validates that the case belongs to the authenticated user before creating fact.
-
-    NOTE: This endpoint still uses raw SQL for case_facts table.
-    TODO: Migrate to CaseFactService when implemented.
 
     Example:
         POST /cases/123/facts
@@ -715,20 +740,6 @@ async def create_case_fact(
         }
     """
     try:
-        # Verify case exists and belongs to user (using service layer)
-        try:
-            await case_service.get_case_by_id(case_id, user_id)
-        except CaseNotFoundError as exc:
-            raise HTTPException(
-                status_code=404, detail="Case not found or unauthorized"
-            ) from exc
-        except HTTPException as e:
-            if e.status_code == 403:
-                raise HTTPException(
-                    status_code=404, detail="Case not found or unauthorized"
-                )
-            raise
-
         # Validate that request.caseId matches path parameter
         if request.caseId != case_id:
             raise HTTPException(
@@ -736,79 +747,29 @@ async def create_case_fact(
                 detail=f"Case ID mismatch: path has {case_id}, body has {request.caseId}",
             )
 
-        # Create case fact (raw SQL - TODO: migrate to service layer)
-        insert_query = text(
-            """
-            INSERT INTO case_facts (case_id, fact_content, fact_category, importance, created_at, updated_at)
-            VALUES (:case_id, :fact_content, :fact_category, :importance, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-        """
+        # Create fact via service layer (handles ownership verification)
+        fact_response = await case_fact_service.create_fact(
+            case_id=case_id,
+            fact_content=request.factContent,
+            fact_category=request.factCategory,
+            importance=request.importance,
+            user_id=user_id,
         )
 
-        db.execute(
-            insert_query,
-            {
-                "case_id": request.caseId,
-                "fact_content": request.factContent,
-                "fact_category": request.factCategory,
-                "importance": request.importance,
-            },
+        # Convert to API response format
+        return CaseFactResponse(
+            id=fact_response.id,
+            caseId=fact_response.caseId,
+            factContent=fact_response.factContent,
+            factCategory=fact_response.factCategory,
+            importance=fact_response.importance,
+            createdAt=fact_response.createdAt,
+            updatedAt=fact_response.updatedAt,
         )
-        db.commit()
-
-        # Get the last inserted ID in a more compatible way
-        fact_id_result = db.execute(text("SELECT last_insert_rowid()"))
-        fact_id = fact_id_result.scalar()
-
-        # Fetch created fact
-        select_query = text(
-            """
-            SELECT
-                id,
-                case_id as caseId,
-                fact_content as factContent,
-                fact_category as factCategory,
-                importance,
-                created_at as createdAt,
-                updated_at as updatedAt
-            FROM case_facts
-            WHERE id = :fact_id
-        """
-        )
-
-        created_fact = db.execute(select_query, {"fact_id": fact_id}).fetchone()
-
-        if created_fact is None:
-            raise HTTPException(status_code=500, detail="Failed to create case fact")
-
-        # Log audit event
-        from backend.services.audit_logger import log_audit_event
-
-        log_audit_event(
-            db=db,
-            event_type="case_fact.create",
-            user_id=str(user_id),
-            resource_type="case_fact",
-            resource_id=str(fact_id),
-            action="create",
-            details={"caseId": request.caseId, "category": request.factCategory},
-            success=True,
-        )
-
-        # Convert to dict
-        fact_dict = dict(created_fact._mapping)
-        fact_dict["createdAt"] = (
-            fact_dict["createdAt"].isoformat() if fact_dict.get("createdAt") else None
-        )
-        fact_dict["updatedAt"] = (
-            fact_dict["updatedAt"].isoformat() if fact_dict.get("updatedAt") else None
-        )
-
-        return fact_dict
 
     except HTTPException:
         raise
     except Exception as exc:
-        db.rollback()
         raise HTTPException(
             status_code=500, detail=f"Failed to create case fact: {str(exc)}"
         ) from exc
@@ -818,75 +779,37 @@ async def create_case_fact(
 async def list_case_facts(
     case_id: int,
     user_id: int = Depends(resolve_current_user_id),
-    case_service: CaseService = Depends(resolve_case_service),
-    db: Session = Depends(get_db),
+    case_fact_service: CaseFactService = Depends(resolve_case_fact_service),
 ):
     """
     List all facts for a specific case.
 
     Validates that the case belongs to the authenticated user.
 
-    NOTE: This endpoint still uses raw SQL for case_facts table.
-    TODO: Migrate to CaseFactService when implemented.
-
     Example:
         GET /cases/123/facts
         Authorization: Bearer <session_id>
     """
     try:
-        # Verify case exists and belongs to user (using service layer)
-        try:
-            await case_service.get_case_by_id(case_id, user_id)
-        except CaseNotFoundError as exc:
-            raise HTTPException(
-                status_code=404, detail="Case not found or unauthorized"
-            ) from exc
-        except HTTPException as e:
-            if e.status_code == 403:
-                raise HTTPException(
-                    status_code=404, detail="Case not found or unauthorized"
-                )
-            raise
-
-        # Get case facts (raw SQL - TODO: migrate to service layer)
-        facts_query = text(
-            """
-            SELECT
-                id,
-                case_id as caseId,
-                fact_content as factContent,
-                fact_category as factCategory,
-                importance,
-                created_at as createdAt,
-                updated_at as updatedAt
-            FROM case_facts
-            WHERE case_id = :case_id
-            ORDER BY created_at DESC
-        """
+        # Get case facts via service layer (handles ownership verification)
+        fact_responses = await case_fact_service.get_facts_by_case_id(
+            case_id=case_id,
+            user_id=user_id,
         )
 
-        facts = db.execute(facts_query, {"case_id": case_id}).fetchall()
-
-        # Convert to list of dicts
-        result = []
-        for fact in facts:
-            # Handle potential None values from fetchall() results
-            if fact is None:
-                continue
-            fact_dict = dict(fact._mapping)
-            fact_dict["createdAt"] = (
-                fact_dict["createdAt"].isoformat()
-                if fact_dict.get("createdAt")
-                else None
+        # Convert to API response format
+        return [
+            CaseFactResponse(
+                id=fact.id,
+                caseId=fact.caseId,
+                factContent=fact.factContent,
+                factCategory=fact.factCategory,
+                importance=fact.importance,
+                createdAt=fact.createdAt,
+                updatedAt=fact.updatedAt,
             )
-            fact_dict["updatedAt"] = (
-                fact_dict["updatedAt"].isoformat()
-                if fact_dict.get("updatedAt")
-                else None
-            )
-            result.append(fact_dict)
-
-        return result
+            for fact in fact_responses
+        ]
 
     except HTTPException:
         raise

@@ -6,6 +6,7 @@ from backend.models.ai_provider_config import AIProviderConfig
 from backend.models.backup import BackupSettings
 from backend.models.base import Base
 from backend.models.case import Case
+from backend.models.case_fact import CaseFact, FactCategory, FactImportance
 from backend.models.chat import Conversation, Message
 from backend.models.consent import Consent, ConsentType
 from backend.models.deadline import Deadline
@@ -23,6 +24,9 @@ __all__ = [
     "User",
     "Session",
     "Case",
+    "CaseFact",
+    "FactCategory",
+    "FactImportance",
     "Evidence",
     "Deadline",
     "Tag",

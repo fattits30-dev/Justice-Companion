@@ -12,7 +12,7 @@
  * - /settings - Settings (requires auth)
  */
 
-import { lazy, Suspense, useEffect, useState } from "react";
+import { lazy, Suspense } from "react";
 import {
   BrowserRouter,
   Navigate,
@@ -20,6 +20,8 @@ import {
   Routes,
   useNavigate,
 } from "react-router-dom";
+import { QueryClientProvider } from "@tanstack/react-query";
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { LoginScreen } from "./components/auth/LoginScreen.tsx";
 import { RegistrationScreen } from "./components/auth/RegistrationScreen.tsx";
 import { ForgotPasswordScreen } from "./components/auth/ForgotPasswordScreen.tsx";
@@ -30,9 +32,10 @@ import { InstallPrompt } from "./components/pwa/InstallPrompt.tsx";
 import { ToastProvider } from "./components/ui/index.ts";
 import { SkeletonCard } from "./components/ui/Skeleton.tsx";
 import { AuthProvider, useAuth } from "./contexts/AuthContext.tsx";
-import { apiClient } from "./lib/apiClient.ts";
+import { queryClient } from "./lib/queryClient.ts";
+import { useDashboardStats } from "./hooks/useDashboardStats.ts";
 import { routerFutureFlags } from "./router/futureFlags.ts";
-import { logger } from "./utils/logger.ts";
+import { logger } from "./lib/logger.ts";
 
 // Lazy load views for code splitting
 const Dashboard = lazy(() =>
@@ -120,99 +123,17 @@ function AuthRoute({ children }: { children: React.ReactNode }) {
 /**
  * DashboardWrapper - Fetches real dashboard stats and wires up navigation
  */
-interface DashboardStats {
-  totalCases: number;
-  activeCases: number;
-  totalEvidence: number;
-  recentActivity: number;
-  recentCases?: Array<{
-    id: string;
-    title: string;
-    status: "active" | "closed" | "pending";
-    lastUpdated: string;
-  }>;
-}
-
 function DashboardWrapper() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [dashboardStats, setDashboardStats] = useState<DashboardStats | null>(
-    null,
-  );
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { data: stats, isLoading, error } = useDashboardStats();
 
-  useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        setIsLoading(true);
-        setError(null);
-
-        // Get sessionId from localStorage (set by AuthContext)
-        const sessionId = localStorage.getItem("sessionId");
-
-        if (!sessionId) {
-          // No session - show empty dashboard
-          setDashboardStats({
-            totalCases: 0,
-            activeCases: 0,
-            totalEvidence: 0,
-            recentActivity: 0,
-            recentCases: [],
-          });
-          setIsLoading(false);
-          return;
-        }
-
-        // Fetch dashboard stats using HTTP REST API
-        apiClient.setSessionId(sessionId);
-        const response = await apiClient.dashboard.getStats();
-
-        // Debug logging
-        console.log("Dashboard response:", JSON.stringify(response, null, 2));
-
-        // Backend wraps responses in {success, data} format via middleware
-        // Response structure: {success: true, data: {totalCases, activeCases, ...}}
-        if (response.success && response.data) {
-          setDashboardStats({
-            totalCases: response.data.totalCases,
-            activeCases: response.data.activeCases,
-            totalEvidence: response.data.totalEvidence,
-            recentActivity:
-              response.data.overdueDeadlines +
-              response.data.unreadNotifications,
-            recentCases: [], // Will be fetched separately if needed
-          });
-        } else {
-          console.error("Invalid response format:", response);
-          throw new Error("Failed to load dashboard stats");
-        }
-      } catch (err) {
-        logger.error("Failed to fetch dashboard stats:", {
-          error: err as Error,
-        });
-        setError(err instanceof Error ? err.message : "An error occurred");
-        // Show empty dashboard on error
-        setDashboardStats({
-          totalCases: 0,
-          activeCases: 0,
-          totalEvidence: 0,
-          recentActivity: 0,
-          recentCases: [],
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchStats();
-  }, []);
   if (error) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-primary-900 p-8">
         <div className="text-center">
           <div className="p-4 text-red-300 bg-red-900/50 rounded-md border border-red-700">
-            {error}
+            {error instanceof Error ? error.message : 'Failed to load dashboard'}
           </div>
         </div>
       </div>
@@ -222,15 +143,13 @@ function DashboardWrapper() {
   return (
     <Dashboard
       username={user?.username || "User"}
-      stats={
-        dashboardStats || {
-          totalCases: 0,
-          activeCases: 0,
-          totalEvidence: 0,
-          recentActivity: 0,
-        }
-      }
-      recentCases={dashboardStats?.recentCases || []}
+      stats={{
+        totalCases: stats?.totalCases || 0,
+        activeCases: stats?.activeCases || 0,
+        totalEvidence: stats?.totalEvidence || 0,
+        recentActivity: (stats?.overdueDeadlines || 0) + (stats?.unreadNotifications || 0),
+      }}
+      recentCases={[]} // Will be fetched separately if needed
       isLoading={isLoading}
       onNewCase={() => navigate("/cases")}
       onUploadEvidence={() => navigate("/documents")}
@@ -410,13 +329,17 @@ function AppRoutes() {
 function App() {
   return (
     <ErrorBoundary>
-      <BrowserRouter future={routerFutureFlags}>
-        <AuthProvider>
-          <ToastProvider />
-          <InstallPrompt />
-          <AppRoutes />
-        </AuthProvider>
-      </BrowserRouter>
+      <QueryClientProvider client={queryClient}>
+        <BrowserRouter future={routerFutureFlags}>
+          <AuthProvider>
+            <ToastProvider />
+            <InstallPrompt />
+            <AppRoutes />
+          </AuthProvider>
+        </BrowserRouter>
+        {/* React Query Devtools (only in development) */}
+        <ReactQueryDevtools initialIsOpen={false} />
+      </QueryClientProvider>
     </ErrorBoundary>
   );
 }

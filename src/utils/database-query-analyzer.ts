@@ -5,7 +5,7 @@
  */
 
 import Database from "better-sqlite3";
-import { logger } from "./logger.ts";
+import { logger } from "../lib/logger.ts";
 
 interface QueryAnalysis {
   query: string;

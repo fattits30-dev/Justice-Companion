@@ -5,7 +5,10 @@ Run with: python -m backend.test_evidence
 
 import requests
 
+from backend.tests.utils.test_credentials import build_password
+
 BASE_URL = "http://127.0.0.1:8000"
+
 
 def test_evidence_flow():
     """Test the complete evidence workflow."""
@@ -17,8 +20,8 @@ def test_evidence_flow():
     print("\n1. Registering user...")
     register_data = {
         "username": "testuser_evidence",
-        "password": "TestPassword123!",
-        "email": "testevidence@example.com"
+        "password": build_password("evidence-user"),
+        "email": "testevidence@example.com",
     }
 
     response = requests.post(f"{BASE_URL}/auth/register", json=register_data)
@@ -33,8 +36,8 @@ def test_evidence_flow():
         print("   Registration failed, trying login...")
         login_data = {
             "username": "testuser_evidence",
-            "password": "TestPassword123!",
-            "remember_me": False
+            "password": build_password("evidence-user"),
+            "remember_me": False,
         }
         response = requests.post(f"{BASE_URL}/auth/login", json=login_data)
         if response.status_code != 200:
@@ -53,7 +56,7 @@ def test_evidence_flow():
         "title": "Evidence Test Case",
         "description": "Case for testing evidence upload",
         "caseType": "employment",
-        "status": "active"
+        "status": "active",
     }
 
     headers = {"Authorization": session_id}
@@ -74,10 +77,12 @@ def test_evidence_flow():
         "evidenceType": "document",
         "title": "Employment Contract",
         "filePath": "/documents/contract.pdf",
-        "obtainedDate": "2025-11-01"
+        "obtainedDate": "2025-11-01",
     }
 
-    response = requests.post(f"{BASE_URL}/evidence", json=evidence_data, headers=headers)
+    response = requests.post(
+        f"{BASE_URL}/evidence", json=evidence_data, headers=headers
+    )
 
     if response.status_code != 201:
         print(f"   Failed to upload evidence: {response.text}")
@@ -97,10 +102,12 @@ def test_evidence_flow():
         "evidenceType": "note",
         "title": "Meeting Notes",
         "content": "Discussion with HR manager on 2025-11-05. Key points: wrongful termination, no written warning, breach of contract.",
-        "obtainedDate": "2025-11-05"
+        "obtainedDate": "2025-11-05",
     }
 
-    response = requests.post(f"{BASE_URL}/evidence", json=evidence_data2, headers=headers)
+    response = requests.post(
+        f"{BASE_URL}/evidence", json=evidence_data2, headers=headers
+    )
 
     if response.status_code != 201:
         print(f"   Failed to upload evidence: {response.text}")
@@ -160,7 +167,7 @@ def test_evidence_flow():
         "evidenceType": "document",
         "title": "Bad Evidence",
         "filePath": "/path/to/file.pdf",
-        "content": "This should fail"
+        "content": "This should fail",
     }
     response = requests.post(f"{BASE_URL}/evidence", json=bad_data, headers=headers)
     print(f"   Expected failure: {response.status_code == 400}")
@@ -170,7 +177,7 @@ def test_evidence_flow():
     bad_data2 = {
         "caseId": case_id,
         "evidenceType": "document",
-        "title": "Bad Evidence 2"
+        "title": "Bad Evidence 2",
     }
     response = requests.post(f"{BASE_URL}/evidence", json=bad_data2, headers=headers)
     print(f"   Expected failure: {response.status_code == 400}")
@@ -181,10 +188,12 @@ def test_evidence_flow():
         "caseId": case_id,
         "evidenceType": "invalid_type",
         "title": "Bad Evidence 3",
-        "filePath": "/path/to/file.pdf"
+        "filePath": "/path/to/file.pdf",
     }
     response = requests.post(f"{BASE_URL}/evidence", json=bad_data3, headers=headers)
-    print(f"   Expected failure: {response.status_code == 422 or response.status_code == 400}")
+    print(
+        f"   Expected failure: {response.status_code == 422 or response.status_code == 400}"
+    )
 
     # Test 4: Unauthorized access to another user's case (should fail)
     print("   Test: Accessing evidence from non-owned case...")
@@ -196,6 +205,7 @@ def test_evidence_flow():
     print("All tests completed!")
     print("=" * 60)
 
+
 if __name__ == "__main__":
     try:
         test_evidence_flow()
@@ -206,4 +216,5 @@ if __name__ == "__main__":
     except Exception as exc:
         print(f"\nError during testing: {e}")
         import traceback
+
         traceback.print_exc()

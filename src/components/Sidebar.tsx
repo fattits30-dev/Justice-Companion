@@ -14,7 +14,7 @@
  */
 
 import React, { type JSX } from "react";
-import { logger } from "../utils/logger.ts";
+import { logger } from "../lib/logger.ts";
 import { apiClient } from "../lib/apiClient.ts";
 
 interface SidebarProps {

@@ -81,6 +81,40 @@ Configure in Settings:
 - **Google** - Gemini models
 - **Mistral** - Mistral AI models
 
+## Environment Variables
+
+### Required
+
+**`ENCRYPTION_KEY_BASE64`** - Base64-encoded 32-byte encryption key for user PII
+
+**Generate with:**
+
+```bash
+python -c 'import os, base64; print(base64.b64encode(os.urandom(32)).decode())'
+```
+
+**⚠️ CRITICAL**:
+
+- Store securely (1Password, AWS Secrets Manager, etc.)
+- Data encrypted with one key **cannot** be decrypted with another
+- Losing the key = **permanent data loss**
+- Required for backend startup - app will refuse to start without it
+
+**Example `.env` file:**
+
+```bash
+ENCRYPTION_KEY_BASE64=your_generated_key_here
+PORT=8000
+DATABASE_URL=sqlite:///./justice_companion.db
+```
+
+### Optional
+
+- `PORT` - Backend port (default: 8000)
+- `DATABASE_URL` - Database connection string (default: SQLite)
+- `ALLOWED_ORIGINS` - CORS origins (default: localhost)
+- `AI_MODE` - AI service mode: `stub`, `sdk`, or `service` (default: `stub`)
+
 ## Privacy-First
 
 - End-to-end encryption for case data

@@ -19,7 +19,7 @@ import { Button } from "../../components/ui/Button.tsx";
 import { Badge } from "../../components/ui/Badge.tsx";
 import { useAuth } from "../../contexts/AuthContext.tsx";
 import { ConfirmationModal } from "../../components/ui/ConfirmationModal.tsx";
-import { logger } from "../../utils/logger.ts";
+import { logger } from "../../lib/logger.ts";
 import { toast } from "sonner";
 
 export interface Backup {

@@ -74,7 +74,9 @@ def mock_process_manager():
     manager.is_port_in_use = AsyncMock(return_value=True)
     manager.find_process_by_port = AsyncMock(return_value=PMProcessInfo(
         pid=12345,
-        name="python.exe"
+        name="python.exe",
+        cmdline=["python.exe", "-m", "backend.main"],
+        create_time=1700000000.0
     ))
     manager.kill_process_by_id = AsyncMock(return_value=True)
 

@@ -145,6 +145,11 @@ class BulkOperationProgress(BaseModel):
 # BulkOperationService Class
 # ============================================================================
 
+# Class-level storage for active operation progress (in-memory)
+# Note: For production with multiple workers, use Redis or database
+_active_operations: Dict[str, "BulkOperationProgress"] = {}
+
+
 class BulkOperationService:
     """
     Business logic layer for bulk operations on cases and evidence.
@@ -152,7 +157,7 @@ class BulkOperationService:
     Provides transaction-safe bulk operations with:
     - Atomic transactions (all-or-nothing with fail_fast=True)
     - Partial completion (continue-on-error with fail_fast=False)
-    - Progress tracking (via events, planned)
+    - Progress tracking (via in-memory store)
     - Audit logging for all operations
     - User ownership verification
 
@@ -221,7 +226,7 @@ class BulkOperationService:
                     error_message=error_message,
                 )
             except Exception as exc:
-                logger.warning(f"Failed to log audit event: {e}")
+                logger.warning(f"Failed to log audit event: {exc}")
 
     def _verify_case_ownership(self, case_id: int, user_id: int) -> None:
         """
@@ -264,6 +269,99 @@ class BulkOperationService:
                 status_code=403, detail=f"Unauthorized access to evidence {evidence_id}"
             )
 
+    def _init_progress(
+        self,
+        operation_id: str,
+        operation_type: str,
+        total_items: int,
+    ) -> BulkOperationProgress:
+        """
+        Initialize progress tracking for a bulk operation.
+
+        Args:
+            operation_id: Unique operation UUID
+            operation_type: Type of operation (e.g., "bulk_delete_cases")
+            total_items: Total number of items to process
+
+        Returns:
+            Initial BulkOperationProgress instance
+        """
+        progress = BulkOperationProgress(
+            operation_id=operation_id,
+            operation_type=operation_type,
+            total_items=total_items,
+            processed_items=0,
+            success_count=0,
+            failure_count=0,
+            status="running",
+            errors=[],
+            started_at=datetime.now(timezone.utc),
+            completed_at=None,
+        )
+        _active_operations[operation_id] = progress
+        return progress
+
+    def _update_progress(
+        self,
+        operation_id: str,
+        processed_items: Optional[int] = None,
+        success_count: Optional[int] = None,
+        failure_count: Optional[int] = None,
+        error: Optional[BulkOperationError] = None,
+        status: Optional[str] = None,
+    ) -> None:
+        """
+        Update progress for an active bulk operation.
+
+        Args:
+            operation_id: Operation UUID to update
+            processed_items: New processed count (optional)
+            success_count: New success count (optional)
+            failure_count: New failure count (optional)
+            error: Error to append to errors list (optional)
+            status: New status (optional)
+        """
+        progress = _active_operations.get(operation_id)
+        if not progress:
+            return
+
+        if processed_items is not None:
+            progress.processed_items = processed_items
+        if success_count is not None:
+            progress.success_count = success_count
+        if failure_count is not None:
+            progress.failure_count = failure_count
+        if error is not None:
+            progress.errors.append(error)
+        if status is not None:
+            progress.status = status
+            if status in ("completed", "failed", "rolled_back"):
+                progress.completed_at = datetime.now(timezone.utc)
+
+    def _finalize_progress(
+        self,
+        operation_id: str,
+        status: str,
+        success_count: int,
+        failure_count: int,
+    ) -> None:
+        """
+        Finalize progress tracking when operation completes.
+
+        Args:
+            operation_id: Operation UUID
+            status: Final status (completed, failed, rolled_back)
+            success_count: Final success count
+            failure_count: Final failure count
+        """
+        progress = _active_operations.get(operation_id)
+        if progress:
+            progress.status = status
+            progress.success_count = success_count
+            progress.failure_count = failure_count
+            progress.processed_items = success_count + failure_count
+            progress.completed_at = datetime.now(timezone.utc)
+
     # ========================================================================
     # Public Bulk Operation Methods
     # ========================================================================
@@ -299,6 +397,9 @@ class BulkOperationService:
         operation_id = str(uuid4())
         operation_type = "bulk_delete_cases"
         opts = options or BulkOperationOptions()
+
+        # Initialize progress tracking
+        self._init_progress(operation_id, operation_type, len(case_ids))
 
         # Audit: Operation started
         self._log_audit_event(
@@ -345,6 +446,13 @@ class BulkOperationService:
 
                             success_count += 1
 
+                            # Update progress
+                            self._update_progress(
+                                operation_id,
+                                processed_items=success_count + failure_count,
+                                success_count=success_count,
+                            )
+
                             # Audit: Case deleted
                             self._log_audit_event(
                                 event_type="case.deleted",
@@ -364,8 +472,17 @@ class BulkOperationService:
                                 if isinstance(item_error, HTTPException)
                                 else item_error
                             )
-                            errors.append(BulkOperationError(item_id=case_id, error=error_message))
+                            bulk_error = BulkOperationError(item_id=case_id, error=error_message)
+                            errors.append(bulk_error)
                             failure_count += 1
+
+                            # Update progress with error
+                            self._update_progress(
+                                operation_id,
+                                processed_items=success_count + failure_count,
+                                failure_count=failure_count,
+                                error=bulk_error,
+                            )
 
                             # Audit: Case deletion failed
                             self._log_audit_event(
@@ -391,6 +508,11 @@ class BulkOperationService:
                     rolled_back = True
 
                     if opts.fail_fast:
+                        # Finalize progress as rolled back
+                        self._finalize_progress(
+                            operation_id, "rolled_back", success_count, failure_count
+                        )
+
                         # Audit: Operation rolled back
                         self._log_audit_event(
                             event_type="bulk_operation.rolled_back",
@@ -406,6 +528,11 @@ class BulkOperationService:
                             error_message=str(batch_error),
                         )
                         raise
+
+            # Finalize progress as completed
+            self._finalize_progress(
+                operation_id, "completed", success_count, failure_count
+            )
 
             # Audit: Operation completed
             self._log_audit_event(
@@ -432,6 +559,11 @@ class BulkOperationService:
             )
 
         except Exception as error:
+            # Finalize progress as failed
+            self._finalize_progress(
+                operation_id, "failed", success_count, failure_count
+            )
+
             # Audit: Operation failed
             self._log_audit_event(
                 event_type="bulk_operation.failed",
@@ -483,6 +615,9 @@ class BulkOperationService:
         operation_id = str(uuid4())
         operation_type = "bulk_update_cases"
         opts = options or BulkOperationOptions()
+
+        # Initialize progress tracking
+        self._init_progress(operation_id, operation_type, len(updates))
 
         # Audit: Operation started
         self._log_audit_event(
@@ -545,6 +680,13 @@ class BulkOperationService:
 
                             success_count += 1
 
+                            # Update progress
+                            self._update_progress(
+                                operation_id,
+                                processed_items=success_count + failure_count,
+                                success_count=success_count,
+                            )
+
                             # Audit: Case updated
                             self._log_audit_event(
                                 event_type="case.updated",
@@ -565,10 +707,17 @@ class BulkOperationService:
                                 if isinstance(item_error, HTTPException)
                                 else item_error
                             )
-                            errors.append(
-                                BulkOperationError(item_id=update.id, error=error_message)
-                            )
+                            bulk_error = BulkOperationError(item_id=update.id, error=error_message)
+                            errors.append(bulk_error)
                             failure_count += 1
+
+                            # Update progress with error
+                            self._update_progress(
+                                operation_id,
+                                processed_items=success_count + failure_count,
+                                failure_count=failure_count,
+                                error=bulk_error,
+                            )
 
                             # Audit: Case update failed
                             self._log_audit_event(
@@ -594,6 +743,11 @@ class BulkOperationService:
                     rolled_back = True
 
                     if opts.fail_fast:
+                        # Finalize progress as rolled back
+                        self._finalize_progress(
+                            operation_id, "rolled_back", success_count, failure_count
+                        )
+
                         # Audit: Operation rolled back
                         self._log_audit_event(
                             event_type="bulk_operation.rolled_back",
@@ -609,6 +763,11 @@ class BulkOperationService:
                             error_message=str(batch_error),
                         )
                         raise
+
+            # Finalize progress as completed
+            self._finalize_progress(
+                operation_id, "completed", success_count, failure_count
+            )
 
             # Audit: Operation completed
             self._log_audit_event(
@@ -635,6 +794,11 @@ class BulkOperationService:
             )
 
         except Exception as error:
+            # Finalize progress as failed
+            self._finalize_progress(
+                operation_id, "failed", success_count, failure_count
+            )
+
             # Audit: Operation failed
             self._log_audit_event(
                 event_type="bulk_operation.failed",
@@ -683,6 +847,9 @@ class BulkOperationService:
         operation_id = str(uuid4())
         operation_type = "bulk_archive_cases"
         opts = options or BulkOperationOptions()
+
+        # Initialize progress tracking
+        self._init_progress(operation_id, operation_type, len(case_ids))
 
         # Audit: Operation started
         self._log_audit_event(
@@ -735,6 +902,13 @@ class BulkOperationService:
 
                             success_count += 1
 
+                            # Update progress
+                            self._update_progress(
+                                operation_id,
+                                processed_items=success_count + failure_count,
+                                success_count=success_count,
+                            )
+
                             # Audit: Case archived
                             self._log_audit_event(
                                 event_type="case.archived",
@@ -754,8 +928,17 @@ class BulkOperationService:
                                 if isinstance(item_error, HTTPException)
                                 else item_error
                             )
-                            errors.append(BulkOperationError(item_id=case_id, error=error_message))
+                            bulk_error = BulkOperationError(item_id=case_id, error=error_message)
+                            errors.append(bulk_error)
                             failure_count += 1
+
+                            # Update progress with error
+                            self._update_progress(
+                                operation_id,
+                                processed_items=success_count + failure_count,
+                                failure_count=failure_count,
+                                error=bulk_error,
+                            )
 
                             # Audit: Case archive failed
                             self._log_audit_event(
@@ -781,6 +964,11 @@ class BulkOperationService:
                     rolled_back = True
 
                     if opts.fail_fast:
+                        # Finalize progress as rolled back
+                        self._finalize_progress(
+                            operation_id, "rolled_back", success_count, failure_count
+                        )
+
                         # Audit: Operation rolled back
                         self._log_audit_event(
                             event_type="bulk_operation.rolled_back",
@@ -796,6 +984,11 @@ class BulkOperationService:
                             error_message=str(batch_error),
                         )
                         raise
+
+            # Finalize progress as completed
+            self._finalize_progress(
+                operation_id, "completed", success_count, failure_count
+            )
 
             # Audit: Operation completed
             self._log_audit_event(
@@ -822,6 +1015,11 @@ class BulkOperationService:
             )
 
         except Exception as error:
+            # Finalize progress as failed
+            self._finalize_progress(
+                operation_id, "failed", success_count, failure_count
+            )
+
             # Audit: Operation failed
             self._log_audit_event(
                 event_type="bulk_operation.failed",
@@ -871,6 +1069,9 @@ class BulkOperationService:
         operation_type = "bulk_delete_evidence"
         opts = options or BulkOperationOptions()
 
+        # Initialize progress tracking
+        self._init_progress(operation_id, operation_type, len(evidence_ids))
+
         # Audit: Operation started
         self._log_audit_event(
             event_type="bulk_operation.started",
@@ -915,6 +1116,13 @@ class BulkOperationService:
 
                             success_count += 1
 
+                            # Update progress
+                            self._update_progress(
+                                operation_id,
+                                processed_items=success_count + failure_count,
+                                success_count=success_count,
+                            )
+
                             # Audit: Evidence deleted
                             self._log_audit_event(
                                 event_type="evidence.deleted",
@@ -934,10 +1142,17 @@ class BulkOperationService:
                                 if isinstance(item_error, HTTPException)
                                 else item_error
                             )
-                            errors.append(
-                                BulkOperationError(item_id=evidence_id, error=error_message)
-                            )
+                            bulk_error = BulkOperationError(item_id=evidence_id, error=error_message)
+                            errors.append(bulk_error)
                             failure_count += 1
+
+                            # Update progress with error
+                            self._update_progress(
+                                operation_id,
+                                processed_items=success_count + failure_count,
+                                failure_count=failure_count,
+                                error=bulk_error,
+                            )
 
                             # Audit: Evidence deletion failed
                             self._log_audit_event(
@@ -963,6 +1178,11 @@ class BulkOperationService:
                     rolled_back = True
 
                     if opts.fail_fast:
+                        # Finalize progress as rolled back
+                        self._finalize_progress(
+                            operation_id, "rolled_back", success_count, failure_count
+                        )
+
                         # Audit: Operation rolled back
                         self._log_audit_event(
                             event_type="bulk_operation.rolled_back",
@@ -978,6 +1198,11 @@ class BulkOperationService:
                             error_message=str(batch_error),
                         )
                         raise
+
+            # Finalize progress as completed
+            self._finalize_progress(
+                operation_id, "completed", success_count, failure_count
+            )
 
             # Audit: Operation completed
             self._log_audit_event(
@@ -1004,6 +1229,11 @@ class BulkOperationService:
             )
 
         except Exception as error:
+            # Finalize progress as failed
+            self._finalize_progress(
+                operation_id, "failed", success_count, failure_count
+            )
+
             # Audit: Operation failed
             self._log_audit_event(
                 event_type="bulk_operation.failed",
@@ -1023,43 +1253,30 @@ class BulkOperationService:
 
     async def get_operation_progress(self, operation_id: str) -> Optional[BulkOperationProgress]:
         """
-        Get operation progress by reconstructing from events.
+        Get operation progress from in-memory store.
 
-        NOTE: This is a simplified implementation. In production, you would:
-        - Implement event store for operation state persistence
-        - Query event store for operation events
-        - Reconstruct current state from event history
-        - Support real-time progress tracking
+        Retrieves real-time progress for active or recently completed operations.
+        Uses in-memory storage which is suitable for single-process deployments.
 
-        Current implementation returns a mock completed operation.
+        Note: For production with multiple workers, consider:
+        - Redis for distributed progress tracking
+        - Database-backed progress storage
+        - Event sourcing pattern for full history
 
         Args:
             operation_id: UUID of the operation to query
 
         Returns:
             BulkOperationProgress if operation exists, None otherwise
-
-        Future Implementation:
-            - Event sourcing pattern with event store
-            - Real-time progress updates via WebSocket/SSE
-            - Operation state reconstruction from event log
-            - Support for long-running operations
         """
         try:
-            # TODO: Implement event store querying
-            # For now, return a mock completed operation to satisfy interface
-            return BulkOperationProgress(
-                operation_id=operation_id,
-                operation_type="bulk_delete_cases",
-                total_items=0,
-                processed_items=0,
-                success_count=0,
-                failure_count=0,
-                status="completed",
-                errors=[],
-                started_at=datetime.now(timezone.utc),
-                completed_at=datetime.now(timezone.utc),
-            )
+            progress = _active_operations.get(operation_id)
+            if progress:
+                return progress
+            
+            # Operation not found in active store
+            logger.debug(f"Operation {operation_id} not found in progress store")
+            return None
         except Exception as exc:
-            logger.warning(f"Failed to get operation progress for {operation_id}: {e}")
+            logger.warning(f"Failed to get operation progress for {operation_id}: {exc}")
             return None

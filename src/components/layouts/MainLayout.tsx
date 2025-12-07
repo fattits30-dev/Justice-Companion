@@ -1,4 +1,4 @@
-import { logger } from "../../utils/logger.ts";
+import { logger } from "../../lib/logger.ts";
 import { apiClient } from "../../lib/apiClient.ts";
 
 /**

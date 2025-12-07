@@ -61,7 +61,7 @@ export default defineConfig({
     }),
     VitePWA({
       registerType: "autoUpdate",
-      includeAssets: ["favicon.ico", "robots.txt", "apple-touch-icon.png"],
+      includeAssets: ["favicon.svg", "pwa-192x192.png", "pwa-512x512.png", "icons/apple-touch-icon.png"],
       manifest: {
         name: "Justice Companion - UK Legal AI Assistant",
         short_name: "JusticeAI",
@@ -96,8 +96,20 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
+        // Ignore dev-specific paths and API calls in service worker
+        navigateFallbackDenylist: [
+          /^\/api\//,
+          /^\/@vite/,
+          /^\/@react-refresh/,
+          /^\/node_modules\//,
+          /^\/@vite-plugin-pwa/,
+          /^\/src\//,
+          /\?t=\d+/, // HMR timestamps
+          /\?v=[a-f0-9]+/, // Vite dep cache busting
+        ],
         runtimeCaching: [
           {
+            // Production API calls (Railway)
             urlPattern: /^https:\/\/.*\.railway\.app\/api\/.*/i,
             handler: "NetworkFirst",
             options: {
@@ -110,13 +122,21 @@ export default defineConfig({
             },
           },
           {
+            // Chat streaming - always network
             urlPattern: /^https:\/\/.*\.railway\.app\/chat\/.*/i,
+            handler: "NetworkOnly",
+          },
+          {
+            // Local API calls in development - don't cache
+            urlPattern: /^http:\/\/localhost:\d+\/.*/i,
             handler: "NetworkOnly",
           },
         ],
       },
       devOptions: {
-        enabled: true,
+        // Disable service worker in development to avoid workbox noise
+        // Set to true only when testing PWA features specifically
+        enabled: false,
         type: "module",
       },
     }),

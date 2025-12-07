@@ -425,15 +425,15 @@ class AuthenticationService:
 
         return session
 
-    def validate_session(self, session_id: Optional[str]) -> Optional[User]:
+    async def validate_session(self, session_id: Optional[str]) -> Optional[dict]:
         """
-        Validate session and return user.
+        Validate session and return session data with user info.
 
         Args:
             session_id: Session UUID or None
 
         Returns:
-            User model if session is valid, None otherwise
+            Dict with session data (user_id, etc.) if session is valid, None otherwise
         """
         if not session_id:
             return None
@@ -451,9 +451,21 @@ class AuthenticationService:
             self.db.commit()
             return None
 
-        # Return user for this session
+        # Return session data as dictionary
         user = self.db.query(User).filter(User.id == session.user_id).first()
-        return user
+        if not user:
+            return None
+
+        return {
+            "user_id": user.id,
+            "user": {
+                "id": user.id,
+                "username": user.username,
+                "email": user.email,
+            },
+            "session_id": session.id,
+            "expires_at": session.expires_at.isoformat() if session.expires_at else None,
+        }
 
     async def change_password(
         self, user_id: int, old_password: str, new_password: str
@@ -546,3 +558,4 @@ class AuthenticationService:
             )
 
         return deleted_count
+

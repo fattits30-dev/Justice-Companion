@@ -73,7 +73,6 @@ class ChatStreamRequest(BaseModel):
 
     @field_validator("message")
     @classmethod
-    @classmethod
     def strip_message(cls, v):
         return v.strip()
 
@@ -86,7 +85,6 @@ class ChatSendRequest(BaseModel):
     useRAG: bool = Field(True, description="Whether to use RAG for legal context")
 
     @field_validator("message")
-    @classmethod
     @classmethod
     def strip_message(cls, v):
         return v.strip()
@@ -193,9 +191,10 @@ async def get_ai_service(
     Get AI service instance.
 
     Behavior controlled by AI_MODE environment variable:
+    - "sdk": Use AISDKService with user's configured AI provider (OpenAI, Anthropic, etc.)
     - "service": Use separate ai-service microservice (Hugging Face powered)
     - "stub": Use StubAIService for deterministic mock responses
-    
+
     Default: "stub" for backward compatibility
 
     Returns:
@@ -203,8 +202,39 @@ async def get_ai_service(
     """
     ai_mode = os.getenv("AI_MODE", "stub").lower()
     print(f"[DEBUG] AI_MODE from env: '{ai_mode}'")
-    
-    if ai_mode == "service":
+
+    if ai_mode == "sdk":
+        # Use AISDKService with user's configured provider
+        from backend.services.ai.providers import AIProviderConfigService
+        from backend.services.ai.sdk import AISDKService
+        from backend.services.ai.service import AIProviderConfig as SDKConfig
+
+        # Get user's active AI configuration
+        print(f"[DEBUG] Getting AI config for user_id: {user_id}")
+        config_service = AIProviderConfigService(db, encryption_service, audit_logger)
+        user_config = await config_service.get_active_provider_config(user_id)
+
+        if not user_config:
+            logger.warning(f"[AI_MODE=sdk] No active AI provider configured for user {user_id}, falling back to stub")
+            return StubAIService(audit_logger)  # type: ignore[return-value]
+
+        print(f"[DEBUG] Retrieved config - ID: {user_config.id}, Provider: {user_config.provider}, Model: {user_config.model}, User: {user_config.user_id}")
+
+        # Create SDK config from user's configuration
+        sdk_config = SDKConfig(
+            provider=user_config.provider,
+            api_key=user_config.api_key,
+            model=user_config.model,
+            endpoint=user_config.endpoint,
+            temperature=user_config.temperature or 0.7,
+            max_tokens=user_config.max_tokens or 4096,
+            top_p=user_config.top_p or 0.9,
+        )
+
+        logger.info(f"[AI_MODE=sdk] Using {user_config.provider} with model {user_config.model}")
+        return AISDKService(sdk_config, audit_logger)  # type: ignore[return-value]
+
+    elif ai_mode == "service":
         # Use separate ai-service microservice
         from backend.services.ai_service_adapter import AIServiceAdapter
         return AIServiceAdapter(audit_logger)  # type: ignore[return-value]

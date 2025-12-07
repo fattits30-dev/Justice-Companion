@@ -286,8 +286,8 @@ def test_user(test_db):
     """Create test user with consent."""
     # Insert test user
     test_db.execute(text("""
-        INSERT INTO users (id, username, email, password_hash)
-        VALUES (1, 'testuser', 'test@example.com', 'hashed_password')
+        INSERT INTO users (id, username, email, password_hash, password_salt, role, is_active)
+        VALUES (1, 'testuser', 'test@example.com', 'hashed_password', 'salt', 'user', 1)
     """))
 
     # Grant data_processing consent
@@ -423,8 +423,8 @@ async def test_export_without_consent_fails(gdpr_service, test_db):
     """Test export fails without active consent."""
     # Create user without consent
     test_db.execute(text("""
-        INSERT INTO users (id, username, email, password_hash)
-        VALUES (999, 'no-consent-user', 'noConsent@example.com', 'hashed')
+        INSERT INTO users (id, username, email, password_hash, password_salt, role, is_active)
+        VALUES (999, 'no-consent-user', 'noConsent@example.com', 'hashed', 'salt', 'user', 1)
     """))
     test_db.commit()
 

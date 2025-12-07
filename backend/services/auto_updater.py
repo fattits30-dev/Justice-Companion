@@ -49,15 +49,15 @@ import hashlib
 import logging
 import os
 import re
-from dataclasses import dataclass, asdict
+from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
 from enum import Enum
 from pathlib import Path
-from typing import Optional, List, Dict, Any, Callable
+from typing import Any, Callable, Dict, List, Optional
 from urllib.parse import urlparse
 
 import httpx
-from packaging.version import Version, InvalidVersion
+from packaging.version import InvalidVersion, Version
 
 # Configure logger
 logger = logging.getLogger(__name__)
@@ -66,12 +66,14 @@ logger = logging.getLogger(__name__)
 # TYPE DEFINITIONS & DATA CLASSES
 # ============================================================================
 
+
 class UpdateChannel(str, Enum):
     """Update channel enumeration."""
 
     STABLE = "stable"
     BETA = "beta"
     ALPHA = "alpha"
+
 
 @dataclass
 class AutoUpdaterConfig:
@@ -83,6 +85,7 @@ class AutoUpdaterConfig:
     github_token: Optional[str] = None  # For private repositories
     timeout_seconds: int = 30
     max_retries: int = 3
+
 
 @dataclass
 class UpdateInfo:
@@ -101,6 +104,7 @@ class UpdateInfo:
         """Convert to dictionary."""
         return asdict(self)
 
+
 @dataclass
 class ProgressInfo:
     """Download progress information."""
@@ -113,6 +117,7 @@ class ProgressInfo:
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary."""
         return asdict(self)
+
 
 @dataclass
 class UpdateStatus:
@@ -130,6 +135,7 @@ class UpdateStatus:
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary."""
         return asdict(self)
+
 
 @dataclass
 class UpdateCheckResult:
@@ -153,6 +159,7 @@ class UpdateCheckResult:
             result["update_info"] = self.update_info.to_dict()
         return result
 
+
 @dataclass
 class UpdateDownloadResult:
     """Result of downloading an update."""
@@ -166,12 +173,15 @@ class UpdateDownloadResult:
         """Convert to dictionary."""
         return asdict(self)
 
+
 # ============================================================================
 # AUTO UPDATER SERVICE
 # ============================================================================
 
+
 class AutoUpdaterError(Exception):
     """Auto updater error exception."""
+
 
 class AutoUpdater:
     """
@@ -208,7 +218,9 @@ class AutoUpdater:
 
         # Validate repository format
         if not re.match(r"^[\w-]+/[\w-]+$", repo):
-            raise AutoUpdaterError(f"Invalid repository format: {repo}. Expected 'owner/repo'")
+            raise AutoUpdaterError(
+                f"Invalid repository format: {repo}. Expected 'owner/repo'"
+            )
 
         # Validate current version
         try:
@@ -242,14 +254,19 @@ class AutoUpdater:
     async def _ensure_client(self):
         """Ensure HTTP client is initialized."""
         if not self.client:
-            headers = {"User-Agent": self.USER_AGENT, "Accept": "application/vnd.github.v3+json"}
+            headers = {
+                "User-Agent": self.USER_AGENT,
+                "Accept": "application/vnd.github.v3+json",
+            }
 
             # Add GitHub token if provided (for private repos)
             if self.config.github_token:
                 headers["Authorization"] = f"token {self.config.github_token}"
 
             self.client = httpx.AsyncClient(
-                headers=headers, timeout=self.config.timeout_seconds, follow_redirects=True
+                headers=headers,
+                timeout=self.config.timeout_seconds,
+                follow_redirects=True,
             )
 
     async def close(self):
@@ -338,7 +355,9 @@ class AutoUpdater:
                 response.raise_for_status()
 
                 releases = response.json()
-                logger.info(f"[AutoUpdater] Fetched {len(releases)} releases from GitHub")
+                logger.info(
+                    f"[AutoUpdater] Fetched {len(releases)} releases from GitHub"
+                )
 
                 return releases
 
@@ -367,7 +386,9 @@ class AutoUpdater:
 
         return []
 
-    def _parse_release_to_update_info(self, release: Dict[str, Any]) -> Optional[UpdateInfo]:
+    def _parse_release_to_update_info(
+        self, release: Dict[str, Any]
+    ) -> Optional[UpdateInfo]:
         """
         Parse GitHub release object to UpdateInfo.
 
@@ -386,14 +407,44 @@ class AutoUpdater:
             return None
 
         # Find suitable asset (platform-specific)
-        # For now, just get the first asset
         assets = release.get("assets", [])
         if not assets:
             logger.warning(f"[AutoUpdater] Release {version_str} has no assets")
             return None
 
-        # TODO: Filter by platform (Windows .exe, macOS .dmg, Linux .AppImage)
-        asset = assets[0]
+        # Filter by platform
+        import sys
+
+        platform = sys.platform
+        asset = None
+
+        # Define platform-specific file extensions
+        platform_extensions = {
+            "win32": [".exe", ".msi"],
+            "darwin": [".dmg", ".pkg", ".zip"],
+            "linux": [".AppImage", ".deb", ".rpm", ".tar.gz"],
+        }
+
+        # Get extensions for current platform
+        extensions = platform_extensions.get(platform, [])
+
+        # Find matching asset for current platform
+        for a in assets:
+            asset_name = a.get("name", "").lower()
+            for ext in extensions:
+                if asset_name.endswith(ext.lower()):
+                    asset = a
+                    break
+            if asset:
+                break
+
+        # Fallback to first asset if no platform match found
+        if not asset:
+            logger.warning(
+                f"[AutoUpdater] No platform-specific asset found for {platform}, "
+                f"using first available asset"
+            )
+            asset = assets[0]
 
         return UpdateInfo(
             version=version_str,
@@ -416,7 +467,9 @@ class AutoUpdater:
             self.status.checking = True
             self.status.error = None
 
-            logger.info(f"[AutoUpdater] Checking for updates (current: {self.current_version})")
+            logger.info(
+                f"[AutoUpdater] Checking for updates (current: {self.current_version})"
+            )
 
             # Fetch releases from GitHub
             releases = await self._fetch_github_releases()
@@ -434,7 +487,10 @@ class AutoUpdater:
                     # Check if this is newer than previously found update
                     if (
                         not latest_update
-                        or self.compare_versions(update_info.version, latest_update.version) > 0
+                        or self.compare_versions(
+                            update_info.version, latest_update.version
+                        )
+                        > 0
                     ):
                         latest_update = update_info
 
@@ -470,7 +526,9 @@ class AutoUpdater:
             else:
                 self.status.update_available = False
 
-                logger.info(f"[AutoUpdater] No updates available (current: {self.current_version})")
+                logger.info(
+                    f"[AutoUpdater] No updates available (current: {self.current_version})"
+                )
 
                 return UpdateCheckResult(
                     update_available=False, current_version=self.current_version
@@ -483,14 +541,18 @@ class AutoUpdater:
             logger.error(f"[AutoUpdater] Error checking for updates: {e}")
 
             return UpdateCheckResult(
-                update_available=False, current_version=self.current_version, error=str(e)
+                update_available=False,
+                current_version=self.current_version,
+                error=str(e),
             )
 
         except Exception as exc:
             self.status.checking = False
             self.status.error = str(e)
 
-            logger.exception(f"[AutoUpdater] Unexpected error checking for updates: {e}")
+            logger.exception(
+                f"[AutoUpdater] Unexpected error checking for updates: {e}"
+            )
 
             return UpdateCheckResult(
                 update_available=False,
@@ -566,8 +628,12 @@ class AutoUpdater:
                             self.status.download_progress = percent
 
                             # Calculate speed
-                            elapsed = (datetime.now(timezone.utc) - start_time).total_seconds()
-                            bytes_per_second = bytes_downloaded / elapsed if elapsed > 0 else 0
+                            elapsed = (
+                                datetime.now(timezone.utc) - start_time
+                            ).total_seconds()
+                            bytes_per_second = (
+                                bytes_downloaded / elapsed if elapsed > 0 else 0
+                            )
 
                             # Notify callbacks
                             progress_info = ProgressInfo(
@@ -581,7 +647,9 @@ class AutoUpdater:
                                 try:
                                     callback(percent)
                                 except Exception as exc:
-                                    logger.warning(f"[AutoUpdater] Error in progress callback: {e}")
+                                    logger.warning(
+                                        f"[AutoUpdater] Error in progress callback: {e}"
+                                    )
 
             # Verify checksum if provided
             checksum_verified = False
@@ -601,7 +669,9 @@ class AutoUpdater:
             self.status.update_downloaded = True
             self.status.download_progress = 100.0
 
-            logger.info(f"[AutoUpdater] Update downloaded successfully to {output_path}")
+            logger.info(
+                f"[AutoUpdater] Update downloaded successfully to {output_path}"
+            )
 
             # Log to audit
             if self.audit_logger:
@@ -685,9 +755,11 @@ class AutoUpdater:
         # Check if we're in debug mode or have updates explicitly disabled
         return not os.getenv("DISABLE_AUTO_UPDATES", "").lower() in ("true", "1", "yes")
 
+
 # ============================================================================
 # HELPER FUNCTIONS
 # ============================================================================
+
 
 def format_file_size(size_bytes: int) -> str:
     """
@@ -704,6 +776,7 @@ def format_file_size(size_bytes: int) -> str:
             return f"{size_bytes:.1f} {unit}"
         size_bytes /= 1024.0
     return f"{size_bytes:.1f} TB"
+
 
 def validate_version(version_str: str) -> bool:
     """

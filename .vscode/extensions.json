@@ -1,65 +1,109 @@
 {
   "recommendations": [
-    // Core Essentials - Performance Optimized
+    // Core Development - Essential
     "dbaeumer.vscode-eslint",
     "esbenp.prettier-vscode",
     "ms-vscode.vscode-typescript-next",
 
-    // Testing - Essential for your project
-    "vitest.explorer",
-    "ms-playwright.playwright",
+    // Python Backend - Essential
+    "ms-python.python",
+    "ms-python.vscode-pylance",
+    "ms-python.black-formatter",
+    "ms-python.debugpy",
+    "charliermarsh.ruff",
 
-    // Git - Essential, streamlined
-    "eamodio.gitlens",
-
-    // Error Detection - Minimal but useful
-    "usernamehw.errorlens",
-
-    // TypeScript/JavaScript - Essential tools
-    "yoavbls.pretty-ts-errors",
-    "wix.vscode-import-cost",
-
-    // React/Frontend - Only essential
+    // React/Frontend - Essential
     "bradlc.vscode-tailwindcss",
+    "stivo.tailwind-fold",
     "dsznajder.es7-react-js-snippets",
+    "formulahendry.auto-rename-tag",
+    "formulahendry.auto-close-tag",
 
-    // Productivity - Streamlined selection
+    // Testing - Essential
+    "ms-playwright.playwright",
+    "vitest.explorer",
+
+    // Git - Essential
+    "eamodio.gitlens",
+    "mhutchie.git-graph",
+
+    // Database - Essential
+    "qwtel.sqlite-viewer",
+    "mtxr.sqltools",
+
+    // Code Quality - Highly Recommended
+    "usernamehw.errorlens",
+    "wix.vscode-import-cost",
+    "yoavbls.pretty-ts-errors",
+
+    // Productivity - Highly Recommended
     "aaron-bond.better-comments",
     "christian-kohler.path-intellisense",
     "wayou.vscode-todo-highlight",
-    "formulahendry.auto-rename-tag",
-
-    // Documentation - Minimal but effective
-    "yzhang.markdown-all-in-one",
-
-    // Security - Keep essential
-    "snyk-security.snyk-vulnerability-scanner",
-
-    // File Navigation - Essential
-    "eamodio.toggle-excluded-files",
-
-    // API Development - Keep for REST APIs
     "humao.rest-client",
 
-    // JSON Support - Good to have
-    "ms-vscode.vscode-json",
+    // AI Assistants
+    "anthropic.claude-code",
+    "github.copilot",
+    "github.copilot-chat",
 
-    // Python - Only for AI service
-    "ms-python.python",
-    "ms-python.black-formatter"
+    // UI/UX
+    "pkief.material-icon-theme",
+    "yzhang.markdown-all-in-one"
   ],
   "unwantedRecommendations": [
+    // Azure bloat - not needed for PWA
+    "ms-azuretools.azure-dev",
+    "ms-azuretools.vscode-azure-github-copilot",
+    "ms-azuretools.vscode-azure-mcp-server",
+    "ms-azuretools.vscode-azureappservice",
+    "ms-azuretools.vscode-azurecontainerapps",
+    "ms-azuretools.vscode-azurefunctions",
+    "ms-azuretools.vscode-azureresourcegroups",
+    "ms-azuretools.vscode-azurestaticwebapps",
+    "ms-azuretools.vscode-azurestorage",
+    "ms-azuretools.vscode-azurevirtualmachines",
+    "ms-azuretools.vscode-cosmosdb",
+    "ms-vscode.vscode-node-azure-pack",
+    "ms-windows-ai-studio.windows-ai-studio",
+    "teamsdevapp.vscode-ai-foundry",
+    "ms-azure-load-testing.microsoft-testing",
+
+    // Duplicate Git functionality
+    "donjayamanne.githistory",
+    "mhutchie.git-graph",
+
+    // Duplicate AI/Claude tools
+    "saoudrizwan.cline-nightly",
+
+    // Obsolete - now built into VS Code
+    "christian-kohler.npm-intellisense",
+
+    // Python extension pack (individual extensions better)
+    "donjayamanne.python-extension-pack",
+
+    // Old Python linters (use Ruff instead)
+    "ms-python.flake8",
+    "ms-python.pylint",
+    "ms-python.mypy-type-checker",
+
+    // Unused browser debuggers
+    "firefox-devtools.vscode-firefox-debug",
+    "ms-edgedevtools.vscode-edge-devtools",
+
+    // Unused database tech
+    "ms-mssql.mssql",
+    "ms-mssql.data-workspace-vscode",
+    "ms-mssql.sql-bindings-vscode",
+    "ms-mssql.sql-database-projects-vscode",
+
+    // Unused deployment tech
+    "ms-kubernetes-tools.vscode-kubernetes-tools",
+
+    // Unused shell
+    "ms-vscode.powershell",
+
     // Performance-heavy extensions to avoid
-    "eamodio.git-graph", // duplicate git functionality
-    "donjayamanne.githistory", // resource intensive git history
-    "sburg.vscode-javascript-booster", // duplicate snippets
-    "styled-components.vscode-styled-components", // if not using heavily
-    "ms-vscode.vscode-node-azure-pack", // unnecessary for local dev
-    "saoudrizwan.claude-dev", // redundant with Cline
-    "ms-vsliveshare.vsliveshare", // resource intensive collaboration
-    "gruntfuggly.todo-tree", // duplicate TODO highlighting
-    "bierner.markdown-preview-github-styles", // unnecessary styling
-    "hookyqr.beautify", // old formatter
-    "ms-vscode.vscode-typescript-tslint-plugin" // deprecated
+    "sonarsource.sonarlint-vscode"
   ]
 }

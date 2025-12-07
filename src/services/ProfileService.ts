@@ -14,7 +14,7 @@ import type {
   IProfileService,
 } from "../types/profile.ts";
 import { ProfileStorageKey } from "../types/profile.ts";
-import { logger } from "../utils/logger.ts";
+import { logger } from "../lib/logger.ts";
 
 /**
  * Profile Service Implementation

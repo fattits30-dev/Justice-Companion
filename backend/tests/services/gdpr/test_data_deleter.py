@@ -46,7 +46,13 @@ def db_session(db_engine) -> Generator[Session, None, None]:
                 id INTEGER PRIMARY KEY,
                 username TEXT NOT NULL,
                 email TEXT NOT NULL,
-                created_at TEXT NOT NULL
+                password_hash TEXT NOT NULL,
+                password_salt TEXT NOT NULL,
+                role TEXT NOT NULL DEFAULT 'user',
+                is_active INTEGER NOT NULL DEFAULT 1,
+                created_at TEXT NOT NULL,
+                updated_at TEXT,
+                last_login_at TEXT
             )
         """))
 
@@ -249,8 +255,8 @@ def sample_user(db_session) -> int:
     now = datetime.now(timezone.utc).isoformat()
 
     db_session.execute(text("""
-        INSERT INTO users (id, username, email, created_at)
-        VALUES (1, 'testuser', 'test@example.com', :now)
+        INSERT INTO users (id, username, email, password_hash, password_salt, role, is_active, created_at)
+        VALUES (1, 'testuser', 'test@example.com', 'hash', 'salt', 'user', 1, :now)
     """), {"now": now})
 
     db_session.commit()
