@@ -32,7 +32,6 @@ import re
 from backend.models.base import get_db
 from backend.models.profile import UserProfile
 from backend.services.auth.service import AuthenticationService
-from backend.routes.auth import get_current_user
 from backend.services.profile_service import (
     ProfileService,
     UserProfileData,
@@ -40,6 +39,15 @@ from backend.services.profile_service import (
 )
 from backend.services.security.encryption import EncryptionService
 from backend.services.audit_logger import AuditLogger
+
+# Import centralized dependency providers
+from backend.dependencies import (
+    get_profile_service,
+    get_auth_service,
+    get_encryption_service,
+    get_audit_logger,
+    get_current_user,
+)
 
 router = APIRouter(prefix="/profile", tags=["profile"])
 
@@ -222,39 +230,6 @@ class PasswordChangeResponse(BaseModel):
     success: bool
     message: str
 
-# ===== DEPENDENCIES =====
-
-def get_auth_service(db: Session = Depends(get_db)) -> AuthenticationService:
-    """Get authentication service instance."""
-    audit_logger = get_audit_logger(db)
-    return AuthenticationService(db=db, audit_logger=audit_logger)
-
-def get_encryption_service() -> EncryptionService:
-    """Get encryption service instance."""
-    # Get encryption key from environment
-    key = os.environ.get("ENCRYPTION_KEY_BASE64")
-    if not key:
-        raise ValueError("ENCRYPTION_KEY_BASE64 environment variable not set")
-
-    return EncryptionService(key)
-
-def get_audit_logger(db: Session = Depends(get_db)) -> AuditLogger:
-    """Get audit logger instance."""
-    return AuditLogger(db=db)
-
-def get_profile_service(
-    user_id: int = Depends(get_current_user),
-    db: Session = Depends(get_db),
-    encryption_service: EncryptionService = Depends(get_encryption_service),
-    audit_logger: AuditLogger = Depends(get_audit_logger),
-) -> ProfileService:
-    """Get profile service instance for the current user."""
-    return ProfileService(
-        db=db, 
-        user_id=user_id,
-        encryption_service=encryption_service, 
-        audit_logger=audit_logger
-    )
 
 # ===== HELPER FUNCTIONS =====
 

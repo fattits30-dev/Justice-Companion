@@ -97,11 +97,16 @@ def db_session(engine):
 
 
 @pytest.fixture(scope="function")
-def client(db_session):
+def client(db_session, mock_encryption_service):
     """
-    Create FastAPI test client with database dependency override.
+    Create FastAPI test client with centralized dependency overrides.
+
+    Overrides both database and encryption service dependencies to use
+    test fixtures. This ensures all routes using centralized dependencies
+    from backend.dependencies module work correctly in tests.
 
     All database operations in tests use the isolated test database.
+    All encryption operations use the mock encryption service.
     """
     def override_get_db():
         try:
@@ -109,8 +114,19 @@ def client(db_session):
         finally:
             pass
 
+    # Import centralized dependencies
+    from backend.dependencies import (
+        get_encryption_service,
+        get_encryption_service_fallback,
+        get_audit_logger,
+    )
+
     # Override database dependency
     app.dependency_overrides[get_db] = override_get_db
+
+    # Override encryption service dependencies
+    app.dependency_overrides[get_encryption_service] = lambda: mock_encryption_service
+    app.dependency_overrides[get_encryption_service_fallback] = lambda: mock_encryption_service
 
     # Create test client
     test_client = TestClient(app)

@@ -269,19 +269,21 @@ def get_dashboard_repository(
 
 def get_auth_service(
     db: Session = Depends(get_db),
+    audit_logger: AuditLogger = Depends(get_audit_logger),
 ):
     """
-    Get AuthenticationService.
+    Get AuthenticationService with audit logging.
 
     Args:
         db: Database session
+        audit_logger: AuditLogger for auth event logging
 
     Returns:
         AuthenticationService instance
     """
     from backend.services.auth.service import AuthenticationService
 
-    return AuthenticationService(db)
+    return AuthenticationService(db=db, audit_logger=audit_logger)
 
 
 def get_tag_service(
@@ -320,6 +322,137 @@ def get_notification_service(
     from backend.services.notification_service import NotificationService
 
     return NotificationService(db, audit_logger)
+
+
+def get_session_manager(
+    db: Session = Depends(get_db),
+    audit_logger: AuditLogger = Depends(get_audit_logger),
+):
+    """
+    Get SessionManager for session lifecycle operations.
+
+    Args:
+        db: Database session
+        audit_logger: AuditLogger for session event logging
+
+    Returns:
+        SessionManager instance configured for database-backed sessions
+
+    Note:
+        - Uses database persistence (memory cache disabled)
+        - Handles session creation, validation, and expiration
+        - Supports 24-hour default or 30-day "remember me" sessions
+    """
+    from backend.services.auth.session_manager import SessionManager
+
+    return SessionManager(
+        db=db,
+        audit_logger=audit_logger,
+        enable_memory_cache=False,  # Use database for persistence
+    )
+
+
+async def get_current_user(
+    request: Request,
+    session_manager = Depends(get_session_manager),
+) -> int:
+    """
+    FastAPI dependency to get current authenticated user ID.
+
+    This is a more comprehensive version of get_current_user_id that:
+    - Checks multiple sources for session_id (Bearer, header, cookie)
+    - Uses SessionManager for session validation
+    - Matches the pattern used in auth routes
+
+    Extracts session_id from (in priority order):
+    1. Authorization header: "Bearer <session_id>"
+    2. X-Session-ID header
+    3. Cookie: sessionId
+
+    Args:
+        request: FastAPI request object
+        session_manager: SessionManager instance (injected)
+
+    Returns:
+        int: User ID of authenticated user
+
+    Raises:
+        HTTPException 401: If session_id not provided or invalid/expired
+
+    Note:
+        This dependency is preferred for routes that need comprehensive
+        auth checking. Use get_current_user_id for simpler Bearer-only auth.
+    """
+    # Try to get session_id from Authorization header
+    session_id: Optional[str] = None
+    auth_header = request.headers.get("Authorization")
+    if auth_header and auth_header.startswith("Bearer "):
+        session_id = auth_header.replace("Bearer ", "")
+    # Try X-Session-ID header
+    elif (header_session := request.headers.get("X-Session-ID")) is not None:
+        session_id = header_session
+    # Try cookie
+    elif (cookie_session := request.cookies.get("sessionId")) is not None:
+        session_id = cookie_session
+
+    if session_id is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Not authenticated - no session ID provided",
+        )
+
+    # Validate session and get user_id
+    try:
+        session_data = session_manager.get_session(session_id)
+        if not session_data or not session_data.get("user_id"):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid or expired session",
+            )
+
+        return session_data["user_id"]
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=f"Session validation failed: {str(e)}",
+        )
+
+
+def get_profile_service(
+    user_id: int = Depends(get_current_user),
+    db: Session = Depends(get_db),
+    encryption_service: EncryptionService = Depends(get_encryption_service_fallback),
+    audit_logger: AuditLogger = Depends(get_audit_logger),
+):
+    """
+    Get ProfileService for the current authenticated user.
+
+    This composed dependency injects all required dependencies for ProfileService
+    and ensures the user is authenticated before accessing profile operations.
+
+    Args:
+        user_id: Current authenticated user ID (from get_current_user)
+        db: Database session
+        encryption_service: EncryptionService for PII field encryption
+        audit_logger: AuditLogger for profile change logging
+
+    Returns:
+        ProfileService instance scoped to the current user
+
+    Note:
+        - User must be authenticated (get_current_user validates session)
+        - Supports multiple auth sources (Bearer, X-Session-ID header, cookie)
+        - Profile data is encrypted at rest (email, phone are PII)
+        - All operations are audit logged for GDPR compliance
+    """
+    from backend.services.profile_service import ProfileService
+
+    return ProfileService(
+        db=db,
+        user_id=user_id,
+        encryption_service=encryption_service,
+        audit_logger=audit_logger,
+    )
 
 
 # =============================================================================
