@@ -1,10 +1,10 @@
 // src/models/Export.ts
-import type { Case } from "./Case.ts";
-import type { Evidence } from "./Evidence.ts";
-import type { Deadline } from "./Deadline.ts";
+import type { Case } from "../domains/cases/entities/Case.ts";
+import type { CaseFact } from "../domains/cases/entities/CaseFact.ts";
+import type { Evidence } from "../domains/evidence/entities/Evidence.ts";
+import type { Deadline } from "../domains/timeline/entities/Deadline.ts";
 import type { Document } from "./Document.ts";
 import type { Note } from "./Note.ts";
-import type { CaseFact } from "./CaseFact.ts";
 
 export interface ExportOptions {
   format: "pdf" | "docx";
