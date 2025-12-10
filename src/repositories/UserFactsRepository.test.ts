@@ -54,13 +54,13 @@ describe("UserFactsRepository", () => {
       const fact = repository.create({
         caseId: 1,
         factContent: "SSN: 123-45-6789",
-        factType: "personal",
+        factCategory: "timeline",
       });
 
       expect(fact.id).toBe(1);
       expect(fact.caseId).toBe(1);
       expect(fact.factContent).toBe("SSN: 123-45-6789");
-      expect(fact.factType).toBe("personal");
+      expect(fact.factCategory).toBe("personal");
 
       // Verify content is encrypted in database
       const storedFact = db!
@@ -76,7 +76,7 @@ describe("UserFactsRepository", () => {
     });
 
     it("should create user facts with different types", () => {
-      const factTypes: Array<
+      const factCategorys: Array<
         | "personal"
         | "employment"
         | "financial"
@@ -92,15 +92,15 @@ describe("UserFactsRepository", () => {
         "other",
       ];
 
-      factTypes.forEach((factType, index) => {
+      factCategorys.forEach((factCategory, index) => {
         const fact = repository.create({
           caseId: 1,
-          factContent: `Test ${factType} fact`,
-          factType,
+          factContent: `Test ${factCategory} fact`,
+          factCategory,
         });
 
         expect(fact.id).toBe(index + 1);
-        expect(fact.factType).toBe(factType);
+        expect(fact.factCategory).toBe(factCategory);
       });
     });
 
@@ -108,7 +108,7 @@ describe("UserFactsRepository", () => {
       repository.create({
         caseId: 1,
         factContent: "Phone: 555-1234",
-        factType: "contact",
+        factCategory: "witness",
       });
 
       const auditLogs = db!
@@ -129,7 +129,7 @@ describe("UserFactsRepository", () => {
 
       const details = JSON.parse(log.details);
       expect(details.caseId).toBe(1);
-      expect(details.factType).toBe("contact");
+      expect(details.factCategory).toBe("contact");
       expect(details.contentLength).toBe(15);
     });
   });
@@ -139,7 +139,7 @@ describe("UserFactsRepository", () => {
       const created = repository.create({
         caseId: 1,
         factContent: "Date of birth: 1990-01-01",
-        factType: "personal",
+        factCategory: "timeline",
       });
 
       const found = repository.findById(created.id);
@@ -147,7 +147,7 @@ describe("UserFactsRepository", () => {
       expect(found).not.toBeNull();
       expect(found!.id).toBe(created.id);
       expect(found!.factContent).toBe("Date of birth: 1990-01-01");
-      expect(found!.factType).toBe("personal");
+      expect(found!.factCategory).toBe("personal");
     });
 
     it("should return null for non-existent ID", () => {
@@ -159,7 +159,7 @@ describe("UserFactsRepository", () => {
       const created = repository.create({
         caseId: 1,
         factContent: "Salary: $50,000",
-        factType: "financial",
+        factCategory: "evidence",
       });
 
       // Clear previous audit logs
@@ -194,19 +194,19 @@ describe("UserFactsRepository", () => {
       repository.create({
         caseId: 1,
         factContent: "Fact 1",
-        factType: "personal",
+        factCategory: "timeline",
       });
 
       repository.create({
         caseId: 1,
         factContent: "Fact 2",
-        factType: "employment",
+        factCategory: "location",
       });
 
       repository.create({
         caseId: 1,
         factContent: "Fact 3",
-        factType: "financial",
+        factCategory: "evidence",
       });
 
       const facts = repository.findByCaseId(1);
@@ -226,13 +226,13 @@ describe("UserFactsRepository", () => {
       repository.create({
         caseId: 1,
         factContent: "Fact 1",
-        factType: "personal",
+        factCategory: "timeline",
       });
 
       repository.create({
         caseId: 1,
         factContent: "Fact 2",
-        factType: "employment",
+        factCategory: "location",
       });
 
       // Clear previous audit logs
@@ -258,19 +258,19 @@ describe("UserFactsRepository", () => {
       repository.create({
         caseId: 1,
         factContent: "Personal fact 1",
-        factType: "personal",
+        factCategory: "timeline",
       });
 
       repository.create({
         caseId: 1,
         factContent: "Employment fact",
-        factType: "employment",
+        factCategory: "location",
       });
 
       repository.create({
         caseId: 1,
         factContent: "Personal fact 2",
-        factType: "personal",
+        factCategory: "timeline",
       });
 
       const personalFacts = repository.findByType(1, "personal");
@@ -278,8 +278,8 @@ describe("UserFactsRepository", () => {
 
       expect(personalFacts).toHaveLength(2);
       expect(employmentFacts).toHaveLength(1);
-      expect(personalFacts.every((f) => f.factType === "personal")).toBe(true);
-      expect(employmentFacts.every((f) => f.factType === "employment")).toBe(
+      expect(personalFacts.every((f) => f.factCategory === "personal")).toBe(true);
+      expect(employmentFacts.every((f) => f.factCategory === "employment")).toBe(
         true,
       );
     });
@@ -293,7 +293,7 @@ describe("UserFactsRepository", () => {
       repository.create({
         caseId: 1,
         factContent: "Financial fact",
-        factType: "financial",
+        factCategory: "evidence",
       });
 
       // Clear previous audit logs
@@ -310,7 +310,7 @@ describe("UserFactsRepository", () => {
 
       const log = auditLogs[0] as { details: string };
       const details = JSON.parse(log.details);
-      expect(details.factType).toBe("financial");
+      expect(details.factCategory).toBe("financial");
     });
   });
 
@@ -319,7 +319,7 @@ describe("UserFactsRepository", () => {
       const created = repository.create({
         caseId: 1,
         factContent: "Old content",
-        factType: "personal",
+        factCategory: "timeline",
       });
 
       const updated = repository.update(created.id, {
@@ -343,15 +343,15 @@ describe("UserFactsRepository", () => {
       const created = repository.create({
         caseId: 1,
         factContent: "Test fact",
-        factType: "personal",
+        factCategory: "timeline",
       });
 
       const updated = repository.update(created.id, {
-        factType: "employment",
+        factCategory: "location",
       });
 
       expect(updated).not.toBeNull();
-      expect(updated!.factType).toBe("employment");
+      expect(updated!.factCategory).toBe("employment");
       expect(updated!.factContent).toBe("Test fact"); // Content unchanged
     });
 
@@ -359,24 +359,24 @@ describe("UserFactsRepository", () => {
       const created = repository.create({
         caseId: 1,
         factContent: "Old fact",
-        factType: "personal",
+        factCategory: "timeline",
       });
 
       const updated = repository.update(created.id, {
         factContent: "New fact",
-        factType: "financial",
+        factCategory: "evidence",
       });
 
       expect(updated).not.toBeNull();
       expect(updated!.factContent).toBe("New fact");
-      expect(updated!.factType).toBe("financial");
+      expect(updated!.factCategory).toBe("financial");
     });
 
     it("should audit update operation", () => {
       const created = repository.create({
         caseId: 1,
         factContent: "Test fact",
-        factType: "personal",
+        factCategory: "timeline",
       });
 
       repository.update(created.id, {
@@ -409,7 +409,7 @@ describe("UserFactsRepository", () => {
       const created = repository.create({
         caseId: 1,
         factContent: "To be deleted",
-        factType: "personal",
+        factCategory: "timeline",
       });
 
       const success = repository.delete(created.id);
@@ -428,7 +428,7 @@ describe("UserFactsRepository", () => {
       const created = repository.create({
         caseId: 1,
         factContent: "Test fact",
-        factType: "personal",
+        factCategory: "timeline",
       });
 
       repository.delete(created.id);
@@ -474,13 +474,13 @@ describe("UserFactsRepository", () => {
       repository.create({
         caseId: 1,
         factContent: "Fact 1",
-        factType: "personal",
+        factCategory: "timeline",
       });
 
       repository.create({
         caseId: 1,
         factContent: "Fact 2",
-        factType: "employment",
+        factCategory: "location",
       });
 
       // Delete the case

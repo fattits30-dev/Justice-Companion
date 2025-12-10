@@ -108,19 +108,19 @@ describe("Facts Repositories Integration Tests", () => {
       userFactsRepo.create({
         caseId: 1,
         factContent: "Name: Jane Smith",
-        factType: "personal",
+        factCategory: "timeline",
       });
 
       userFactsRepo.create({
         caseId: 1,
         factContent: "Email: jane.smith@example.com",
-        factType: "contact",
+        factCategory: "witness",
       });
 
       userFactsRepo.create({
         caseId: 1,
         factContent: "Salary: $75,000/year",
-        factType: "financial",
+        factCategory: "evidence",
       });
 
       // Create case facts (case-specific information)
@@ -148,9 +148,9 @@ describe("Facts Repositories Integration Tests", () => {
       // Verify user facts
       const userFacts = userFactsRepo.findByCaseId(1);
       expect(userFacts).toHaveLength(3);
-      expect(userFacts.map((f) => f.factType)).toContain("personal");
-      expect(userFacts.map((f) => f.factType)).toContain("contact");
-      expect(userFacts.map((f) => f.factType)).toContain("financial");
+      expect(userFacts.map((f) => f.factCategory)).toContain("personal");
+      expect(userFacts.map((f) => f.factCategory)).toContain("contact");
+      expect(userFacts.map((f) => f.factCategory)).toContain("financial");
 
       // Verify case facts
       const caseFacts = caseFactsRepo.findByCaseId(1);
@@ -166,7 +166,7 @@ describe("Facts Repositories Integration Tests", () => {
       const userFact = userFactsRepo.create({
         caseId: 1,
         factContent: "SSN: 123-45-6789",
-        factType: "personal",
+        factCategory: "timeline",
       });
 
       const caseFact = caseFactsRepo.create({
@@ -208,19 +208,19 @@ describe("Facts Repositories Integration Tests", () => {
       userFactsRepo.create({
         caseId: 1,
         factContent: "Personal info 1",
-        factType: "personal",
+        factCategory: "timeline",
       });
 
       userFactsRepo.create({
         caseId: 1,
         factContent: "Personal info 2",
-        factType: "personal",
+        factCategory: "timeline",
       });
 
       userFactsRepo.create({
         caseId: 1,
         factContent: "Employment info",
-        factType: "employment",
+        factCategory: "location",
       });
 
       caseFactsRepo.create({
@@ -278,13 +278,13 @@ describe("Facts Repositories Integration Tests", () => {
       userFactsRepo.create({
         caseId: 1,
         factContent: "User fact 1",
-        factType: "personal",
+        factCategory: "timeline",
       });
 
       userFactsRepo.create({
         caseId: 1,
         factContent: "User fact 2",
-        factType: "employment",
+        factCategory: "location",
       });
 
       caseFactsRepo.create({
@@ -317,7 +317,7 @@ describe("Facts Repositories Integration Tests", () => {
       userFactsRepo.create({
         caseId: 1,
         factContent: "User fact",
-        factType: "personal",
+        factCategory: "timeline",
       });
 
       caseFactsRepo.create({
@@ -341,7 +341,7 @@ describe("Facts Repositories Integration Tests", () => {
       const userFact = userFactsRepo.create({
         caseId: 1,
         factContent: "User fact",
-        factType: "personal",
+        factCategory: "timeline",
       });
 
       const caseFact = caseFactsRepo.create({
@@ -373,7 +373,7 @@ describe("Facts Repositories Integration Tests", () => {
       const userFact = userFactsRepo.create({
         caseId: 1,
         factContent: "User fact",
-        factType: "personal",
+        factCategory: "timeline",
       });
 
       const caseFact = caseFactsRepo.create({
@@ -414,37 +414,37 @@ describe("Facts Repositories Integration Tests", () => {
       userFactsRepo.create({
         caseId: 1,
         factContent: "Full Name: Jane Elizabeth Smith",
-        factType: "personal",
+        factCategory: "timeline",
       });
 
       userFactsRepo.create({
         caseId: 1,
         factContent: "DOB: 1985-03-15",
-        factType: "personal",
+        factCategory: "timeline",
       });
 
       userFactsRepo.create({
         caseId: 1,
         factContent: "Phone: (555) 123-4567",
-        factType: "contact",
+        factCategory: "witness",
       });
 
       userFactsRepo.create({
         caseId: 1,
         factContent: "Email: jane.smith@email.com",
-        factType: "contact",
+        factCategory: "witness",
       });
 
       userFactsRepo.create({
         caseId: 1,
         factContent: "Job Title: Senior Software Engineer",
-        factType: "employment",
+        factCategory: "location",
       });
 
       userFactsRepo.create({
         caseId: 1,
         factContent: "Annual Salary: $95,000",
-        factType: "financial",
+        factCategory: "evidence",
       });
 
       // Case facts (P1 encryption - may contain PII)
@@ -567,7 +567,7 @@ describe("Facts Repositories Integration Tests", () => {
         userFactsRepo.create({
           caseId: 999, // Non-existent case
           factContent: "Test fact",
-          factType: "personal",
+          factCategory: "timeline",
         });
       }).toThrow(); // Should throw foreign key constraint error
     });

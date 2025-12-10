@@ -43,7 +43,7 @@ export class AuthorizationMiddleware {
     if (!caseData) {
       this.auditLogger?.log({
         eventType: "authorization.denied",
-        userId: userId.toString(),
+        userId: userId,
         resourceType: "case",
         resourceId: caseId.toString(),
         action: "read",
@@ -58,7 +58,7 @@ export class AuthorizationMiddleware {
     if (caseData.userId && caseData.userId !== userId) {
       this.auditLogger?.log({
         eventType: "authorization.denied",
-        userId: userId.toString(),
+        userId: userId,
         resourceType: "case",
         resourceId: caseId.toString(),
         action: "read",
@@ -79,7 +79,7 @@ export class AuthorizationMiddleware {
     if (user.role !== "admin") {
       this.auditLogger?.log({
         eventType: "authorization.denied",
-        userId: user.id.toString(),
+        userId: user.id,
         resourceType: "admin",
         resourceId: "system",
         action: "read",
@@ -100,7 +100,7 @@ export class AuthorizationMiddleware {
     if (!user.isActive) {
       this.auditLogger?.log({
         eventType: "authorization.denied",
-        userId: user.id.toString(),
+        userId: user.id,
         resourceType: "user",
         resourceId: user.id.toString(),
         action: "read",

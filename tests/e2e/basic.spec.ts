@@ -55,6 +55,25 @@ test.describe("Justice Companion - Basic Smoke Tests", () => {
   });
 
   test("App responds to login attempt", async ({ page }) => {
+    await page.route("**/auth/login", async (route) => {
+      if (route.request().method() !== "POST") {
+        return route.continue();
+      }
+
+      await route.fulfill({
+        status: 401,
+        contentType: "application/json",
+        body: JSON.stringify({
+          detail: "Invalid credentials",
+          error: {
+            code: "INVALID_CREDENTIALS",
+            message:
+              "Invalid credentials. Please check your email and password.",
+          },
+        }),
+      });
+    });
+
     await page.goto("/login");
 
     // Fill in login form with test credentials

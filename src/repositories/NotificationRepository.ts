@@ -157,15 +157,12 @@ export class NotificationRepository {
     `);
 
     stmt.run(
-      input.type ?? null,
-      input.severity ?? null,
       input.title ?? null,
       input.message ?? null,
       input.actionUrl ?? null,
       input.actionLabel ?? null,
       input.metadata ? JSON.stringify(input.metadata) : null,
       this.normalizeDateInput(input.expiresAt),
-      this.normalizeDateInput(input.readAt),
       input.isRead ?? null,
       input.isDismissed ?? null,
       id,

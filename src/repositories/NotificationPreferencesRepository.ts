@@ -54,7 +54,22 @@ export class NotificationPreferencesRepository {
    * Create default preferences for a user
    */
   createDefaults(userId: number): NotificationPreferences {
-    return this.create({ userId });
+    return this.create({
+      id: 0,
+      userId,
+      deadlineRemindersEnabled: true,
+      deadlineReminderDays: 7,
+      caseUpdatesEnabled: true,
+      evidenceUpdatesEnabled: true,
+      systemNotificationsEnabled: true,
+      emailNotificationsEnabled: false,
+      emailAddress: null,
+      quietHoursEnabled: false,
+      quietHoursStart: "",
+      quietHoursEnd: "",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    });
   }
 
   /**

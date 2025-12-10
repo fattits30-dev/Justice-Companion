@@ -190,7 +190,7 @@ export class AuditLogger {
 
       if (rows.length === 0) {
         return {
-          valid: true,
+          isValid: true,
           totalLogs: 0,
         };
       }
@@ -206,7 +206,7 @@ export class AuditLogger {
         const calculatedHash = this.calculateIntegrityHash(entry);
         if (entry.integrityHash !== calculatedHash) {
           return {
-            valid: false,
+            isValid: false,
             totalLogs: entries.length,
             brokenAt: i,
             brokenLog: entry,
@@ -218,7 +218,7 @@ export class AuditLogger {
         // Verify chain linking
         if (entry.previousLogHash !== previousHash) {
           return {
-            valid: false,
+            isValid: false,
             totalLogs: entries.length,
             brokenAt: i,
             brokenLog: entry,
@@ -231,12 +231,12 @@ export class AuditLogger {
       }
 
       return {
-        valid: true,
+        isValid: true,
         totalLogs: entries.length,
       };
     } catch (error) {
       return {
-        valid: false,
+        isValid: false,
         totalLogs: 0,
         error: error instanceof Error ? error.message : "Unknown error",
       };

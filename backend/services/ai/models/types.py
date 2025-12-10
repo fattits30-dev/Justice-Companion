@@ -20,6 +20,7 @@ AIProviderType = Literal[
     "perplexity",
     "emberton",
     "ollama",
+    "groq",
 ]
 
 

@@ -1,0 +1,312 @@
+
+> justice-companion@1.0.0 typecheck
+> tsc --noEmit
+
+src/middleware/AuthorizationMiddleware.ts(46,9): error TS2322: Type 'string' is not assignable to type 'number'.
+src/middleware/AuthorizationMiddleware.ts(61,9): error TS2322: Type 'string' is not assignable to type 'number'.
+src/middleware/AuthorizationMiddleware.ts(82,9): error TS2322: Type 'string' is not assignable to type 'number'.
+src/middleware/AuthorizationMiddleware.ts(103,9): error TS2322: Type 'string' is not assignable to type 'number'.
+src/middleware/AuthorizationMiddleware.ts(127,9): error TS2322: Type 'string' is not assignable to type 'number'.
+src/repositories/FactsRepositories.test.ts(111,9): error TS2353: Object literal may only specify known properties, and 'factType' does not exist in type 'CreateUserFactInput'.
+src/repositories/FactsRepositories.test.ts(117,9): error TS2353: Object literal may only specify known properties, and 'factType' does not exist in type 'CreateUserFactInput'.
+src/repositories/FactsRepositories.test.ts(123,9): error TS2353: Object literal may only specify known properties, and 'factType' does not exist in type 'CreateUserFactInput'.
+src/repositories/FactsRepositories.test.ts(151,37): error TS2339: Property 'factType' does not exist on type 'UserFact'.
+src/repositories/FactsRepositories.test.ts(152,37): error TS2339: Property 'factType' does not exist on type 'UserFact'.
+src/repositories/FactsRepositories.test.ts(153,37): error TS2339: Property 'factType' does not exist on type 'UserFact'.
+src/repositories/FactsRepositories.test.ts(169,9): error TS2353: Object literal may only specify known properties, and 'factType' does not exist in type 'CreateUserFactInput'.
+src/repositories/FactsRepositories.test.ts(211,9): error TS2353: Object literal may only specify known properties, and 'factType' does not exist in type 'CreateUserFactInput'.
+src/repositories/FactsRepositories.test.ts(217,9): error TS2353: Object literal may only specify known properties, and 'factType' does not exist in type 'CreateUserFactInput'.
+src/repositories/FactsRepositories.test.ts(223,9): error TS2353: Object literal may only specify known properties, and 'factType' does not exist in type 'CreateUserFactInput'.
+src/repositories/FactsRepositories.test.ts(281,9): error TS2353: Object literal may only specify known properties, and 'factType' does not exist in type 'CreateUserFactInput'.
+src/repositories/FactsRepositories.test.ts(287,9): error TS2353: Object literal may only specify known properties, and 'factType' does not exist in type 'CreateUserFactInput'.
+src/repositories/FactsRepositories.test.ts(320,9): error TS2353: Object literal may only specify known properties, and 'factType' does not exist in type 'CreateUserFactInput'.
+src/repositories/FactsRepositories.test.ts(344,9): error TS2353: Object literal may only specify known properties, and 'factType' does not exist in type 'CreateUserFactInput'.
+src/repositories/FactsRepositories.test.ts(376,9): error TS2353: Object literal may only specify known properties, and 'factType' does not exist in type 'CreateUserFactInput'.
+src/repositories/FactsRepositories.test.ts(417,9): error TS2353: Object literal may only specify known properties, and 'factType' does not exist in type 'CreateUserFactInput'.
+src/repositories/FactsRepositories.test.ts(423,9): error TS2353: Object literal may only specify known properties, and 'factType' does not exist in type 'CreateUserFactInput'.
+src/repositories/FactsRepositories.test.ts(429,9): error TS2353: Object literal may only specify known properties, and 'factType' does not exist in type 'CreateUserFactInput'.
+src/repositories/FactsRepositories.test.ts(435,9): error TS2353: Object literal may only specify known properties, and 'factType' does not exist in type 'CreateUserFactInput'.
+src/repositories/FactsRepositories.test.ts(441,9): error TS2353: Object literal may only specify known properties, and 'factType' does not exist in type 'CreateUserFactInput'.
+src/repositories/FactsRepositories.test.ts(447,9): error TS2353: Object literal may only specify known properties, and 'factType' does not exist in type 'CreateUserFactInput'.
+src/repositories/FactsRepositories.test.ts(570,11): error TS2353: Object literal may only specify known properties, and 'factType' does not exist in type 'CreateUserFactInput'.
+src/repositories/NotesRepository.test.ts(54,38): error TS2345: Argument of type '{ caseId: number; content: string; }' is not assignable to parameter of type 'CreateNoteInput'.
+  Type '{ caseId: number; content: string; }' is missing the following properties from type 'CreateNoteInput': userId, title
+src/repositories/NotesRepository.test.ts(81,25): error TS2345: Argument of type '{ caseId: number; content: string; }' is not assignable to parameter of type 'CreateNoteInput'.
+  Type '{ caseId: number; content: string; }' is missing the following properties from type 'CreateNoteInput': userId, title
+src/repositories/NotesRepository.test.ts(102,25): error TS2345: Argument of type '{ caseId: number; content: string; }' is not assignable to parameter of type 'CreateNoteInput'.
+  Type '{ caseId: number; content: string; }' is missing the following properties from type 'CreateNoteInput': userId, title
+src/repositories/NotesRepository.test.ts(122,41): error TS2345: Argument of type '{ caseId: number; content: string; }' is not assignable to parameter of type 'CreateNoteInput'.
+  Type '{ caseId: number; content: string; }' is missing the following properties from type 'CreateNoteInput': userId, title
+src/repositories/NotesRepository.test.ts(134,41): error TS2345: Argument of type '{ caseId: number; content: string; }' is not assignable to parameter of type 'CreateNoteInput'.
+  Type '{ caseId: number; content: string; }' is missing the following properties from type 'CreateNoteInput': userId, title
+src/repositories/NotesRepository.test.ts(162,25): error TS2345: Argument of type '{ caseId: number; content: string; }' is not assignable to parameter of type 'CreateNoteInput'.
+  Type '{ caseId: number; content: string; }' is missing the following properties from type 'CreateNoteInput': userId, title
+src/repositories/NotesRepository.test.ts(163,25): error TS2345: Argument of type '{ caseId: number; content: string; }' is not assignable to parameter of type 'CreateNoteInput'.
+  Type '{ caseId: number; content: string; }' is missing the following properties from type 'CreateNoteInput': userId, title
+src/repositories/NotesRepository.test.ts(180,41): error TS2345: Argument of type '{ caseId: number; content: string; }' is not assignable to parameter of type 'CreateNoteInput'.
+  Type '{ caseId: number; content: string; }' is missing the following properties from type 'CreateNoteInput': userId, title
+src/repositories/NotesRepository.test.ts(204,41): error TS2345: Argument of type '{ caseId: number; content: string; }' is not assignable to parameter of type 'CreateNoteInput'.
+  Type '{ caseId: number; content: string; }' is missing the following properties from type 'CreateNoteInput': userId, title
+src/repositories/NotesRepository.test.ts(226,41): error TS2345: Argument of type '{ caseId: number; content: string; }' is not assignable to parameter of type 'CreateNoteInput'.
+  Type '{ caseId: number; content: string; }' is missing the following properties from type 'CreateNoteInput': userId, title
+src/repositories/NotesRepository.test.ts(245,41): error TS2345: Argument of type '{ caseId: number; content: string; }' is not assignable to parameter of type 'CreateNoteInput'.
+  Type '{ caseId: number; content: string; }' is missing the following properties from type 'CreateNoteInput': userId, title
+src/repositories/NotesRepository.test.ts(300,25): error TS2345: Argument of type '{ caseId: number; content: string; }' is not assignable to parameter of type 'CreateNoteInput'.
+  Type '{ caseId: number; content: string; }' is missing the following properties from type 'CreateNoteInput': userId, title
+src/repositories/NotesRepository.ts(182,26): error TS18048: 'input.content' is possibly 'undefined'.
+src/repositories/NotificationPreferencesRepository.ts(57,24): error TS2345: Argument of type '{ userId: number; }' is not assignable to parameter of type 'NotificationPreferences'.
+  Type '{ userId: number; }' is missing the following properties from type 'NotificationPreferences': id, deadlineRemindersEnabled, deadlineReminderDays, caseUpdatesEnabled, and 9 more.
+src/repositories/NotificationRepository.ts(160,13): error TS2339: Property 'type' does not exist on type 'UpdateNotificationInput'.
+src/repositories/NotificationRepository.ts(161,13): error TS2339: Property 'severity' does not exist on type 'UpdateNotificationInput'.
+src/repositories/NotificationRepository.ts(168,37): error TS2339: Property 'readAt' does not exist on type 'UpdateNotificationInput'.
+src/repositories/UserFactsRepository.test.ts(57,9): error TS2353: Object literal may only specify known properties, and 'factType' does not exist in type 'CreateUserFactInput'.
+src/repositories/UserFactsRepository.test.ts(63,19): error TS2339: Property 'factType' does not exist on type 'UserFact'.
+src/repositories/UserFactsRepository.test.ts(99,11): error TS2353: Object literal may only specify known properties, and 'factType' does not exist in type 'CreateUserFactInput'.
+src/repositories/UserFactsRepository.test.ts(103,21): error TS2339: Property 'factType' does not exist on type 'UserFact'.
+src/repositories/UserFactsRepository.test.ts(111,9): error TS2353: Object literal may only specify known properties, and 'factType' does not exist in type 'CreateUserFactInput'.
+src/repositories/UserFactsRepository.test.ts(142,9): error TS2353: Object literal may only specify known properties, and 'factType' does not exist in type 'CreateUserFactInput'.
+src/repositories/UserFactsRepository.test.ts(150,21): error TS2339: Property 'factType' does not exist on type 'UserFact'.
+src/repositories/UserFactsRepository.test.ts(162,9): error TS2353: Object literal may only specify known properties, and 'factType' does not exist in type 'CreateUserFactInput'.
+src/repositories/UserFactsRepository.test.ts(197,9): error TS2353: Object literal may only specify known properties, and 'factType' does not exist in type 'CreateUserFactInput'.
+src/repositories/UserFactsRepository.test.ts(203,9): error TS2353: Object literal may only specify known properties, and 'factType' does not exist in type 'CreateUserFactInput'.
+src/repositories/UserFactsRepository.test.ts(209,9): error TS2353: Object literal may only specify known properties, and 'factType' does not exist in type 'CreateUserFactInput'.
+src/repositories/UserFactsRepository.test.ts(229,9): error TS2353: Object literal may only specify known properties, and 'factType' does not exist in type 'CreateUserFactInput'.
+src/repositories/UserFactsRepository.test.ts(235,9): error TS2353: Object literal may only specify known properties, and 'factType' does not exist in type 'CreateUserFactInput'.
+src/repositories/UserFactsRepository.test.ts(261,9): error TS2353: Object literal may only specify known properties, and 'factType' does not exist in type 'CreateUserFactInput'.
+src/repositories/UserFactsRepository.test.ts(267,9): error TS2353: Object literal may only specify known properties, and 'factType' does not exist in type 'CreateUserFactInput'.
+src/repositories/UserFactsRepository.test.ts(273,9): error TS2353: Object literal may only specify known properties, and 'factType' does not exist in type 'CreateUserFactInput'.
+src/repositories/UserFactsRepository.test.ts(281,43): error TS2339: Property 'factType' does not exist on type 'UserFact'.
+src/repositories/UserFactsRepository.test.ts(282,45): error TS2339: Property 'factType' does not exist on type 'UserFact'.
+src/repositories/UserFactsRepository.test.ts(296,9): error TS2353: Object literal may only specify known properties, and 'factType' does not exist in type 'CreateUserFactInput'.
+src/repositories/UserFactsRepository.test.ts(322,9): error TS2353: Object literal may only specify known properties, and 'factType' does not exist in type 'CreateUserFactInput'.
+src/repositories/UserFactsRepository.test.ts(346,9): error TS2353: Object literal may only specify known properties, and 'factType' does not exist in type 'CreateUserFactInput'.
+src/repositories/UserFactsRepository.test.ts(350,9): error TS2353: Object literal may only specify known properties, and 'factType' does not exist in type 'UpdateUserFactInput'.
+src/repositories/UserFactsRepository.test.ts(354,23): error TS2339: Property 'factType' does not exist on type 'UserFact'.
+src/repositories/UserFactsRepository.test.ts(362,9): error TS2353: Object literal may only specify known properties, and 'factType' does not exist in type 'CreateUserFactInput'.
+src/repositories/UserFactsRepository.test.ts(367,9): error TS2353: Object literal may only specify known properties, and 'factType' does not exist in type 'UpdateUserFactInput'.
+src/repositories/UserFactsRepository.test.ts(372,23): error TS2339: Property 'factType' does not exist on type 'UserFact'.
+src/repositories/UserFactsRepository.test.ts(379,9): error TS2353: Object literal may only specify known properties, and 'factType' does not exist in type 'CreateUserFactInput'.
+src/repositories/UserFactsRepository.test.ts(412,9): error TS2353: Object literal may only specify known properties, and 'factType' does not exist in type 'CreateUserFactInput'.
+src/repositories/UserFactsRepository.test.ts(431,9): error TS2353: Object literal may only specify known properties, and 'factType' does not exist in type 'CreateUserFactInput'.
+src/repositories/UserFactsRepository.test.ts(477,9): error TS2353: Object literal may only specify known properties, and 'factType' does not exist in type 'CreateUserFactInput'.
+src/repositories/UserFactsRepository.test.ts(483,9): error TS2353: Object literal may only specify known properties, and 'factType' does not exist in type 'CreateUserFactInput'.
+src/repositories/UserFactsRepository.ts(57,25): error TS2339: Property 'factType' does not exist on type 'CreateUserFactInput'.
+src/repositories/UserFactsRepository.ts(70,27): error TS2339: Property 'factType' does not exist on type 'CreateUserFactInput'.
+src/repositories/UserFactsRepository.ts(245,17): error TS2339: Property 'factType' does not exist on type 'UpdateUserFactInput'.
+src/repositories/UserFactsRepository.ts(247,33): error TS2339: Property 'factType' does not exist on type 'UpdateUserFactInput'.
+src/repositories/UserRepository.ts(52,9): error TS2322: Type 'string' is not assignable to type 'number'.
+src/repositories/UserRepository.ts(258,9): error TS2322: Type 'string' is not assignable to type 'number'.
+src/repositories/UserRepository.ts(273,9): error TS2322: Type 'string' is not assignable to type 'number'.
+src/repositories/UserRepository.ts(306,9): error TS2322: Type 'string' is not assignable to type 'number'.
+src/repositories/UserRepository.ts(316,9): error TS2322: Type 'string' is not assignable to type 'number'.
+src/repositories/UserRepository.ts(344,7): error TS2322: Type 'string' is not assignable to type 'number'.
+src/repositories/UserRepository.ts(369,7): error TS2322: Type 'string' is not assignable to type 'number'.
+src/repositories/UserRepository.ts(391,9): error TS2322: Type 'string' is not assignable to type 'number'.
+src/repositories/UserRepository.ts(403,9): error TS2322: Type 'string' is not assignable to type 'number'.
+src/services/AuditLogger.e2e.test.ts(804,19): error TS2551: Property 'valid' does not exist on type 'IntegrityReport'. Did you mean 'isValid'?
+src/services/AuditLogger.e2e.test.ts(828,21): error TS2551: Property 'valid' does not exist on type 'IntegrityReport'. Did you mean 'isValid'?
+src/services/AuditLogger.e2e.test.ts(868,21): error TS2551: Property 'valid' does not exist on type 'IntegrityReport'. Did you mean 'isValid'?
+src/services/AuditLogger.e2e.test.ts(894,21): error TS2551: Property 'valid' does not exist on type 'IntegrityReport'. Did you mean 'isValid'?
+src/services/AuditLogger.e2e.test.ts(1028,21): error TS2551: Property 'valid' does not exist on type 'IntegrityReport'. Did you mean 'isValid'?
+src/services/AuditLogger.e2e.test.ts(1046,11): error TS2322: Type 'string | undefined' is not assignable to type 'number | undefined'.
+  Type 'string' is not assignable to type 'number'.
+src/services/AuditLogger.e2e.test.ts(1054,44): error TS2322: Type 'string' is not assignable to type 'number'.
+src/services/AuditLogger.e2e.test.ts(1119,21): error TS2551: Property 'valid' does not exist on type 'IntegrityReport'. Did you mean 'isValid'?
+src/services/AuditLogger.e2e.test.ts(1150,21): error TS2551: Property 'valid' does not exist on type 'IntegrityReport'. Did you mean 'isValid'?
+src/services/AuditLogger.e2e.test.ts(1187,21): error TS2551: Property 'valid' does not exist on type 'IntegrityReport'. Did you mean 'isValid'?
+src/services/AuditLogger.e2e.test.ts(1213,21): error TS2551: Property 'valid' does not exist on type 'IntegrityReport'. Did you mean 'isValid'?
+src/services/AuditLogger.e2e.test.ts(1226,21): error TS2551: Property 'valid' does not exist on type 'IntegrityReport'. Did you mean 'isValid'?
+src/services/AuditLogger.e2e.test.ts(1227,21): error TS2551: Property 'error' does not exist on type 'IntegrityReport'. Did you mean 'errors'?
+src/services/AuditLogger.test.ts(140,9): error TS2322: Type 'string' is not assignable to type 'number'.
+src/services/AuditLogger.test.ts(292,21): error TS2551: Property 'valid' does not exist on type 'IntegrityReport'. Did you mean 'isValid'?
+src/services/AuditLogger.test.ts(294,21): error TS2339: Property 'brokenAt' does not exist on type 'IntegrityReport'.
+src/services/AuditLogger.test.ts(321,21): error TS2551: Property 'valid' does not exist on type 'IntegrityReport'. Did you mean 'isValid'?
+src/services/AuditLogger.test.ts(322,21): error TS2339: Property 'brokenAt' does not exist on type 'IntegrityReport'.
+src/services/AuditLogger.test.ts(342,21): error TS2551: Property 'valid' does not exist on type 'IntegrityReport'. Did you mean 'isValid'?
+src/services/AuditLogger.test.ts(359,21): error TS2551: Property 'valid' does not exist on type 'IntegrityReport'. Did you mean 'isValid'?
+src/services/AuditLogger.test.ts(360,21): error TS2339: Property 'brokenAt' does not exist on type 'IntegrityReport'.
+src/services/AuditLogger.test.ts(365,21): error TS2551: Property 'valid' does not exist on type 'IntegrityReport'. Did you mean 'isValid'?
+src/services/AuditLogger.test.ts(429,9): error TS2322: Type 'string' is not assignable to type 'number'.
+src/services/AuditLogger.test.ts(435,40): error TS2322: Type 'string' is not assignable to type 'number'.
+src/services/AuditLogger.test.ts(586,9): error TS2322: Type 'string' is not assignable to type 'number'.
+src/services/AuditLogger.test.ts(597,53): error TS2322: Type 'string' is not assignable to type 'number'.
+src/services/AuditLogger.test.ts(969,21): error TS2551: Property 'valid' does not exist on type 'IntegrityReport'. Did you mean 'isValid'?
+src/services/AuditLogger.test.ts(993,21): error TS2551: Property 'valid' does not exist on type 'IntegrityReport'. Did you mean 'isValid'?
+src/services/AuditLogger.ts(193,11): error TS2561: Object literal may only specify known properties, but 'valid' does not exist in type 'IntegrityReport'. Did you mean to write 'isValid'?
+src/services/AuditLogger.ts(209,13): error TS2561: Object literal may only specify known properties, but 'valid' does not exist in type 'IntegrityReport'. Did you mean to write 'isValid'?
+src/services/AuditLogger.ts(221,13): error TS2561: Object literal may only specify known properties, but 'valid' does not exist in type 'IntegrityReport'. Did you mean to write 'isValid'?
+src/services/AuditLogger.ts(234,9): error TS2561: Object literal may only specify known properties, but 'valid' does not exist in type 'IntegrityReport'. Did you mean to write 'isValid'?
+src/services/AuditLogger.ts(239,9): error TS2561: Object literal may only specify known properties, but 'valid' does not exist in type 'IntegrityReport'. Did you mean to write 'isValid'?
+src/services/AuditLogger.ts(302,44): error TS2345: Argument of type 'string | number' is not assignable to parameter of type 'string'.
+  Type 'number' is not assignable to type 'string'.
+src/services/AuditLogger.ts(431,7): error TS2322: Type 'string | null' is not assignable to type 'number | null'.
+  Type 'string' is not assignable to type 'number'.
+src/services/AuthenticationService.integration.test.ts(7,8): error TS7016: Could not find a declaration file for module '../../tests/helpers/testCredentials.js'. 'C:/Users/sava6/ClaudeHome/projects/Justice Companion/tests/helpers/testCredentials.js' implicitly has an 'any' type.
+src/services/AuthenticationService.ts(151,7): error TS2322: Type 'string' is not assignable to type 'number'.
+src/services/AuthenticationService.ts(169,7): error TS2322: Type 'string' is not assignable to type 'number'.
+src/services/AuthenticationService.ts(246,9): error TS2322: Type 'string' is not assignable to type 'number'.
+src/services/AuthenticationService.ts(270,9): error TS2322: Type 'string' is not assignable to type 'number'.
+src/services/AuthenticationService.ts(338,7): error TS2322: Type 'string' is not assignable to type 'number'.
+src/services/AuthenticationService.ts(405,9): error TS2322: Type 'string' is not assignable to type 'number'.
+src/services/AuthenticationService.ts(467,9): error TS2322: Type 'string' is not assignable to type 'number'.
+src/services/AuthenticationService.ts(519,7): error TS2322: Type 'string' is not assignable to type 'number'.
+src/services/AuthenticationService.ts(585,9): error TS2322: Type 'string' is not assignable to type 'number'.
+src/services/ConsentService.ts(51,7): error TS2322: Type 'string' is not assignable to type 'number'.
+src/services/ConsentService.ts(79,9): error TS2322: Type 'string' is not assignable to type 'number'.
+src/services/ConsentService.ts(167,7): error TS2322: Type 'string' is not assignable to type 'number'.
+src/services/export/ExportService.test.ts(257,33): error TS2304: Cannot find name 'Mock'.
+src/services/export/ExportService.test.ts(258,33): error TS2304: Cannot find name 'Mock'.
+src/services/export/ExportService.test.ts(259,41): error TS2304: Cannot find name 'Mock'.
+src/services/export/ExportService.test.ts(260,41): error TS2304: Cannot find name 'Mock'.
+src/services/export/ExportService.test.ts(263,37): error TS2304: Cannot find name 'Mock'.
+src/services/export/ExportService.test.ts(264,41): error TS2304: Cannot find name 'Mock'.
+src/services/export/ExportService.test.ts(286,33): error TS2304: Cannot find name 'Mock'.
+src/services/export/ExportService.test.ts(299,33): error TS2304: Cannot find name 'Mock'.
+src/services/export/ExportService.test.ts(309,33): error TS2304: Cannot find name 'Mock'.
+src/services/export/ExportService.test.ts(310,33): error TS2304: Cannot find name 'Mock'.
+src/services/export/ExportService.test.ts(311,41): error TS2304: Cannot find name 'Mock'.
+src/services/export/ExportService.test.ts(312,41): error TS2304: Cannot find name 'Mock'.
+src/services/export/ExportService.test.ts(315,37): error TS2304: Cannot find name 'Mock'.
+src/services/export/ExportService.test.ts(316,41): error TS2304: Cannot find name 'Mock'.
+src/services/export/ExportService.test.ts(339,33): error TS2304: Cannot find name 'Mock'.
+src/services/export/ExportService.test.ts(340,33): error TS2304: Cannot find name 'Mock'.
+src/services/export/ExportService.test.ts(341,41): error TS2304: Cannot find name 'Mock'.
+src/services/export/ExportService.test.ts(342,41): error TS2304: Cannot find name 'Mock'.
+src/services/export/ExportService.test.ts(343,37): error TS2304: Cannot find name 'Mock'.
+src/services/export/ExportService.test.ts(344,41): error TS2304: Cannot find name 'Mock'.
+src/services/export/ExportService.test.ts(360,33): error TS2304: Cannot find name 'Mock'.
+src/services/export/ExportService.test.ts(361,33): error TS2304: Cannot find name 'Mock'.
+src/services/export/ExportService.test.ts(362,41): error TS2304: Cannot find name 'Mock'.
+src/services/export/ExportService.test.ts(363,41): error TS2304: Cannot find name 'Mock'.
+src/services/export/ExportService.test.ts(366,37): error TS2304: Cannot find name 'Mock'.
+src/services/export/ExportService.test.ts(367,41): error TS2304: Cannot find name 'Mock'.
+src/services/export/ExportService.test.ts(389,33): error TS2304: Cannot find name 'Mock'.
+src/services/export/ExportService.test.ts(390,33): error TS2304: Cannot find name 'Mock'.
+src/services/export/ExportService.test.ts(391,41): error TS2304: Cannot find name 'Mock'.
+src/services/export/ExportService.test.ts(394,41): error TS2304: Cannot find name 'Mock'.
+src/services/export/ExportService.test.ts(395,37): error TS2304: Cannot find name 'Mock'.
+src/services/export/ExportService.test.ts(396,41): error TS2304: Cannot find name 'Mock'.
+src/services/export/ExportService.test.ts(412,33): error TS2304: Cannot find name 'Mock'.
+src/services/export/ExportService.test.ts(413,33): error TS2304: Cannot find name 'Mock'.
+src/services/export/ExportService.test.ts(414,41): error TS2304: Cannot find name 'Mock'.
+src/services/export/ExportService.test.ts(415,41): error TS2304: Cannot find name 'Mock'.
+src/services/export/ExportService.test.ts(416,37): error TS2304: Cannot find name 'Mock'.
+src/services/export/ExportService.test.ts(417,41): error TS2304: Cannot find name 'Mock'.
+src/services/export/ExportService.test.ts(432,33): error TS2304: Cannot find name 'Mock'.
+src/services/export/ExportService.test.ts(433,33): error TS2304: Cannot find name 'Mock'.
+src/services/export/ExportService.test.ts(434,41): error TS2304: Cannot find name 'Mock'.
+src/services/export/ExportService.test.ts(437,41): error TS2304: Cannot find name 'Mock'.
+src/services/export/ExportService.test.ts(438,37): error TS2304: Cannot find name 'Mock'.
+src/services/export/ExportService.test.ts(439,41): error TS2304: Cannot find name 'Mock'.
+src/services/export/ExportService.test.ts(454,33): error TS2304: Cannot find name 'Mock'.
+src/services/export/ExportService.test.ts(455,33): error TS2304: Cannot find name 'Mock'.
+src/services/export/ExportService.test.ts(456,37): error TS2304: Cannot find name 'Mock'.
+src/services/export/ExportService.test.ts(457,41): error TS2304: Cannot find name 'Mock'.
+src/services/export/ExportService.test.ts(458,41): error TS2304: Cannot find name 'Mock'.
+src/services/export/ExportService.test.ts(459,41): error TS2304: Cannot find name 'Mock'.
+src/services/export/ExportService.test.ts(474,33): error TS2304: Cannot find name 'Mock'.
+src/services/export/ExportService.test.ts(475,33): error TS2304: Cannot find name 'Mock'.
+src/services/export/ExportService.test.ts(476,37): error TS2304: Cannot find name 'Mock'.
+src/services/export/ExportService.test.ts(477,41): error TS2304: Cannot find name 'Mock'.
+src/services/export/ExportService.test.ts(478,41): error TS2304: Cannot find name 'Mock'.
+src/services/export/ExportService.test.ts(479,41): error TS2304: Cannot find name 'Mock'.
+src/services/export/ExportService.test.ts(494,33): error TS2304: Cannot find name 'Mock'.
+src/services/export/ExportService.test.ts(495,33): error TS2304: Cannot find name 'Mock'.
+src/services/export/ExportService.test.ts(496,41): error TS2304: Cannot find name 'Mock'.
+src/services/export/ExportService.test.ts(497,41): error TS2304: Cannot find name 'Mock'.
+src/services/export/ExportService.test.ts(498,37): error TS2304: Cannot find name 'Mock'.
+src/services/export/ExportService.test.ts(499,41): error TS2304: Cannot find name 'Mock'.
+src/services/export/ExportService.test.ts(514,33): error TS2304: Cannot find name 'Mock'.
+src/services/export/ExportService.test.ts(515,33): error TS2304: Cannot find name 'Mock'.
+src/services/export/ExportService.test.ts(516,41): error TS2304: Cannot find name 'Mock'.
+src/services/export/ExportService.test.ts(517,37): error TS2304: Cannot find name 'Mock'.
+src/services/export/ExportService.test.ts(518,41): error TS2304: Cannot find name 'Mock'.
+src/services/export/ExportService.test.ts(529,33): error TS2304: Cannot find name 'Mock'.
+src/services/export/ExportService.test.ts(530,33): error TS2304: Cannot find name 'Mock'.
+src/services/export/ExportService.test.ts(531,41): error TS2304: Cannot find name 'Mock'.
+src/services/export/ExportService.test.ts(532,41): error TS2304: Cannot find name 'Mock'.
+src/services/export/ExportService.test.ts(533,41): error TS2304: Cannot find name 'Mock'.
+src/services/export/ExportService.test.ts(546,33): error TS2304: Cannot find name 'Mock'.
+src/services/export/ExportService.test.ts(547,33): error TS2304: Cannot find name 'Mock'.
+src/services/export/ExportService.test.ts(548,41): error TS2304: Cannot find name 'Mock'.
+src/services/export/ExportService.test.ts(549,41): error TS2304: Cannot find name 'Mock'.
+src/services/export/ExportService.test.ts(550,37): error TS2304: Cannot find name 'Mock'.
+src/services/export/ExportService.test.ts(551,41): error TS2304: Cannot find name 'Mock'.
+src/services/export/ExportService.ts(490,7): error TS2322: Type '{ fileName: string; filePath: string; description: string | undefined; id: number; caseId: number; fileSize: number; fileType: string; uploadedAt: string; tags?: string[] | undefined; }[]' is not assignable to type 'Document[]'.
+  Type '{ fileName: string; filePath: string; description: string | undefined; id: number; caseId: number; fileSize: number; fileType: string; uploadedAt: string; tags?: string[] | undefined; }' is missing the following properties from type 'Document': mimeType, uploadedBy, createdAt, updatedAt
+src/services/gdpr/Gdpr.integration.test.ts(263,9): error TS2322: Type 'string' is not assignable to type 'number'.
+src/services/gdpr/GdprService.ts(76,9): error TS2322: Type 'string' is not assignable to type 'number'.
+src/services/gdpr/GdprService.ts(95,9): error TS2322: Type 'string' is not assignable to type 'number'.
+src/services/gdpr/GdprService.ts(133,9): error TS2322: Type 'string' is not assignable to type 'number'.
+src/services/gdpr/GdprService.ts(154,9): error TS2322: Type 'string' is not assignable to type 'number'.
+src/services/NotificationService.ts(99,9): error TS2322: Type 'string' is not assignable to type 'number'.
+src/services/NotificationService.ts(177,7): error TS2322: Type 'string' is not assignable to type 'number'.
+src/services/NotificationService.ts(237,7): error TS2322: Type 'string' is not assignable to type 'number'.
+src/services/SearchService.ts(105,7): error TS2322: Type 'string' is not assignable to type 'number'.
+src/services/SearchService.ts(173,9): error TS2322: Type 'string' is not assignable to type 'number'.
+src/services/SearchService.ts(469,26): error TS2339: Property 'isPinned' does not exist on type 'Note'.
+src/services/SearchService.ts(783,7): error TS2322: Type 'string' is not assignable to type 'number'.
+src/services/SearchService.ts(825,9): error TS2322: Type 'string' is not assignable to type 'number'.
+src/services/SessionPersistenceService.test.ts(91,8): error TS2339: Property 'mockReturnValue' does not exist on type 'never'.
+src/services/TagService.ts(41,9): error TS2322: Type 'string' is not assignable to type 'number'.
+src/services/TagService.ts(153,7): error TS2322: Type 'string' is not assignable to type 'number'.
+src/services/TagService.ts(190,7): error TS2322: Type 'string' is not assignable to type 'number'.
+src/services/TagService.ts(214,9): error TS2322: Type 'string' is not assignable to type 'number'.
+src/services/TagService.ts(239,9): error TS2322: Type 'string' is not assignable to type 'number'.
+src/test/setup.ts(6,1): error TS2578: Unused '@ts-expect-error' directive.
+src/views/settings/AIServiceSettings.tsx(203,9): error TS2322: Type 'string | { code: string; message: string; details?: unknown; }' is not assignable to type 'string'.
+  Type '{ code: string; message: string; details?: unknown; }' is not assignable to type 'string'.
+src/views/settings/AIServiceSettings.tsx(316,23): error TS2322: Type '"outline"' is not assignable to type '"primary" | "secondary" | "ghost" | "danger" | undefined'.
+src/views/settings/AIServiceSettings.tsx(411,23): error TS2322: Type '"outline"' is not assignable to type '"primary" | "secondary" | "ghost" | "danger" | undefined'.
+src/views/settings/BackupSettings.test.tsx(14,20): error TS7031: Binding element 'children' implicitly has an 'any' type.
+src/views/timeline/TimelineView.test.tsx(61,20): error TS2339: Property 'id' does not exist on type 'never'.
+src/views/timeline/TimelineView.test.tsx(62,24): error TS2339: Property 'caseId' does not exist on type 'never'.
+src/views/timeline/TimelineView.test.tsx(63,24): error TS2339: Property 'userId' does not exist on type 'never'.
+src/views/timeline/TimelineView.test.tsx(64,23): error TS2339: Property 'title' does not exist on type 'never'.
+src/views/timeline/TimelineView.test.tsx(65,29): error TS2339: Property 'description' does not exist on type 'never'.
+src/views/timeline/TimelineView.test.tsx(66,30): error TS2339: Property 'deadlineDate' does not exist on type 'never'.
+src/views/timeline/TimelineView.test.tsx(67,26): error TS2339: Property 'priority' does not exist on type 'never'.
+src/views/timeline/TimelineView.test.tsx(68,24): error TS2339: Property 'status' does not exist on type 'never'.
+src/views/timeline/TimelineView.test.tsx(69,27): error TS2339: Property 'status' does not exist on type 'never'.
+src/views/timeline/TimelineView.test.tsx(70,29): error TS2339: Property 'completedAt' does not exist on type 'never'.
+src/views/timeline/TimelineView.test.tsx(73,27): error TS2339: Property 'createdAt' does not exist on type 'never'.
+src/views/timeline/TimelineView.test.tsx(74,27): error TS2339: Property 'updatedAt' does not exist on type 'never'.
+src/views/timeline/TimelineView.test.tsx(75,27): error TS2339: Property 'caseTitle' does not exist on type 'never'.
+src/views/timeline/TimelineView.test.tsx(76,28): error TS2339: Property 'caseStatus' does not exist on type 'never'.
+src/views/timeline/TimelineView.test.tsx(79,45): error TS2339: Property 'status' does not exist on type 'never'.
+src/views/timeline/TimelineView.test.tsx(95,24): error TS7006: Parameter 'deadline' implicitly has an 'any' type.
+src/views/timeline/TimelineView.test.tsx(115,31): error TS7006: Parameter 'deadlines' implicitly has an 'any' type.
+src/views/timeline/TimelineView.test.tsx(117,5): error TS2345: Argument of type '{ success: boolean; data: { items: { id: any; caseId: any; userId: any; title: any; description: any; deadlineDate: any; priority: any; status: any; completed: boolean; completedAt: any; reminderEnabled: boolean; ... 4 more ...; caseStatus: any; }[]; ... 4 more ...; offset: number; }; }' is not assignable to parameter of type 'ApiResponse<{ items: { id: number; caseId?: number | undefined; userId: number; title: string; description?: string | undefined; deadlineDate: string; priority: string; status: string; completed: boolean; ... 6 more ...; caseStatus?: string | undefined; }[]; total: number; overdueCount: number; }>'.
+  Type '{ success: boolean; data: { items: { id: any; caseId: any; userId: any; title: any; description: any; deadlineDate: any; priority: any; status: any; completed: boolean; completedAt: any; reminderEnabled: boolean; ... 4 more ...; caseStatus: any; }[]; ... 4 more ...; offset: number; }; }' is not assignable to type 'ApiSuccessResponse<{ items: { id: number; caseId?: number | undefined; userId: number; title: string; description?: string | undefined; deadlineDate: string; priority: string; status: string; completed: boolean; ... 6 more ...; caseStatus?: string | undefined; }[]; total: number; overdueCount: number; }>'.
+    Types of property 'success' are incompatible.
+      Type 'boolean' is not assignable to type 'true'.
+src/views/timeline/TimelineView.test.tsx(120,28): error TS7006: Parameter 'message' implicitly has an 'any' type.
+src/views/timeline/TimelineView.test.tsx(129,27): error TS7006: Parameter 'cases' implicitly has an 'any' type.
+src/views/timeline/TimelineView.test.tsx(130,53): error TS2345: Argument of type '{ success: boolean; data: { items: never[]; total: number; hasMore: boolean; limit: number; offset: number; }; }' is not assignable to parameter of type 'ApiResponse<PaginatedResponse<Case>>'.
+  Type '{ success: boolean; data: { items: never[]; total: number; hasMore: boolean; limit: number; offset: number; }; }' is not assignable to type 'ApiSuccessResponse<PaginatedResponse<Case>>'.
+    Types of property 'success' are incompatible.
+      Type 'boolean' is not assignable to type 'true'.
+src/views/timeline/TimelineView.test.tsx(158,5): error TS2345: Argument of type '{ success: boolean; data: { id: any; caseId: any; userId: any; title: any; description: any; deadlineDate: any; priority: any; status: any; completed: boolean; completedAt: any; reminderEnabled: boolean; reminderDaysBefore: number; createdAt: any; updatedAt: any; }; }' is not assignable to parameter of type 'ApiResponse<{ id: number; caseId?: number | undefined; userId: number; title: string; description?: string | undefined; deadlineDate: string; priority: string; status: string; completed: boolean; completedAt?: string | undefined; reminderEnabled: boolean; reminderDaysBefore: number; createdAt: string; updatedAt: str...'.
+  Type '{ success: boolean; data: { id: any; caseId: any; userId: any; title: any; description: any; deadlineDate: any; priority: any; status: any; completed: boolean; completedAt: any; reminderEnabled: boolean; reminderDaysBefore: number; createdAt: any; updatedAt: any; }; }' is not assignable to type 'ApiSuccessResponse<{ id: number; caseId?: number | undefined; userId: number; title: string; description?: string | undefined; deadlineDate: string; priority: string; status: string; completed: boolean; completedAt?: string | undefined; reminderEnabled: boolean; reminderDaysBefore: number; createdAt: string; updated...'.
+    Types of property 'success' are incompatible.
+      Type 'boolean' is not assignable to type 'true'.
+src/views/timeline/TimelineView.test.tsx(161,5): error TS2345: Argument of type '{ success: boolean; data: { id: any; caseId: any; userId: any; title: any; description: any; deadlineDate: any; priority: any; status: any; completed: boolean; completedAt: any; reminderEnabled: boolean; reminderDaysBefore: number; createdAt: any; updatedAt: any; }; }' is not assignable to parameter of type 'ApiResponse<{ id: number; caseId?: number | undefined; userId: number; title: string; description?: string | undefined; deadlineDate: string; priority: string; status: string; completed: boolean; completedAt?: string | undefined; reminderEnabled: boolean; reminderDaysBefore: number; createdAt: string; updatedAt: str...'.
+  Type '{ success: boolean; data: { id: any; caseId: any; userId: any; title: any; description: any; deadlineDate: any; priority: any; status: any; completed: boolean; completedAt: any; reminderEnabled: boolean; reminderDaysBefore: number; createdAt: any; updatedAt: any; }; }' is not assignable to type 'ApiSuccessResponse<{ id: number; caseId?: number | undefined; userId: number; title: string; description?: string | undefined; deadlineDate: string; priority: string; status: string; completed: boolean; completedAt?: string | undefined; reminderEnabled: boolean; reminderDaysBefore: number; createdAt: string; updated...'.
+    Types of property 'success' are incompatible.
+      Type 'boolean' is not assignable to type 'true'.
+src/views/timeline/TimelineView.test.tsx(380,9): error TS2345: Argument of type '{ success: boolean; data: { id: any; caseId: any; userId: any; title: any; description: any; deadlineDate: any; priority: any; status: any; completed: boolean; completedAt: any; reminderEnabled: boolean; reminderDaysBefore: number; createdAt: any; updatedAt: any; }; }' is not assignable to parameter of type 'ApiResponse<{ id: number; caseId?: number | undefined; userId: number; title: string; description?: string | undefined; deadlineDate: string; priority: string; status: string; completed: boolean; completedAt?: string | undefined; reminderEnabled: boolean; reminderDaysBefore: number; createdAt: string; updatedAt: str...'.
+  Type '{ success: boolean; data: { id: any; caseId: any; userId: any; title: any; description: any; deadlineDate: any; priority: any; status: any; completed: boolean; completedAt: any; reminderEnabled: boolean; reminderDaysBefore: number; createdAt: any; updatedAt: any; }; }' is not assignable to type 'ApiSuccessResponse<{ id: number; caseId?: number | undefined; userId: number; title: string; description?: string | undefined; deadlineDate: string; priority: string; status: string; completed: boolean; completedAt?: string | undefined; reminderEnabled: boolean; reminderDaysBefore: number; createdAt: string; updated...'.
+    Types of property 'success' are incompatible.
+      Type 'boolean' is not assignable to type 'true'.
+src/views/timeline/TimelineView.test.tsx(456,9): error TS2345: Argument of type '{ success: boolean; data: { id: any; caseId: any; userId: any; title: any; description: any; deadlineDate: any; priority: any; status: any; completed: boolean; completedAt: any; reminderEnabled: boolean; reminderDaysBefore: number; createdAt: any; updatedAt: any; }; }' is not assignable to parameter of type 'ApiResponse<{ id: number; caseId?: number | undefined; userId: number; title: string; description?: string | undefined; deadlineDate: string; priority: string; status: string; completed: boolean; completedAt?: string | undefined; reminderEnabled: boolean; reminderDaysBefore: number; createdAt: string; updatedAt: str...'.
+  Type '{ success: boolean; data: { id: any; caseId: any; userId: any; title: any; description: any; deadlineDate: any; priority: any; status: any; completed: boolean; completedAt: any; reminderEnabled: boolean; reminderDaysBefore: number; createdAt: any; updatedAt: any; }; }' is not assignable to type 'ApiSuccessResponse<{ id: number; caseId?: number | undefined; userId: number; title: string; description?: string | undefined; deadlineDate: string; priority: string; status: string; completed: boolean; completedAt?: string | undefined; reminderEnabled: boolean; reminderDaysBefore: number; createdAt: string; updated...'.
+    Types of property 'success' are incompatible.
+      Type 'boolean' is not assignable to type 'true'.
+src/views/timeline/TimelineView.test.tsx(489,9): error TS2345: Argument of type '{ success: boolean; data: { id: any; caseId: any; userId: any; title: any; description: any; deadlineDate: any; priority: any; status: any; completed: boolean; completedAt: any; reminderEnabled: boolean; reminderDaysBefore: number; createdAt: any; updatedAt: any; }; }' is not assignable to parameter of type 'ApiResponse<{ id: number; caseId?: number | undefined; userId: number; title: string; description?: string | undefined; deadlineDate: string; priority: string; status: string; completed: boolean; completedAt?: string | undefined; reminderEnabled: boolean; reminderDaysBefore: number; createdAt: string; updatedAt: str...'.
+  Type '{ success: boolean; data: { id: any; caseId: any; userId: any; title: any; description: any; deadlineDate: any; priority: any; status: any; completed: boolean; completedAt: any; reminderEnabled: boolean; reminderDaysBefore: number; createdAt: any; updatedAt: any; }; }' is not assignable to type 'ApiSuccessResponse<{ id: number; caseId?: number | undefined; userId: number; title: string; description?: string | undefined; deadlineDate: string; priority: string; status: string; completed: boolean; completedAt?: string | undefined; reminderEnabled: boolean; reminderDaysBefore: number; createdAt: string; updated...'.
+    Types of property 'success' are incompatible.
+      Type 'boolean' is not assignable to type 'true'.
+src/views/timeline/TimelineView.test.tsx(509,9): error TS2345: Argument of type '{ success: boolean; data: { id: any; caseId: any; userId: any; title: any; description: any; deadlineDate: any; priority: any; status: any; completed: boolean; completedAt: any; reminderEnabled: boolean; reminderDaysBefore: number; createdAt: any; updatedAt: any; }; }' is not assignable to parameter of type 'ApiResponse<{ id: number; caseId?: number | undefined; userId: number; title: string; description?: string | undefined; deadlineDate: string; priority: string; status: string; completed: boolean; completedAt?: string | undefined; reminderEnabled: boolean; reminderDaysBefore: number; createdAt: string; updatedAt: str...'.
+  Type '{ success: boolean; data: { id: any; caseId: any; userId: any; title: any; description: any; deadlineDate: any; priority: any; status: any; completed: boolean; completedAt: any; reminderEnabled: boolean; reminderDaysBefore: number; createdAt: any; updatedAt: any; }; }' is not assignable to type 'ApiSuccessResponse<{ id: number; caseId?: number | undefined; userId: number; title: string; description?: string | undefined; deadlineDate: string; priority: string; status: string; completed: boolean; completedAt?: string | undefined; reminderEnabled: boolean; reminderDaysBefore: number; createdAt: string; updated...'.
+    Types of property 'success' are incompatible.
+      Type 'boolean' is not assignable to type 'true'.

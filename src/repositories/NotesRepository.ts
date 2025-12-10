@@ -59,7 +59,7 @@ export class NotesRepository {
         action: "create",
         details: {
           caseId: input.caseId,
-          contentLength: input.content.length,
+          contentLength: input.content?.length ?? 0,
         },
         success: true,
       });
@@ -179,7 +179,7 @@ export class NotesRepository {
         resourceId: id.toString(),
         action: "update",
         details: {
-          contentLength: input.content.length,
+          contentLength: input.content?.length ?? 0,
         },
         success: true,
       });

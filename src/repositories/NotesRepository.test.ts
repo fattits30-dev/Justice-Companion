@@ -53,6 +53,8 @@ describe("NotesRepository", () => {
     it("should create a note with encrypted content", () => {
       const note = repository.create({
         caseId: 1,
+        userId: 1,
+        title: "Test Note",
         content: "This is a sensitive private note about the case.",
       });
 
@@ -80,7 +82,9 @@ describe("NotesRepository", () => {
     it("should audit note creation", () => {
       repository.create({
         caseId: 1,
-        content: "Test note",
+        userId: 1,
+        title: "Test Note",
+        content: "This is a sensitive private note about the case.",
       });
 
       const auditLog = db
@@ -99,10 +103,7 @@ describe("NotesRepository", () => {
 
     it("should not log plaintext content in audit logs", () => {
       const sensitiveContent = "SENSITIVE_SECRET_DATA";
-      repository.create({
-        caseId: 1,
-        content: sensitiveContent,
-      });
+      repository.create({ caseId: 1, userId: 1, title: "Test Note", content: sensitiveContent });
 
       const auditLog = db
         .prepare(
@@ -121,7 +122,9 @@ describe("NotesRepository", () => {
     it("should decrypt content when retrieving note", () => {
       const created = repository.create({
         caseId: 1,
-        content: "Encrypted note content",
+        userId: 1,
+        title: "Test Note",
+        content: "This is a sensitive private note about the case.",
       });
 
       const retrieved = repository.findById(created.id);
@@ -133,7 +136,9 @@ describe("NotesRepository", () => {
     it("should audit PII access when decrypting content", () => {
       const created = repository.create({
         caseId: 1,
-        content: "Test note",
+        userId: 1,
+        title: "Test Note",
+        content: "This is a sensitive private note about the case.",
       });
 
       repository.findById(created.id);
@@ -159,8 +164,18 @@ describe("NotesRepository", () => {
 
   describe("findByCaseId", () => {
     it("should decrypt all notes for a case", () => {
-      repository.create({ caseId: 1, content: "First note" });
-      repository.create({ caseId: 1, content: "Second note" });
+      repository.create({
+        caseId: 1,
+        userId: 1,
+        title: "Test Note",
+        content: "This is a sensitive private note about the case.",
+      });
+      repository.create({
+        caseId: 1,
+        userId: 1,
+        title: "Test Note",
+        content: "This is a sensitive private note about the case.",
+      });
 
       const notes = repository.findByCaseId(1);
 
@@ -179,7 +194,9 @@ describe("NotesRepository", () => {
     it("should update note content with new encryption", () => {
       const created = repository.create({
         caseId: 1,
-        content: "Original content",
+        userId: 1,
+        title: "Test Note",
+        content: "This is a sensitive private note about the case.",
       });
 
       const updated = repository.update(created.id, {
@@ -203,7 +220,9 @@ describe("NotesRepository", () => {
     it("should audit note update", () => {
       const created = repository.create({
         caseId: 1,
-        content: "Original content",
+        userId: 1,
+        title: "Test Note",
+        content: "This is a sensitive private note about the case.",
       });
 
       repository.update(created.id, { content: "Updated content" });
@@ -225,7 +244,9 @@ describe("NotesRepository", () => {
     it("should delete note and return true", () => {
       const created = repository.create({
         caseId: 1,
-        content: "To be deleted",
+        userId: 1,
+        title: "Test Note",
+        content: "This is a sensitive private note about the case.",
       });
 
       const result = repository.delete(created.id);
@@ -244,7 +265,9 @@ describe("NotesRepository", () => {
     it("should audit note deletion", () => {
       const created = repository.create({
         caseId: 1,
-        content: "To be deleted",
+        userId: 1,
+        title: "Test Note",
+        content: "This is a sensitive private note about the case.",
       });
 
       repository.delete(created.id);
@@ -297,7 +320,7 @@ describe("NotesRepository", () => {
     it("should never log decrypted content in audit logs", () => {
       const sensitiveData = "EXTREMELY_SENSITIVE_PERSONAL_DATA";
 
-      repository.create({ caseId: 1, content: sensitiveData });
+      repository.create({ caseId: 1, userId: 1, title: "Test Note", content: sensitiveData });
       repository.findById(1);
 
       const allAuditLogs = db

@@ -49,7 +49,7 @@ export class UserRepository {
       // Audit: User created
       this.auditLogger?.log({
         eventType: "user.create",
-        userId: createdUser.id.toString(),
+        userId: createdUser.id,
         resourceType: "user",
         resourceId: createdUser.id.toString(),
         action: "create",
@@ -255,7 +255,7 @@ export class UserRepository {
       // Audit: User updated
       this.auditLogger?.log({
         eventType: "user.update",
-        userId: id.toString(),
+        userId: id,
         resourceType: "user",
         resourceId: id.toString(),
         action: "update",
@@ -270,7 +270,7 @@ export class UserRepository {
       // Audit: Failed update
       this.auditLogger?.log({
         eventType: "user.update",
-        userId: id.toString(),
+        userId: id,
         resourceType: "user",
         resourceId: id.toString(),
         action: "update",
@@ -303,7 +303,7 @@ export class UserRepository {
       // Audit: Password changed (don't log the hash!)
       this.auditLogger?.log({
         eventType: "user.password_change",
-        userId: id.toString(),
+        userId: id,
         resourceType: "user",
         resourceId: id.toString(),
         action: "update",
@@ -313,7 +313,7 @@ export class UserRepository {
       // Audit: Failed password change
       this.auditLogger?.log({
         eventType: "user.password_change",
-        userId: id.toString(),
+        userId: id,
         resourceType: "user",
         resourceId: id.toString(),
         action: "update",
@@ -341,7 +341,7 @@ export class UserRepository {
     // Audit: Login timestamp updated
     this.auditLogger?.log({
       eventType: "user.login_timestamp",
-      userId: id.toString(),
+      userId: id,
       resourceType: "user",
       resourceId: id.toString(),
       action: "update",
@@ -366,7 +366,7 @@ export class UserRepository {
     // Audit: Active status changed
     this.auditLogger?.log({
       eventType: "user.update",
-      userId: id.toString(),
+      userId: id,
       resourceType: "user",
       resourceId: id.toString(),
       action: "update",
@@ -388,7 +388,7 @@ export class UserRepository {
       // Audit: User deleted
       this.auditLogger?.log({
         eventType: "user.delete",
-        userId: id.toString(),
+        userId: id,
         resourceType: "user",
         resourceId: id.toString(),
         action: "delete",
@@ -400,7 +400,7 @@ export class UserRepository {
       // Audit: Failed deletion
       this.auditLogger?.log({
         eventType: "user.delete",
-        userId: id.toString(),
+        userId: id,
         resourceType: "user",
         resourceId: id.toString(),
         action: "delete",

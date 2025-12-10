@@ -48,13 +48,13 @@ export class UserFactsRepository {
 
       const stmt = db.prepare(`
         INSERT INTO user_facts (case_id, fact_content, fact_type)
-        VALUES (@caseId, @factContent, @factType)
+        VALUES (@caseId, @factContent, @factCategory)
       `);
 
       const result = stmt.run({
         caseId: input.caseId,
         factContent: contentToStore,
-        factType: input.factType,
+        factCategory: input.factCategory,
       });
 
       const createdFact = this.findById(result.lastInsertRowid as number)!;
@@ -67,7 +67,7 @@ export class UserFactsRepository {
         action: "create",
         details: {
           caseId: input.caseId,
-          factType: input.factType,
+          factCategory: input.factCategory,
           contentLength: input.factContent.length,
         },
         success: true,
@@ -98,7 +98,7 @@ export class UserFactsRepository {
         id,
         case_id as caseId,
         fact_content as factContent,
-        fact_type as factType,
+        fact_type as factCategory,
         created_at as createdAt,
         updated_at as updatedAt
       FROM user_facts
@@ -138,7 +138,7 @@ export class UserFactsRepository {
         id,
         case_id as caseId,
         fact_content as factContent,
-        fact_type as factType,
+        fact_type as factCategory,
         created_at as createdAt,
         updated_at as updatedAt
       FROM user_facts
@@ -176,14 +176,14 @@ export class UserFactsRepository {
   /**
    * Find user facts by type for a case
    */
-  findByType(caseId: number, factType: string): UserFact[] {
+  findByType(caseId: number, factCategory: string): UserFact[] {
     const db = getDb();
     const stmt = db.prepare(`
       SELECT
         id,
         case_id as caseId,
         fact_content as factContent,
-        fact_type as factType,
+        fact_type as factCategory,
         created_at as createdAt,
         updated_at as updatedAt
       FROM user_facts
@@ -191,7 +191,7 @@ export class UserFactsRepository {
       ORDER BY created_at DESC
     `);
 
-    const rows = stmt.all(caseId, factType) as UserFact[];
+    const rows = stmt.all(caseId, factCategory) as UserFact[];
 
     // Decrypt all fact_content fields
     const decryptedRows = rows.map((row) => ({
@@ -204,12 +204,12 @@ export class UserFactsRepository {
       this.auditLogger?.log({
         eventType: "user_fact.content_access",
         resourceType: "user_fact",
-        resourceId: `case_${caseId}_type_${factType}`,
+        resourceId: `case_${caseId}_type_${factCategory}`,
         action: "read",
         details: {
           field: "fact_content",
           encrypted: true,
-          factType,
+          factCategory,
           count: decryptedRows.length,
         },
         success: true,
@@ -242,9 +242,9 @@ export class UserFactsRepository {
         params.factContent = JSON.stringify(encryptedContent);
       }
 
-      if (input.factType !== undefined) {
-        updates.push("fact_type = @factType");
-        params.factType = input.factType;
+      if (input.factCategory !== undefined) {
+        updates.push("fact_type = @factCategory");
+        params.factCategory = input.factCategory;
       }
 
       if (updates.length === 0) {

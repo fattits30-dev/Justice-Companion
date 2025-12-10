@@ -801,7 +801,7 @@ describe("AuditLogger E2E", () => {
       // Verify chain integrity
       const report = auditLogger.verifyIntegrity();
 
-      if (!report.valid) {
+      if (!report.isValid) {
         console.error(
           "Integrity check failed:",
           JSON.stringify(report, null, 2),
@@ -825,7 +825,7 @@ describe("AuditLogger E2E", () => {
         );
       }
 
-      expect(report.valid).toBe(true);
+      expect(report.isValid).toBe(true);
       expect(report.totalLogs).toBeGreaterThan(0);
     });
 
@@ -865,7 +865,7 @@ describe("AuditLogger E2E", () => {
 
       // Verify full chain integrity
       const report = auditLogger.verifyIntegrity();
-      expect(report.valid).toBe(true);
+      expect(report.isValid).toBe(true);
       expect(report.totalLogs).toBeGreaterThanOrEqual(7);
     });
 
@@ -891,7 +891,7 @@ describe("AuditLogger E2E", () => {
 
       // Chain should still be valid
       const report = auditLogger.verifyIntegrity();
-      expect(report.valid).toBe(true);
+      expect(report.isValid).toBe(true);
 
       // Should have both success and failure logs
       const allLogs = auditLogger.query();
@@ -1025,7 +1025,7 @@ describe("AuditLogger E2E", () => {
       const report = auditLogger.verifyIntegrity();
       const verifyTime = Date.now() - startTime;
 
-      expect(report.valid).toBe(true);
+      expect(report.isValid).toBe(true);
       expect(report.totalLogs).toBe(1000);
 
       // Verification should complete in < 2 seconds
@@ -1051,7 +1051,7 @@ describe("AuditLogger E2E", () => {
 
       // Query with filters
       const caseLogs = auditLogger.query({ resourceType: "case" });
-      const userLogs = auditLogger.query({ userId: "user123" });
+      const userLogs = auditLogger.query({ userId: 1 });
       const limitedLogs = auditLogger.query({ limit: 50 });
 
       const queryTime = Date.now() - startTime;
@@ -1116,7 +1116,7 @@ describe("AuditLogger E2E", () => {
 
       // Verify chain integrity
       const report = auditLogger.verifyIntegrity();
-      expect(report.valid).toBe(true);
+      expect(report.isValid).toBe(true);
       expect(report.totalLogs).toBe(10);
     });
 
@@ -1147,7 +1147,7 @@ describe("AuditLogger E2E", () => {
 
       // Chain should be intact
       const report = auditLogger.verifyIntegrity();
-      expect(report.valid).toBe(true);
+      expect(report.isValid).toBe(true);
     });
   });
 
@@ -1184,7 +1184,7 @@ describe("AuditLogger E2E", () => {
 
       // Chain should still be valid
       const report = auditLogger.verifyIntegrity();
-      expect(report.valid).toBe(true);
+      expect(report.isValid).toBe(true);
     });
   });
 
@@ -1210,7 +1210,7 @@ describe("AuditLogger E2E", () => {
 
       // Verify initial integrity
       let report = auditLogger.verifyIntegrity();
-      expect(report.valid).toBe(true);
+      expect(report.isValid).toBe(true);
 
       // Tamper with middle entry (evidence.create)
       const logs = auditLogger.query({ eventType: "evidence.create" });
@@ -1223,8 +1223,8 @@ describe("AuditLogger E2E", () => {
 
       // Verify tampering is detected
       report = auditLogger.verifyIntegrity();
-      expect(report.valid).toBe(false);
-      expect(report.error).toContain("tampered");
+      expect(report.isValid).toBe(false);
+      expect(report.errors).toContain("tampered");
     });
   });
 });

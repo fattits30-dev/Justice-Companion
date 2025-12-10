@@ -289,9 +289,9 @@ describe.sequential("AuditLogger", () => {
       }
 
       const report = auditLogger.verifyIntegrity();
-      expect(report.valid).toBe(true);
+      expect(report.isValid).toBe(true);
       expect(report.totalLogs).toBe(10);
-      expect(report.brokenAt).toBeUndefined();
+      expect(report.errors.length).toBeUndefined();
     });
 
     it("detects tampered integrity hash", () => {
@@ -318,8 +318,8 @@ describe.sequential("AuditLogger", () => {
       );
 
       const report = auditLogger.verifyIntegrity();
-      expect(report.valid).toBe(false);
-      expect(report.brokenAt).toBe(0);
+      expect(report.isValid).toBe(false);
+      expect(report.errors.length).toBe(0);
     });
 
     it("detects broken chain link", () => {
@@ -339,7 +339,7 @@ describe.sequential("AuditLogger", () => {
       ).run("BROKEN_LINK_1234567890123456789012345678901234567890123456789012");
 
       const report = auditLogger.verifyIntegrity();
-      expect(report.valid).toBe(false);
+      expect(report.isValid).toBe(false);
     });
 
     it("detects tampered event data", () => {
@@ -356,13 +356,13 @@ describe.sequential("AuditLogger", () => {
       ).run("case.delete");
 
       const report = auditLogger.verifyIntegrity();
-      expect(report.valid).toBe(false);
-      expect(report.brokenAt).toBe(0);
+      expect(report.isValid).toBe(false);
+      expect(report.errors.length).toBe(0);
     });
 
     it("returns valid:true for empty audit log", () => {
       const report = auditLogger.verifyIntegrity();
-      expect(report.valid).toBe(true);
+      expect(report.isValid).toBe(true);
       expect(report.totalLogs).toBe(0);
     });
   });
@@ -966,7 +966,7 @@ describe.sequential("AuditLogger", () => {
       }
 
       const report = auditLogger.verifyIntegrity();
-      expect(report.valid).toBe(true);
+      expect(report.isValid).toBe(true);
       expect(report.totalLogs).toBe(100);
     });
 
@@ -990,7 +990,7 @@ describe.sequential("AuditLogger", () => {
       );
 
       const report = auditLogger.verifyIntegrity();
-      expect(report.valid).toBe(false);
+      expect(report.isValid).toBe(false);
     });
   });
 });
