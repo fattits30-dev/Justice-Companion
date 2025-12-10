@@ -1,4 +1,5 @@
-import { describe, it, expect } from "vitest";
+/// <reference types="vitest/globals" />
+
 import { PaginationParamsSchema } from "./pagination";
 import type { PaginationParams, PaginatedResult } from "./pagination";
 

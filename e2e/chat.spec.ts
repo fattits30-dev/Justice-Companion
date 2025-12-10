@@ -8,35 +8,29 @@ test.describe("AI Chat Functionality", () => {
 
   test("should navigate to chat interface", async ({ page }) => {
     // Click Chat navigation
-    await page.click('a[href*="chat"], text=Chat, text=AI Assistant');
+    await page.click('a[href="/chat"]');
 
     // Should be on chat page
     await expect(page.url()).toMatch(/\/chat/);
-    await expect(page.locator("text=Chat")).toBeVisible();
+    // Look for chat interface elements (textarea is unique to chat page)
+    await expect(page.locator("textarea")).toBeVisible();
   });
 
   test("should send basic chat message and receive AI response", async ({
     page,
   }) => {
     // Navigate to chat
-    await page.click('a[href*="chat"], text=Chat');
+    await page.click('a[href="/chat"]');
     await expect(page.url()).toMatch(/\/chat/);
 
     // Wait for chat interface to load
-    await expect(
-      page.locator('[data-testid="message-input"], textarea')
-    ).toBeVisible();
+    await expect(page.locator("textarea")).toBeVisible();
 
     // Type a simple legal question
-    await page.fill(
-      '[data-testid="message-input"], textarea',
-      "Can they fire me?"
-    );
+    await page.fill("textarea", "Can they fire me?");
 
     // Send message
-    await page.click(
-      'button[type="submit"], [data-testid="send-button"], text=Send'
-    );
+    await page.click('button:has(svg)');
 
     // Should see message in chat
     await expect(page.locator("text=Can they fire me?")).toBeVisible({
@@ -44,7 +38,7 @@ test.describe("AI Chat Functionality", () => {
     });
 
     // Should receive AI response (check for common legal terms)
-    const aiResponse = page.locator('[data-testid="ai-message"], .ai-message');
+    const aiResponse = page.locator(".ai-message");
     await expect(aiResponse.or(page.locator("text=Employment"))).toBeVisible({
       timeout: 30000,
     });
@@ -56,25 +50,21 @@ test.describe("AI Chat Functionality", () => {
   });
 
   test("should stream AI response word by word", async ({ page }) => {
-    await page.click('a[href*="chat"]');
+    await page.click('a[href="/chat"]');
     await expect(page.url()).toMatch(/\/chat/);
 
-    await page.fill('[data-testid="message-input"]', "Unfair dismissal");
+    await page.fill("textarea", "Unfair dismissal");
 
     // Count words before sending
-    const initialWordCount = await page
-      .locator('.ai-message, [data-testid="ai-response"]')
-      .count();
+    const initialWordCount = await page.locator(".ai-message").count();
 
-    await page.click('button[type="submit"]');
+    await page.click('button:has(svg)');
 
     // Wait for streaming to start
     await page.waitForTimeout(2000);
 
     // Check if content is being added progressively
-    const wordsDuringStream = await page
-      .locator('.ai-message, [data-testid="ai-response"]')
-      .count();
+    const wordsDuringStream = await page.locator(".ai-message").count();
 
     // Should have more content than initial state
     expect(wordsDuringStream).toBeGreaterThan(initialWordCount);
@@ -88,9 +78,9 @@ test.describe("AI Chat Functionality", () => {
   });
 
   test("should show typing indicator during AI response", async ({ page }) => {
-    await page.click('a[href*="chat"]');
-    await page.fill('[data-testid="message-input"]', "Employment tribunal");
-    await page.click('button[type="submit"]');
+    await page.click('a[href="/chat"]');
+    await page.fill("textarea", "Employment tribunal");
+    await page.click('button:has(svg)');
 
     // Look for typing indicators
     const typingIndicators = [
@@ -118,19 +108,19 @@ test.describe("AI Chat Functionality", () => {
   });
 
   test("should handle conversation history", async ({ page }) => {
-    await page.click('a[href*="chat"]');
+    await page.click('a[href="/chat"]');
 
     // Send first message
-    await page.fill('[data-testid="message-input"]', "What is ET1 form?");
-    await page.click('button[type="submit"]');
+    await page.fill("textarea", "What is ET1 form?");
+    await page.click('button:has(svg)');
 
     await expect(page.locator("text=ET1 form")).toBeVisible({
       timeout: 20000,
     });
 
     // Send follow-up message
-    await page.fill('[data-testid="message-input"]', "How do I fill it out?");
-    await page.click('button[type="submit"]');
+    await page.fill("textarea", "How do I fill it out?");
+    await page.click('button:has(svg)');
 
     // Should see both questions
     await expect(page.locator("text=What is ET1 form?")).toBeVisible();
@@ -141,13 +131,10 @@ test.describe("AI Chat Functionality", () => {
   });
 
   test("should handle legal terminology and sources", async ({ page }) => {
-    await page.click('a[href*="chat"]');
+    await page.click('a[href="/chat"]');
 
-    await page.fill(
-      '[data-testid="message-input"]',
-      "Wrongful dismissal claim"
-    );
-    await page.click('button[type="submit"]');
+    await page.fill("textarea", "Wrongful dismissal claim");
+    await page.click('button:has(svg)');
 
     // Should mention legal sources
     const legalSources = [
@@ -172,11 +159,11 @@ test.describe("AI Chat Functionality", () => {
   });
 
   test("should handle document upload in chat", async ({ page }) => {
-    await page.click('a[href*="chat"]');
+    await page.click('a[href="/chat"]');
 
     // Look for upload button (paperclip, plus, or upload icon)
     const uploadButton = page.locator(
-      'button[aria-label*="upload"], [data-testid*="upload"], .upload-button, button:has(.lucide-plus)'
+      'button[aria-label*="upload"], [data-testid*="upload"], .upload-button, button:has(svg)'
     );
 
     if (await uploadButton.isVisible()) {
@@ -199,10 +186,10 @@ test.describe("AI Chat Functionality", () => {
   });
 
   test("should show error for empty message", async ({ page }) => {
-    await page.click('a[href*="chat"]');
+    await page.click('a[href="/chat"]');
 
     // Try to send empty message
-    await page.click('button[type="submit"]');
+    await page.click('button:has(svg)');
 
     // Should show error or not send
     const messageCount = await page.locator(".user-message").count();
@@ -215,14 +202,14 @@ test.describe("AI Chat Functionality", () => {
   });
 
   test("should handle long messages", async ({ page }) => {
-    await page.click('a[href*="chat"]');
+    await page.click('a[href="/chat"]');
 
     // Create a long detailed message
     const longMessage =
       "I have been working for my company for 5 years and recently had a dispute with my manager about working hours. We tried to resolve it through the company's HR procedures but haven't reached a satisfactory solution. Can you explain what options I might have for raising a formal grievance or if I should consider other legal actions under UK employment law? I work in London and my contract mentions the disciplinary procedure but I'm not sure if I've been treated fairly.";
 
-    await page.fill('[data-testid="message-input"]', longMessage);
-    await page.click('button[type="submit"]');
+    await page.fill("textarea", longMessage);
+    await page.click('button:has(svg)');
 
     // Should accept long message
     await expect(

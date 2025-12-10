@@ -1,10 +1,11 @@
+/// <reference types="vitest/globals" />
 /**
  * Repository initialization tests
  *
  * Tests for the centralized repository system and lazy initialization.
  */
 
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { vi } from "vitest";
 import {
   getRepositories,
   initializeTestRepositories,

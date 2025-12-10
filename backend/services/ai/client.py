@@ -19,35 +19,35 @@ Author: Justice Companion Team
 License: MIT
 """
 
-from typing import Optional, Dict, Any, List, Literal
-from datetime import datetime
-from pathlib import Path
 import asyncio
 import logging
+from datetime import datetime
+from pathlib import Path
+from typing import Any, Dict, List, Literal, Optional
 
-from pydantic import BaseModel, Field, ConfigDict, field_validator
 from fastapi import HTTPException
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 # AI service imports
 try:
     # Try absolute import (when running from project root)
     from backend.services.ai.service import (
-        UnifiedAIService,
         AIProviderConfig,
-        ParsedDocument,
-        UserProfile,
-        ExtractionSource,
         AIProviderType,
+        ExtractionSource,
+        ParsedDocument,
+        UnifiedAIService,
+        UserProfile,
     )
 except ImportError:
     # Fall back to relative import (when running tests)
     from unified_ai_service import (
-        UnifiedAIService,
         AIProviderConfig,
-        ParsedDocument,
-        UserProfile,
-        ExtractionSource,
         AIProviderType,
+        ExtractionSource,
+        ParsedDocument,
+        UnifiedAIService,
+        UserProfile,
     )
 
 # Type aliases
@@ -59,6 +59,7 @@ logger = logging.getLogger(__name__)
 # ============================================================================
 # PYDANTIC MODELS - Request/Response Types
 # ============================================================================
+
 
 class ConfidenceScores(BaseModel):
     """Confidence scores for extracted fields (0.0-1.0)"""
@@ -73,6 +74,7 @@ class ConfidenceScores(BaseModel):
     next_hearing_date: float = Field(..., ge=0.0, le=1.0)
 
     model_config = ConfigDict(from_attributes=True)
+
 
 class SuggestedCaseDataResponse(BaseModel):
     """Suggested case data extracted from document"""
@@ -90,26 +92,36 @@ class SuggestedCaseDataResponse(BaseModel):
     opposing_party: Optional[str] = Field(None, description="Opposing party name")
     case_number: Optional[str] = Field(None, description="Court/tribunal case number")
     court_name: Optional[str] = Field(None, description="Court or tribunal name")
-    filing_deadline: Optional[str] = Field(None, description="Filing deadline in YYYY-MM-DD format")
+    filing_deadline: Optional[str] = Field(
+        None, description="Filing deadline in YYYY-MM-DD format"
+    )
     next_hearing_date: Optional[str] = Field(
         None, description="Next hearing date in YYYY-MM-DD format"
     )
-    confidence: ConfidenceScores = Field(..., description="Confidence scores for each field")
+    confidence: ConfidenceScores = Field(
+        ..., description="Confidence scores for each field"
+    )
     extracted_from: Dict[str, Optional[ExtractionSource]] = Field(
         default_factory=dict, description="Source text for each extracted field"
     )
 
     model_config = ConfigDict(from_attributes=True)
 
+
 class DocumentAnalysisRequest(BaseModel):
     """Request for document analysis"""
 
-    document: ParsedDocument = Field(..., description="Parsed document with text content")
+    document: ParsedDocument = Field(
+        ..., description="Parsed document with text content"
+    )
     user_profile: UserProfile = Field(..., description="User profile information")
     session_id: str = Field(..., min_length=1, description="Session UUID")
-    user_question: Optional[str] = Field(None, description="Optional user question about document")
+    user_question: Optional[str] = Field(
+        None, description="Optional user question about document"
+    )
 
     model_config = ConfigDict(from_attributes=True)
+
 
 class DocumentAnalysisResponse(BaseModel):
     """Response from document analysis"""
@@ -121,6 +133,7 @@ class DocumentAnalysisResponse(BaseModel):
     metadata: Optional[Dict[str, Any]] = Field(None, description="Additional metadata")
 
     model_config = ConfigDict(from_attributes=True)
+
 
 class OCRResult(BaseModel):
     """OCR processing result"""
@@ -134,6 +147,7 @@ class OCRResult(BaseModel):
     )
 
     model_config = ConfigDict(from_attributes=True)
+
 
 class ImageAnalysisRequest(BaseModel):
     """Request for image analysis with OCR"""
@@ -158,6 +172,7 @@ class ImageAnalysisRequest(BaseModel):
             raise ValueError(f"Path is not a file: {v}")
         return v
 
+
 class ServiceHealthResponse(BaseModel):
     """Health check response"""
 
@@ -169,6 +184,7 @@ class ServiceHealthResponse(BaseModel):
     model_ready: bool = False
 
     model_config = ConfigDict(from_attributes=True)
+
 
 class ServiceInfoResponse(BaseModel):
     """Service information response"""
@@ -184,9 +200,11 @@ class ServiceInfoResponse(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
+
 # ============================================================================
 # PYTHON AI CLIENT SERVICE - Server-Side Implementation
 # ============================================================================
+
 
 class PythonAIClientService:
     """
@@ -254,8 +272,9 @@ class PythonAIClientService:
         # Initialize AI service
         self.ai_service = UnifiedAIService(config=ai_config, audit_logger=audit_logger)
 
+        # Provider works directly in f-strings (auto-converted to string)
         logger.info(
-            f"Initialized PythonAIClientService with {ai_config.provider.value}/{ai_config.model}"
+            f"Initialized PythonAIClientService with {ai_config.provider}/{ai_config.model}"
         )
 
     async def is_available(self) -> bool:
@@ -290,7 +309,7 @@ class PythonAIClientService:
 
         return ServiceHealthResponse(
             status="healthy" if is_ready else "unhealthy",
-            ai_provider=self.ai_config.provider.value,
+            ai_provider=self.ai_config.provider,
             model_ready=is_ready,
         )
 
@@ -307,11 +326,11 @@ class PythonAIClientService:
         """
         is_ready = await self.is_available()
 
-        return ServiceInfoResponse(
-            model_provider=self.ai_config.provider.value, model_ready=is_ready
-        )
+        return ServiceInfoResponse(model_provider=self.ai_config.provider, model_ready=is_ready)
 
-    async def analyze_document(self, request: DocumentAnalysisRequest) -> DocumentAnalysisResponse:
+    async def analyze_document(
+        self, request: DocumentAnalysisRequest
+    ) -> DocumentAnalysisResponse:
         """
         Analyze document text and extract structured case data.
 
@@ -386,13 +405,15 @@ class PythonAIClientService:
                 extracted_from=extraction_result.suggested_case_data.extracted_from,
             )
 
-            logger.info(f"Document analyzed successfully: {suggested_case_data.case_type} case")
+            logger.info(
+                f"Document analyzed successfully: {suggested_case_data.case_type} case"
+            )
 
             return DocumentAnalysisResponse(
                 analysis=extraction_result.analysis,
                 suggested_case_data=suggested_case_data,
                 metadata={
-                    "provider": self.ai_config.provider.value,
+                    "provider": self.ai_config.provider,
                     "model": self.ai_config.model,
                     "timestamp": datetime.utcnow().isoformat(),
                 },
@@ -400,9 +421,13 @@ class PythonAIClientService:
 
         except Exception as error:
             logger.error(f"Document analysis failed: {error}", exc_info=True)
-            raise HTTPException(status_code=500, detail=f"Document analysis failed: {str(error)}")
+            raise HTTPException(
+                status_code=500, detail=f"Document analysis failed: {str(error)}"
+            )
 
-    async def analyze_image(self, request: ImageAnalysisRequest) -> DocumentAnalysisResponse:
+    async def analyze_image(
+        self, request: ImageAnalysisRequest
+    ) -> DocumentAnalysisResponse:
         """
         Analyze image using OCR and extract structured case data.
 
@@ -434,7 +459,9 @@ class PythonAIClientService:
         """
         return await self._retry_operation(self._analyze_image_impl, request)
 
-    async def _analyze_image_impl(self, request: ImageAnalysisRequest) -> DocumentAnalysisResponse:
+    async def _analyze_image_impl(
+        self, request: ImageAnalysisRequest
+    ) -> DocumentAnalysisResponse:
         """Internal implementation of image analysis with OCR."""
         try:
             logger.info(f"Analyzing image with OCR: {request.image_path}")
@@ -502,7 +529,7 @@ class PythonAIClientService:
                 analysis=extraction_result.analysis,
                 suggested_case_data=suggested_case_data,
                 metadata={
-                    "provider": self.ai_config.provider.value,
+                    "provider": self.ai_config.provider,
                     "model": self.ai_config.model,
                     "timestamp": datetime.utcnow().isoformat(),
                     "ocr": {
@@ -524,7 +551,9 @@ class PythonAIClientService:
                     detail="Tesseract OCR not installed. Install with: apt-get install tesseract-ocr (Linux) or brew install tesseract (macOS)",
                 )
 
-            raise HTTPException(status_code=500, detail=f"Image analysis failed: {str(error)}")
+            raise HTTPException(
+                status_code=500, detail=f"Image analysis failed: {str(error)}"
+            )
 
     async def _perform_ocr(self, image_path: str) -> OCRResult:
         """
@@ -550,10 +579,10 @@ class PythonAIClientService:
         try:
             # Import OCR dependencies (lazy import)
             try:
+                import cv2
+                import numpy as np
                 import pytesseract
                 from PIL import Image
-                import numpy as np
-                import cv2
             except ImportError as e:
                 missing_lib = str(e).split("'")[1]
                 raise RuntimeError(
@@ -613,25 +642,29 @@ class PythonAIClientService:
             preprocessing_steps.append("contrast_enhance")
 
             # 5. Binarization (Otsu's thresholding)
-            _, img_binary = cv2.threshold(img_enhanced, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+            _, img_binary = cv2.threshold(
+                img_enhanced, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU
+            )
             preprocessing_steps.append("binarize")
 
             # Convert back to PIL Image
             processed_image = Image.fromarray(img_binary)
 
             # Run Tesseract OCR
-            custom_config = (
-                r"--oem 3 --psm 6"  # OEM 3: Default, PSM 6: Assume uniform block of text
-            )
+            custom_config = r"--oem 3 --psm 6"  # OEM 3: Default, PSM 6: Assume uniform block of text
 
             # Extract text
             text = pytesseract.image_to_string(processed_image, config=custom_config)
 
             # Get detailed data for confidence calculation
-            data = pytesseract.image_to_data(processed_image, output_type=pytesseract.Output.DICT)
+            data = pytesseract.image_to_data(
+                processed_image, output_type=pytesseract.Output.DICT
+            )
 
             # Calculate average confidence (excluding -1 values)
-            confidences = [float(conf) for conf in data["conf"] if conf != -1 and conf != "-1"]
+            confidences = [
+                float(conf) for conf in data["conf"] if conf != -1 and conf != "-1"
+            ]
             avg_confidence = sum(confidences) / len(confidences) if confidences else 0.0
 
             # Count words
@@ -656,7 +689,9 @@ class PythonAIClientService:
             logger.error(f"OCR processing failed: {error}", exc_info=True)
             raise RuntimeError(f"OCR processing failed: {str(error)}")
 
-    async def _retry_operation(self, operation_func, request) -> DocumentAnalysisResponse:
+    async def _retry_operation(
+        self, operation_func, request
+    ) -> DocumentAnalysisResponse:
         """
         Retry operation with exponential backoff.
 
@@ -733,9 +768,11 @@ class PythonAIClientService:
             detail=f"Operation failed after {self.max_retries} retries: {error_msg}",
         )
 
+
 # ============================================================================
 # HELPER FUNCTIONS
 # ============================================================================
+
 
 def create_python_ai_client_service(
     provider: str = "openai",
@@ -784,5 +821,8 @@ def create_python_ai_client_service(
     )
 
     return PythonAIClientService(
-        ai_config=ai_config, timeout=timeout, max_retries=max_retries, audit_logger=audit_logger
+        ai_config=ai_config,
+        timeout=timeout,
+        max_retries=max_retries,
+        audit_logger=audit_logger,
     )

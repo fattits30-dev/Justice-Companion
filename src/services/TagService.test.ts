@@ -1,9 +1,8 @@
+/// <reference types="vitest/globals" />
 /**
  * TagService Tests
  * Comprehensive test suite for tag management functionality
  */
-
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import Database from "better-sqlite3";
 import { TagService } from "./TagService";
 import type { CreateTagInput } from "../models/Tag";

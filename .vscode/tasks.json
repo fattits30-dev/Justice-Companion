@@ -5,20 +5,16 @@
       "label": "Start Full Stack",
       "type": "shell",
       "command": "npm",
-      "args": ["run", "dev"],
+      "args": ["run", "dev:full"],
       "isBackground": true,
       "problemMatcher": {
-        "owner": "vite",
         "pattern": {
-          "regexp": "^(.*)$",
-          "file": 1,
-          "location": 2,
-          "message": 3
+          "regexp": "^$"
         },
         "background": {
           "activeOnStart": true,
-          "beginsPattern": "Justice Companion Full Stack",
-          "endsPattern": "Full stack is running!"
+          "beginsPattern": ".",
+          "endsPattern": "^$"
         }
       },
       "presentation": {
@@ -28,29 +24,6 @@
         "panel": "dedicated",
         "showReuseMessage": true,
         "clear": false
-      }
-    },
-    {
-      "label": "Start Electron Dev",
-      "type": "shell",
-      "command": "pnpm electron:dev",
-      "isBackground": true,
-      "problemMatcher": {
-        "pattern": {
-          "regexp": "^(.*)$",
-          "file": 1,
-          "location": 2,
-          "message": 3
-        },
-        "background": {
-          "activeOnStart": true,
-          "beginsPattern": "Starting",
-          "endsPattern": "Electron.*started"
-        }
-      },
-      "presentation": {
-        "reveal": "always",
-        "panel": "dedicated"
       }
     },
     {
@@ -78,39 +51,6 @@
         "kind": "build",
         "isDefault": true
       },
-      "problemMatcher": ["$tsc"],
-      "presentation": {
-        "reveal": "always",
-        "panel": "dedicated"
-      }
-    },
-    {
-      "label": "Build: Windows",
-      "type": "shell",
-      "command": "pnpm build:win",
-      "group": "build",
-      "problemMatcher": ["$tsc"],
-      "presentation": {
-        "reveal": "always",
-        "panel": "dedicated"
-      }
-    },
-    {
-      "label": "Build: macOS",
-      "type": "shell",
-      "command": "pnpm build:mac",
-      "group": "build",
-      "problemMatcher": ["$tsc"],
-      "presentation": {
-        "reveal": "always",
-        "panel": "dedicated"
-      }
-    },
-    {
-      "label": "Build: Linux",
-      "type": "shell",
-      "command": "pnpm build:linux",
-      "group": "build",
       "problemMatcher": ["$tsc"],
       "presentation": {
         "reveal": "always",
@@ -339,26 +279,6 @@
       }
     },
     {
-      "label": "Rebuild: Native Modules (Electron)",
-      "type": "shell",
-      "command": "pnpm rebuild:electron",
-      "problemMatcher": [],
-      "presentation": {
-        "reveal": "always",
-        "panel": "shared"
-      }
-    },
-    {
-      "label": "Rebuild: Native Modules (Node)",
-      "type": "shell",
-      "command": "pnpm rebuild:node",
-      "problemMatcher": [],
-      "presentation": {
-        "reveal": "always",
-        "panel": "shared"
-      }
-    },
-    {
       "label": "Pre-Commit: Full Check",
       "type": "shell",
       "command": "pnpm lint:fix && pnpm type-check && pnpm test",
@@ -396,37 +316,6 @@
       "presentation": {
         "reveal": "always",
         "panel": "shared"
-      }
-    },
-    {
-      "label": "Rebuild better-sqlite3",
-      "type": "shell",
-      "command": "pnpm rebuild:electron",
-      "problemMatcher": [],
-      "presentation": {
-        "reveal": "always",
-        "panel": "shared"
-      }
-    },
-    {
-      "label": "Full Setup (Install + Rebuild)",
-      "type": "shell",
-      "command": "pnpm install && pnpm rebuild:electron",
-      "problemMatcher": [],
-      "presentation": {
-        "reveal": "always",
-        "panel": "dedicated"
-      }
-    },
-    {
-      "label": "Start Development (Full Stack)",
-      "type": "shell",
-      "command": "pnpm electron:dev",
-      "isBackground": true,
-      "problemMatcher": [],
-      "presentation": {
-        "reveal": "always",
-        "panel": "dedicated"
       }
     },
     {
@@ -523,8 +412,7 @@
       "label": "Full Stack: Start All Services",
       "dependsOn": [
         "Python AI: Start Service",
-        "Start Vite Dev Server",
-        "Start Electron Dev"
+        "Start Full Stack"
       ],
       "dependsOrder": "sequence",
       "problemMatcher": [],

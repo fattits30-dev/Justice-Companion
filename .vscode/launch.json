@@ -18,13 +18,19 @@
         "NODE_ENV": "development",
         "AI_MODE": "sdk",
         "HF_TOKEN": "${env:HF_TOKEN}",
-        "OPENAI_API_KEY": "${env:OPENAI_API_KEY}"
+        "OPENAI_API_KEY": "${env:OPENAI_API_KEY}",
+        "BACKEND_PORT": "8000"
       },
       "stopOnEntry": false,
       "autoAttachChildProcesses": true,
       "sourceMaps": true,
       "smartStep": true,
-      "trace": false
+      "trace": false,
+      "serverReadyAction": {
+        "pattern": "Local:.*?(https?://[0-9a-z:]+)",
+        "uriFormat": "%s",
+        "action": "debugWithChrome"
+      }
     },
     {
       "name": "▶️ Frontend Only (npm run dev)",
@@ -66,42 +72,6 @@
       },
       "justMyCode": false,
       "stopOnEntry": false
-    },
-    {
-      "name": "⚡ Electron App (Python must be running)",
-      "type": "node",
-      "request": "launch",
-      "cwd": "${workspaceFolder}",
-      "runtimeExecutable": "${workspaceFolder}/node_modules/.bin/tsx",
-      "windows": {
-        "runtimeExecutable": "${workspaceFolder}/node_modules/.bin/tsx.cmd"
-      },
-      "args": [
-        "node_modules/electron/cli.js",
-        "electron/main.ts",
-        "--remote-debugging-port=9223"
-      ],
-      "outputCapture": "std",
-      "console": "integratedTerminal",
-      "preLaunchTask": "Start Vite Dev Server",
-      "postDebugTask": "Kill Vite Dev Server",
-      "skipFiles": [
-        "<node_internals>/**",
-        "${workspaceFolder}/node_modules/**"
-      ],
-      "env": {
-        "NODE_ENV": "development",
-        "ELECTRON_ENABLE_LOGGING": "1",
-        "ELECTRON_DISABLE_SECURITY_WARNINGS": "true",
-        "NODE_OPTIONS": "--import=tsx",
-        "HF_TOKEN": "${env:HF_TOKEN}",
-        "OPENAI_API_KEY": "${env:OPENAI_API_KEY}"
-      },
-      "stopOnEntry": false,
-      "autoAttachChildProcesses": true,
-      "sourceMaps": true,
-      "smartStep": true,
-      "trace": false
     },
     {
       "name": "🧪 Run Tests",

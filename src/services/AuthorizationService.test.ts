@@ -1,4 +1,5 @@
-import { describe, it, expect, beforeEach } from "vitest";
+/// <reference types="vitest/globals" />
+
 import Database from "better-sqlite3";
 import { AuthorizationService } from "./AuthorizationService";
 import fs from "fs";

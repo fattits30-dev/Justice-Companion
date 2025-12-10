@@ -1,4 +1,5 @@
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
+/// <reference types="vitest/globals" />
+
 import Database from "better-sqlite3-multiple-ciphers";
 import { NotesRepository } from "./NotesRepository";
 import { AuditLogger } from "../services/AuditLogger";

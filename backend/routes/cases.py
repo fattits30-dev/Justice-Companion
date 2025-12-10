@@ -27,7 +27,7 @@ import base64
 import inspect
 import os
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Awaitable, Dict, List, Optional, cast
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from sqlalchemy import text
@@ -138,10 +138,13 @@ async def resolve_current_user_id(
     if "session_manager" in params:
         kwargs["session_manager"] = session_manager
 
-    result = dependency(**kwargs)
+    result: Any = dependency(**kwargs)
     if inspect.isawaitable(result):
-        return await result  # type: ignore[return-value]
-    return result  # type: ignore[return-value]
+        resolved = await cast(Awaitable[int], result)
+    else:
+        resolved = cast(int, result)
+
+    return resolved
 
 
 async def resolve_case_service(
@@ -161,10 +164,13 @@ async def resolve_case_service(
     if "audit_logger" in params:
         kwargs["audit_logger"] = audit_logger
 
-    result = dependency(**kwargs)
+    result: Any = dependency(**kwargs)
     if inspect.isawaitable(result):
-        return await result  # type: ignore[return-value]
-    return result  # type: ignore[return-value]
+        resolved = await cast(Awaitable[CaseService], result)
+    else:
+        resolved = cast(CaseService, result)
+
+    return resolved
 
 
 async def resolve_bulk_operation_service(
@@ -181,10 +187,13 @@ async def resolve_bulk_operation_service(
     if "audit_logger" in params:
         kwargs["audit_logger"] = audit_logger
 
-    result = dependency(**kwargs)
+    result: Any = dependency(**kwargs)
     if inspect.isawaitable(result):
-        return await result  # type: ignore[return-value]
-    return result  # type: ignore[return-value]
+        resolved = await cast(Awaitable[BulkOperationService], result)
+    else:
+        resolved = cast(BulkOperationService, result)
+
+    return resolved
 
 
 def get_case_fact_service(
@@ -215,10 +224,13 @@ async def resolve_case_fact_service(
     if "audit_logger" in params:
         kwargs["audit_logger"] = audit_logger
 
-    result = dependency(**kwargs)
+    result: Any = dependency(**kwargs)
     if inspect.isawaitable(result):
-        return await result  # type: ignore[return-value]
-    return result  # type: ignore[return-value]
+        resolved = await cast(Awaitable[CaseFactService], result)
+    else:
+        resolved = cast(CaseFactService, result)
+
+    return resolved
 
 
 # ===== HELPER FUNCTIONS =====

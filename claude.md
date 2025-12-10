@@ -125,6 +125,572 @@ mcp__serena__rename_symbol("old_function", "path/to/file.py", "new_function")
 mcp__serena__write_memory("refactoring-[name]", "# What Changed\n...")
 ```
 
+## CONTEXT7 MCP - ALWAYS QUERY BEFORE CODING
+
+**BEFORE writing ANY code that uses libraries/frameworks, you MUST query Context7 to avoid errors from outdated patterns, deprecated APIs, and breaking changes.**
+
+### When to Query Context7
+
+MANDATORY queries BEFORE:
+
+- Writing React components (hooks, patterns)
+- Using FastAPI decorators or features
+- Working with SQLAlchemy 2.0 (breaking changes from 1.x!)
+- Writing Vitest tests
+- Using TypeScript features
+- Implementing Tailwind classes
+- Configuring Vite/PWA
+- Debugging library-related errors
+
+### Two-Step Pattern
+
+#### Step 1: Resolve Library ID
+
+```
+mcp__context7__resolve-library-id("library-name")
+```
+
+#### Step 2: Get Documentation
+
+```
+mcp__context7__get-library-docs(
+    context7CompatibleLibraryID="/org/project",
+    topic="specific-feature"  # Optional but recommended
+)
+```
+
+### Justice Companion Tech Stack Queries
+
+| Technology | Library ID | Common Topics |
+|------------|------------|---------------|
+| React 18 | `/facebook/react` | "hooks", "context", "suspense", "concurrent" |
+| TypeScript | `/microsoft/TypeScript` | "types", "generics", "decorators" |
+| FastAPI | `/tiangolo/fastapi` | "routing", "dependencies", "async", "websockets" |
+| SQLAlchemy 2.0 | `/sqlalchemy/sqlalchemy` | "async orm", "select", "relationships", "migrations" |
+| Vitest | `/vitest-dev/vitest` | "testing", "mocking", "coverage" |
+| Tailwind CSS | `/tailwindlabs/tailwindcss` | "utilities", "responsive", "dark-mode" |
+| Vite | `/vitejs/vite` | "plugins", "build", "configuration" |
+| vite-plugin-pwa | `/vite-pwa/vite-plugin-pwa` | "offline", "service-worker", "manifest" |
+| TSyringe | `/microsoft/tsyringe` | "dependency-injection", "decorators" |
+
+### Critical: SQLAlchemy 2.0 Breaking Changes
+
+**❌ NEVER use 1.x patterns:**
+```python
+# Deprecated 1.x pattern
+session.query(User).filter_by(id=1).first()
+```
+
+**✅ ALWAYS query Context7 first:**
+```
+1. mcp__context7__resolve-library-id("sqlalchemy")
+2. mcp__context7__get-library-docs("/sqlalchemy/sqlalchemy", topic="async select")
+```
+
+**✅ Use 2.0 patterns:**
+```python
+# SQLAlchemy 2.0 pattern
+from sqlalchemy import select
+stmt = select(User).where(User.id == 1)
+result = await session.execute(stmt)
+user = result.scalar_one_or_none()
+```
+
+### Workflow Integration
+
+**Before writing backend code:**
+```
+1. mcp__serena__read_memory("justice-companion-architecture")
+2. mcp__context7__get-library-docs("/tiangolo/fastapi", topic="dependencies")
+3. mcp__context7__get-library-docs("/sqlalchemy/sqlalchemy", topic="async orm")
+4. Write code with verified patterns
+5. mcp__serena__write_memory("new-pattern-[name]", documentation)
+```
+
+**Before writing frontend code:**
+```
+1. mcp__serena__read_memory("justice-companion-architecture")
+2. mcp__context7__get-library-docs("/facebook/react", topic="hooks")
+3. mcp__context7__get-library-docs("/microsoft/TypeScript", topic="types")
+4. Write code with current React 18 patterns
+5. mcp__serena__write_memory("frontend-pattern-[name]", documentation)
+```
+
+**When debugging library errors:**
+```
+1. Identify the library causing the error
+2. mcp__context7__resolve-library-id("library-name")
+3. mcp__context7__get-library-docs("/org/project", topic="error-message-keyword")
+4. Check for breaking changes, deprecated features
+5. Fix using current patterns
+6. mcp__serena__write_memory("bug-fix-[name]", root-cause-and-solution)
+```
+
+### Error Prevention Examples
+
+**React Class Components (Deprecated):**
+```typescript
+// ❌ WITHOUT Context7 - Outdated React 17 pattern
+class MyComponent extends React.Component {
+  componentDidMount() { }
+}
+
+// ✅ WITH Context7 - Current React 18 pattern
+function MyComponent() {
+  useEffect(() => { }, []);
+}
+```
+
+**FastAPI Dependencies (Current):**
+```python
+# ❌ WITHOUT Context7 - Missing async/await
+def get_user(db: Session = Depends(get_db)):
+    return db.query(User).first()
+
+# ✅ WITH Context7 - Proper async pattern
+async def get_user(db: AsyncSession = Depends(get_db)):
+    stmt = select(User)
+    result = await db.execute(stmt)
+    return result.scalar_one_or_none()
+```
+
+**TSyringe DI (Phase 3 Target):**
+```typescript
+// ❌ WITHOUT Context7 - Manual singleton
+export const service = new ProfileService();
+
+// ✅ WITH Context7 - TSyringe pattern
+import { singleton } from "tsyringe";
+
+@singleton()
+export class ProfileService {
+  constructor(
+    @inject(EncryptionService) private encryption: EncryptionService
+  ) {}
+}
+```
+
+### Best Practices for This Project
+
+1. **Query on library errors** - First action when hitting library-related bugs
+2. **Query before Phase 3** - TSyringe patterns MUST be verified
+3. **Cache in Serena memory** - Save verified patterns for reuse
+4. **Update architecture memory** - Document pattern changes
+5. **Check breaking changes** - Especially SQLAlchemy, React, FastAPI
+
+### Performance Note
+
+- Context7 query: ~1-2 seconds
+- Fixing deprecated pattern bug: 10-60 minutes
+- **ROI: 5-60x time savings per query**
+
+## GITHUB MCP - VERSION CONTROL & COLLABORATION
+
+**Claude Code is installed as a git integration** - Use GitHub MCP tools for all version control operations instead of CLI commands.
+
+### Git Repository Context
+
+I always have access to:
+
+- Current branch: `main`
+- Main branch for PRs: `main`
+- Git status (modified, staged, untracked files)
+- Recent commits
+- Remote repository information
+
+### GitHub MCP Tools Available
+
+26+ tools for repository operations, PRs, issues, code search, and file management.
+
+### Common Workflows for This Project
+
+#### Creating a Feature Branch and PR
+
+```
+# 1. Check current status
+git status  # via Bash tool to see changes
+
+# 2. Create feature branch
+mcp__github__create_branch(
+    owner="your-org",
+    repo="Justice Companion",
+    branch="feature/add-timeline-export",
+    from_branch="main"
+)
+
+# 3. Push changes (after using Serena symbolic editing)
+mcp__github__push_files(
+    owner="your-org",
+    repo="Justice Companion",
+    branch="feature/add-timeline-export",
+    files=[
+        {"path": "backend/routes/timeline.py", "content": "..."},
+        {"path": "src/views/timeline/TimelineView.tsx", "content": "..."}
+    ],
+    message="feat: add timeline export functionality
+
+- Add export endpoint to backend
+- Implement frontend export button
+- Add PDF/CSV export formats
+- Update tests
+
+🤖 Generated with Claude Code
+Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
+)
+
+# 4. Create pull request
+mcp__github__create_pull_request(
+    owner="your-org",
+    repo="Justice Companion",
+    title="feat: Add timeline export functionality",
+    head="feature/add-timeline-export",
+    base="main",
+    body="## Summary
+- Added timeline export to PDF and CSV formats
+- Backend endpoint with proper authentication
+- Frontend UI with export button in timeline view
+
+## Changes
+- `backend/routes/timeline.py`: New export endpoint
+- `src/views/timeline/TimelineView.tsx`: Export button component
+- Tests updated for both frontend and backend
+
+## Test Plan
+- [ ] Export timeline to PDF
+- [ ] Export timeline to CSV
+- [ ] Verify authentication required
+- [ ] Check encrypted data handling
+
+## Phase Context
+This builds on Phase 2 backend DI patterns using centralized dependencies.
+
+🤖 Generated with Claude Code",
+    draft=False
+)
+
+# 5. Document in Serena memory
+mcp__serena__write_memory(
+    "feature-timeline-export",
+    "# Timeline Export Feature
+
+## Implementation
+- Backend: FastAPI endpoint with Depends(get_profile_service)
+- Frontend: React component with export hook
+- Formats: PDF (reportlab), CSV (pandas)
+
+## Files Modified
+- backend/routes/timeline.py
+- src/views/timeline/TimelineView.tsx
+- backend/services/export_service.py
+
+## PR
+- Branch: feature/add-timeline-export
+- PR #123
+"
+)
+```
+
+#### Reviewing Code Changes
+
+```
+# 1. Get PR details
+mcp__github__get_pull_request(
+    owner="your-org",
+    repo="Justice Companion",
+    pull_number=123
+)
+
+# 2. Get changed files
+mcp__github__get_pull_request_files(
+    owner="your-org",
+    repo="Justice Companion",
+    pull_number=123
+)
+
+# 3. Review with Serena symbolic analysis
+mcp__serena__find_symbol("export_timeline", include_body=True)
+mcp__serena__find_referencing_symbols("export_timeline", "backend/routes/timeline.py")
+
+# 4. Create review
+mcp__github__create_pull_request_review(
+    owner="your-org",
+    repo="Justice Companion",
+    pull_number=123,
+    body="Code review complete. Changes follow Phase 2 DI patterns correctly.",
+    event="APPROVE",
+    comments=[
+        {
+            "path": "backend/routes/timeline.py",
+            "line": 45,
+            "body": "✅ Good use of centralized dependency injection"
+        }
+    ]
+)
+```
+
+#### Managing Issues with DI Migration Context
+
+```
+# Search for DI-related issues
+mcp__github__search_issues(
+    query="repo:your-org/Justice Companion is:open label:di-migration"
+)
+
+# Create issue for Phase 3
+mcp__github__issue_write(
+    method="create",
+    owner="your-org",
+    repo="Justice Companion",
+    title="Phase 3: Implement Frontend DI with TSyringe",
+    body="## Phase 3: Frontend Dependency Injection
+
+### Context
+Phase 2 (backend DI) is complete. Need to migrate frontend from manual singletons to TSyringe DI.
+
+### Current State
+Manual singletons in `src/services/`:
+- `profileService = new ProfileService()`
+- `encryptionService = new EncryptionService()`
+- etc.
+
+### Target State
+TSyringe container with `@singleton()` decorators
+
+### Prerequisites
+- [x] Phase 2 complete (backend DI)
+- [ ] Query Context7 for TSyringe patterns
+- [ ] Create DI container
+- [ ] Migrate services one by one
+
+### References
+- Memory: `di-migration-status`
+- Memory: `phase2-backend-di-completion`
+- Phase 2 commit: 2e7c40e7
+
+See CLAUDE.md for Context7 query pattern.",
+    labels=["di-migration", "phase-3", "frontend"],
+    type="task"
+)
+
+# Update memory with issue tracking
+mcp__serena__edit_memory(
+    "di-migration-status",
+    "Phase 3: PENDING",
+    "Phase 3: IN PROGRESS - Issue #124 created",
+    mode="literal"
+)
+```
+
+#### Searching Codebase Patterns
+
+```
+# Find all Depends() usage (backend DI pattern)
+mcp__github__search_code(
+    query="repo:your-org/Justice Companion Depends(get_ language:python"
+)
+
+# Find manual singleton patterns (need Phase 3 migration)
+mcp__github__search_code(
+    query="repo:your-org/Justice Companion 'export const' 'new' 'Service' language:typescript"
+)
+
+# Search for SQLAlchemy 1.x patterns (deprecated)
+mcp__github__search_code(
+    query="repo:your-org/Justice Companion session.query language:python"
+)
+```
+
+### Workflow Integration
+
+#### Before Making Changes
+
+```
+1. mcp__serena__read_memory("justice-companion-architecture")
+2. Check git status: git status
+3. Review recent commits: mcp__github__list_commits(owner, repo, sha="main")
+4. Search for existing patterns: mcp__github__search_code(...)
+5. Query Context7 for library patterns
+6. Use Serena symbolic tools to understand code
+```
+
+#### After Making Changes
+
+```
+1. Use Serena symbolic editing (replace_symbol_body, etc.)
+2. Update Serena memory with changes
+3. Create branch and push: mcp__github__push_files(...)
+4. Create PR: mcp__github__create_pull_request(...)
+5. Update architecture memory if needed
+```
+
+#### For Bug Fixes
+
+```
+1. Search for error: mcp__github__search_code(query="error text")
+2. Find affected symbols: mcp__serena__find_symbol(...)
+3. Query Context7 if library-related
+4. Fix using Serena symbolic editing
+5. Write bug-fix memory: mcp__serena__write_memory("bug-fix-[name]", ...)
+6. Push fix: mcp__github__push_files(...)
+7. Reference in commit: "Fixes #123" to auto-close issue
+```
+
+### Commit Message Format
+
+Follow conventional commits pattern:
+
+```
+<type>: <description>
+
+<body>
+
+🤖 Generated with Claude Code
+Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>
+```
+
+**Types:**
+
+- `feat:` New feature
+- `fix:` Bug fix
+- `refactor:` Code refactoring (e.g., DI migration)
+- `test:` Test updates
+- `docs:` Documentation
+- `chore:` Maintenance tasks
+
+**Examples:**
+
+```
+feat: implement encryption service with AES-256-GCM
+
+- Add EncryptionService to backend/services
+- Centralize in dependencies.py
+- Use for all PII fields
+- Add comprehensive tests
+
+Relates to Phase 2 DI migration
+```
+
+```
+refactor: migrate ProfileService to centralized DI
+
+- Move dependency creation to backend/dependencies.py
+- Update all routes to use get_profile_service()
+- Remove local instantiations
+- Part of Phase 2 backend DI completion
+
+Phase 2 Progress: 15/20 services migrated
+```
+
+### Pull Request Best Practices
+
+**PR Title:** Follow commit message format
+
+**PR Body Template:**
+
+```markdown
+## Summary
+
+[Brief description]
+
+## Changes
+
+- File 1: [what changed]
+- File 2: [what changed]
+
+## Phase Context
+
+[Which phase? How does it fit?]
+
+## Test Plan
+
+- [ ] Manual test 1
+- [ ] Manual test 2
+- [ ] All tests passing (npm run test)
+
+## Related
+
+- Issue #123
+- Memory: `memory-name`
+- Previous PR: #122
+
+🤖 Generated with Claude Code
+```
+
+### Issue Best Practices
+
+**Labels to use:**
+
+- `di-migration` - DI migration work (Phases 1-4)
+- `phase-1` / `phase-2` / `phase-3` / `phase-4`
+- `backend` / `frontend`
+- `bug` / `enhancement` / `documentation`
+- `breaking-change` - Breaking API changes
+
+**Link to memories:**
+
+```markdown
+See Serena memories:
+
+- `justice-companion-architecture` - Overall architecture
+- `di-migration-status` - Current DI phase
+- `phase2-backend-di-completion` - Backend patterns
+```
+
+### GitHub Tool Reference
+
+| Operation | MCP Tool | Justice Companion Usage |
+|-----------|----------|-------------------------|
+| Create branch | `mcp__github__create_branch` | Feature branches from `main` |
+| Push files | `mcp__github__push_files` | After Serena symbolic edits |
+| Create PR | `mcp__github__create_pull_request` | Always include phase context |
+| Review PR | `mcp__github__create_pull_request_review` | Use APPROVE/REQUEST_CHANGES |
+| Search code | `mcp__github__search_code` | Find patterns across codebase |
+| Manage issues | `mcp__github__issue_write` | Track DI migration phases |
+| Get file | `mcp__github__get_file_contents` | Read remote files |
+| List commits | `mcp__github__list_commits` | Review recent changes |
+
+### Best Practices for This Project
+
+1. **Always create feature branches** - Never commit directly to `main`
+2. **Link to Serena memories** - Reference architecture and phase docs
+3. **Include phase context** - Specify which DI phase (if applicable)
+4. **Use conventional commits** - Clear, structured commit messages
+5. **Review with Serena** - Use symbolic tools to analyze PR changes
+6. **Update memories** - Keep Serena memories current with changes
+7. **Query Context7 first** - Verify library patterns before coding
+8. **Cross-reference issues** - Use "Fixes #123" to auto-close
+
+### Integration: Serena + Context7 + GitHub
+
+**Complete workflow example:**
+
+```
+# 1. Start with Serena architecture
+mcp__serena__read_memory("justice-companion-architecture")
+mcp__serena__read_memory("di-migration-status")
+
+# 2. Query Context7 for library patterns
+mcp__context7__get-library-docs("/tiangolo/fastapi", topic="dependencies")
+
+# 3. Use Serena for symbolic code exploration
+mcp__serena__find_symbol("ProfileService", include_body=True)
+mcp__serena__find_referencing_symbols("ProfileService", "backend/services/profile_service.py")
+
+# 4. Make changes with Serena symbolic editing
+mcp__serena__replace_symbol_body("get_profile", "backend/routes/profile.py", new_code)
+
+# 5. Update Serena memory
+mcp__serena__write_memory("change-description", documentation)
+
+# 6. Version control with GitHub MCP
+mcp__github__create_branch(owner, repo, branch="feature/name")
+mcp__github__push_files(owner, repo, branch, files, message)
+mcp__github__create_pull_request(owner, repo, title, head, base, body)
+
+# 7. Done!
+mcp__serena__think_about_whether_you_are_done()
+```
+
 ## Project Overview
 
 **AI-Powered Civil Law Case Management PWA** - Provides legal INFORMATION (not advice) to help users manage UK civil law matters.

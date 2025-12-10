@@ -1,3 +1,4 @@
+/// <reference types="vitest/globals" />
 /**
  * GDPR Integration Tests
  *
@@ -5,7 +6,7 @@
  * with real database operations, encryption, and audit logging.
  */
 
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
+
 import Database from "better-sqlite3";
 import { GdprService } from "./GdprService";
 import { EncryptionService } from "../EncryptionService";

@@ -1,7 +1,8 @@
+/// <reference types="vitest/globals" />
 /**
  * @vitest-environment node
  */
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
+
 import { ConsentService } from "./ConsentService";
 import { ConsentRepository } from "../repositories/ConsentRepository";
 import { AuditLogger } from "./AuditLogger";

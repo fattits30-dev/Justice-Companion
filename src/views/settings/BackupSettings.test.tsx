@@ -1,4 +1,5 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+/// <reference types="vitest/globals" />
+import { vi } from "vitest";
 import { useAuth } from "../../contexts/AuthContext";
 import {
   fireEvent,

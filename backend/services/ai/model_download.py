@@ -43,16 +43,17 @@ Usage:
 import hashlib
 import logging
 import time
-from pathlib import Path
-from typing import Optional, Callable, Dict, Any, List
 from dataclasses import dataclass
 from enum import Enum
+from pathlib import Path
+from typing import Any, Callable, Dict, List, Optional
 
 import httpx
 from fastapi import HTTPException
 
 # Configure logger
 logger = logging.getLogger(__name__)
+
 
 class DownloadStatus(str, Enum):
     """Download status enumeration."""
@@ -61,6 +62,7 @@ class DownloadStatus(str, Enum):
     COMPLETE = "complete"
     ERROR = "error"
     PAUSED = "paused"
+
 
 @dataclass
 class ModelInfo:
@@ -100,6 +102,7 @@ class ModelInfo:
             "recommended": self.recommended,
         }
 
+
 @dataclass
 class DownloadProgress:
     """
@@ -135,6 +138,7 @@ class DownloadProgress:
             "error": self.error,
         }
 
+
 @dataclass
 class ActiveDownload:
     """
@@ -149,6 +153,7 @@ class ActiveDownload:
     model_id: str
     start_time: float
     last_progress: float
+
 
 class ModelDownloadService:
     """
@@ -215,7 +220,9 @@ class ModelDownloadService:
         # Ensure models directory exists
         try:
             self.models_dir.mkdir(parents=True, exist_ok=True)
-            logger.info(f"ModelDownloadService initialized: models_dir={self.models_dir}")
+            logger.info(
+                f"ModelDownloadService initialized: models_dir={self.models_dir}"
+            )
 
             if self.audit_logger:
                 self.audit_logger.log(
@@ -291,7 +298,9 @@ class ModelDownloadService:
             List of model info dictionaries for downloaded models
         """
         return [
-            model.to_dict() for model in self.AVAILABLE_MODELS if self.is_model_downloaded(model.id)
+            model.to_dict()
+            for model in self.AVAILABLE_MODELS
+            if self.is_model_downloaded(model.id)
         ]
 
     async def download_model(
@@ -377,7 +386,11 @@ class ModelDownloadService:
                     resource_type="model",
                     resource_id=model_id,
                     action="download",
-                    details={"url": model.url, "size": model.size, "file_name": model.file_name},
+                    details={
+                        "url": model.url,
+                        "size": model.size,
+                        "file_name": model.file_name,
+                    },
                     success=True,
                 )
 
@@ -441,8 +454,10 @@ class ModelDownloadService:
             if temp_path.exists():
                 temp_path.unlink()
 
-            error_message = str(e)
-            logger.error(f"Model download failed: {model_id} - {error_message}", exc_info=True)
+            error_message = str(exc)
+            logger.error(
+                f"Model download failed: {model_id} - {error_message}", exc_info=True
+            )
 
             if self.audit_logger:
                 self.audit_logger.log(
@@ -552,7 +567,11 @@ class ModelDownloadService:
         """
         model = self._get_model_by_id(model_id)
         if not model:
-            return {"valid": False, "exists": False, "error": "Model not found in catalog"}
+            return {
+                "valid": False,
+                "exists": False,
+                "error": "Model not found in catalog",
+            }
 
         model_path = self.models_dir / model.file_name
 
@@ -644,7 +663,9 @@ class ModelDownloadService:
                         if elapsed >= 1.0 or downloaded_bytes == total_size:
                             # Calculate speed (bytes per second)
                             speed = (
-                                (downloaded_bytes - last_bytes) / elapsed if elapsed > 0 else 0.0
+                                (downloaded_bytes - last_bytes) / elapsed
+                                if elapsed > 0
+                                else 0.0
                             )
                             last_update = now
                             last_bytes = downloaded_bytes
@@ -655,7 +676,8 @@ class ModelDownloadService:
                                         model_id=model_id,
                                         downloaded_bytes=downloaded_bytes,
                                         total_bytes=total_size,
-                                        percentage=(downloaded_bytes / total_size) * 100.0,
+                                        percentage=(downloaded_bytes / total_size)
+                                        * 100.0,
                                         speed=speed,
                                         status=DownloadStatus.DOWNLOADING,
                                     )

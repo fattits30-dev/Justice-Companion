@@ -1,5 +1,6 @@
+/// <reference types="vitest/globals" />
 import Database from "better-sqlite3-multiple-ciphers";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
 import {
   buildDeterministicUser,
   deriveTestPassword,

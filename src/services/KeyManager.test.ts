@@ -1,3 +1,4 @@
+/// <reference types="vitest/globals" />
 /**
  * KeyManager Security Tests
  *
@@ -9,7 +10,7 @@
  * Security Level: CVSS 9.1 mitigation
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+
 import { KeyManager, type SafeStorageLike } from "./KeyManager";
 
 // Mock SafeStorage interface for web compatibility

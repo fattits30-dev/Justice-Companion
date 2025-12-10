@@ -44,6 +44,7 @@
 
     // AI Assistants
     "anthropic.claude-code",
+    "saoudrizwan.cline-nightly",
     "github.copilot",
     "github.copilot-chat",
 
@@ -72,9 +73,6 @@
     // Duplicate Git functionality
     "donjayamanne.githistory",
     "mhutchie.git-graph",
-
-    // Duplicate AI/Claude tools
-    "saoudrizwan.cline-nightly",
 
     // Obsolete - now built into VS Code
     "christian-kohler.npm-intellisense",

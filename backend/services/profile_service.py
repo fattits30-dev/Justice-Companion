@@ -24,21 +24,24 @@ import json
 import re
 import time
 from json import JSONDecodeError
-from typing import Optional, Dict, Any, Union
+from typing import Any, Dict, Optional, Union
 
 from fastapi import HTTPException
-from pydantic import BaseModel, Field, ConfigDict
-from sqlalchemy.orm import Session
+from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.orm import Session
 
 from backend.models.profile import UserProfile
-from backend.services.security.encryption import EncryptionService, EncryptedData
+from backend.services.security.encryption import EncryptedData, EncryptionService
+
 
 class ProfileValidationError(Exception):
     """Exception raised for profile validation failures."""
 
+
 class ProfileUpdateError(Exception):
     """Exception raised for profile update failures."""
+
 
 class UserProfileData(BaseModel):
     """Basic user profile data."""
@@ -47,8 +50,10 @@ class UserProfileData(BaseModel):
     lastName: str = Field("", description="User's last name")
     email: str = Field("", description="User's email address")
     phone: Optional[str] = Field(None, description="User's phone number (optional)")
+    username: Optional[str] = Field(None, description="User's display username")
 
     model_config = ConfigDict(populate_by_name=True)
+
 
 class ExtendedUserProfileData(UserProfileData):
     """Extended user profile with computed fields."""
@@ -57,6 +62,7 @@ class ExtendedUserProfileData(UserProfileData):
     initials: str = Field("U", description="User initials (computed)")
 
     model_config = ConfigDict(populate_by_name=True)
+
 
 class ProfileFormData(BaseModel):
     """Profile form data used in frontend components."""
@@ -68,6 +74,7 @@ class ProfileFormData(BaseModel):
 
     model_config = ConfigDict(populate_by_name=True)
 
+
 class ProfileValidationResult(BaseModel):
     """Profile validation result with field-level errors."""
 
@@ -77,6 +84,7 @@ class ProfileValidationResult(BaseModel):
     )
 
     model_config = ConfigDict(populate_by_name=True)
+
 
 class ProfileUpdateResult(BaseModel):
     """Profile update operation result."""
@@ -88,6 +96,7 @@ class ProfileUpdateResult(BaseModel):
     )
 
     model_config = ConfigDict(populate_by_name=True)
+
 
 class ProfileResponse(BaseModel):
     """Response model for profile data."""
@@ -104,6 +113,7 @@ class ProfileResponse(BaseModel):
 
     model_config = ConfigDict(from_attributes=True, populate_by_name=True)
 
+
 class ExtendedProfileResponse(ProfileResponse):
     """Extended profile response with computed fields."""
 
@@ -111,6 +121,7 @@ class ExtendedProfileResponse(ProfileResponse):
     initials: str
 
     model_config = ConfigDict(from_attributes=True, populate_by_name=True)
+
 
 class ProfileService:
     """
@@ -289,6 +300,7 @@ class ProfileService:
                 lastName=profile.last_name or "",
                 email=email or "",
                 phone=phone or None,
+                username=profile.username or None,
             )
 
         except SQLAlchemyError as e:
@@ -334,6 +346,7 @@ class ProfileService:
                     "lastName": profile_data.get("lastName", current_profile.lastName),
                     "email": profile_data.get("email", current_profile.email),
                     "phone": profile_data.get("phone", current_profile.phone),
+                    "username": profile_data.get("username", current_profile.username),
                 }
 
                 updated_profile = UserProfileData(**updated_data)
@@ -372,6 +385,11 @@ class ProfileService:
                 # Update fields
                 db_profile.first_name = updated_profile.firstName.strip() or None
                 db_profile.last_name = updated_profile.lastName.strip() or None
+                db_profile.username = (
+                    updated_profile.username.strip()
+                    if updated_profile.username
+                    else None
+                )
 
                 # Compute full name
                 full_name = f"{updated_profile.firstName.strip()} {updated_profile.lastName.strip()}".strip()
@@ -595,6 +613,7 @@ class ProfileService:
             lastName=profile.lastName,
             email=profile.email,
             phone=profile.phone,
+            username=profile.username,
             fullName=full_name,
             initials=initials,
         )

@@ -56,9 +56,10 @@ Usage:
 
 import logging
 from datetime import datetime, timedelta, timezone
-from typing import Optional, List, Dict, Any
+from typing import Any, Dict, List, Optional
 from uuid import uuid4
-from pydantic import BaseModel, Field, ConfigDict
+
+from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy.orm import Session
 
 from backend.models.session import Session as SessionModel
@@ -420,6 +421,24 @@ class SessionManager:
             logger.error("Session validation error for %s: %s", session_id, exc)
             return SessionValidationResult(valid=False, user_id=None, username=None)
 
+    async def get_session(self, session_id: str) -> Optional[SessionModel]:
+        """
+        Get session by ID.
+
+        Added to fix AttributeError: 'SessionManager' object has no attribute 'get_session'.
+        This method seems to be expected by some consumer, possibly due to confusion
+        with AuthenticationService.
+        """
+        try:
+            return (
+                self.db.query(SessionModel)
+                .filter(SessionModel.id == session_id)
+                .first()
+            )
+        except Exception as exc:
+            logger.error("Error in SessionManager.get_session: %s", exc)
+            return None
+
     async def destroy_session(self, session_id: str) -> bool:
         """
         Destroy a session (logout).
@@ -727,6 +746,15 @@ def get_session_manager(
         SessionManager instance
     """
     global _session_manager_instance
+
+    # Reset stale singleton instances that predate newer methods (e.g., get_session)
+    if _session_manager_instance is not None and not hasattr(
+        _session_manager_instance, "get_session"
+    ):
+        logger.warning(
+            "SessionManager singleton missing get_session; recreating fresh instance"
+        )
+        _session_manager_instance = None
 
     if _session_manager_instance is None:
         _session_manager_instance = SessionManager(

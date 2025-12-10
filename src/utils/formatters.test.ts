@@ -1,10 +1,11 @@
+/// <reference types="vitest/globals" />
 /**
  * Formatters utility tests
  *
  * Tests for formatting functions including dates, file sizes, and text.
  */
 
-import { describe, expect, it, vi } from "vitest";
+
 import {
   capitalize,
   formatCurrency,

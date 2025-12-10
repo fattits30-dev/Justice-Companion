@@ -1,10 +1,11 @@
+/// <reference types="vitest/globals" />
 /**
  * Comprehensive tests for Phase 3 repositories with encryption
  * Tests: UserProfileRepository, LegalIssuesRepository, TimelineRepository
  */
 import Database from "better-sqlite3-multiple-ciphers";
 import { randomUUID } from "node:crypto";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
 import * as databaseModule from "../db/database";
 import { AuditLogger } from "../services/AuditLogger";
 import { EncryptionService } from "../services/EncryptionService";

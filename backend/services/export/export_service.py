@@ -34,21 +34,23 @@ Python Version: 3.12+
 Dependencies: reportlab (PDF), python-docx (DOCX), pandas (CSV)
 """
 
-import json
 import csv
+import json
 from datetime import datetime
-from pathlib import Path
-from typing import Any, Dict, List, Optional, Literal
 from io import StringIO
+from pathlib import Path
+from typing import Any, Dict, List, Literal, Optional
 
 from fastapi import HTTPException, status
-from pydantic import BaseModel, Field, field_validator, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-# Import Python services (assuming these exist in the backend)
-from backend.services.security.encryption import EncryptionService, EncryptedData
 from backend.services.audit_logger import AuditLogger
 
+# Import Python services (assuming these exist in the backend)
+from backend.services.security.encryption import EncryptedData, EncryptionService
+
 # ===== PYDANTIC MODELS =====
+
 
 class ExportFormat(BaseModel):
     """Enumeration of supported export formats."""
@@ -58,6 +60,7 @@ class ExportFormat(BaseModel):
     JSON: str = "json"
     CSV: str = "csv"
 
+
 class ExportTemplate(BaseModel):
     """Export template types."""
 
@@ -65,6 +68,7 @@ class ExportTemplate(BaseModel):
     EVIDENCE_LIST: str = "evidence-list"
     TIMELINE_REPORT: str = "timeline-report"
     CASE_NOTES: str = "case-notes"
+
 
 class ExportOptions(BaseModel):
     """
@@ -106,6 +110,7 @@ class ExportOptions(BaseModel):
         }
     )
 
+
 class TimelineEvent(BaseModel):
     """Timeline event representing a case milestone or deadline."""
 
@@ -129,6 +134,7 @@ class TimelineEvent(BaseModel):
         except ValueError:
             raise ValueError(f"Invalid ISO 8601 date format: {v}")
 
+
 class CaseExportData(BaseModel):
     """
     Complete case data structure for export operations.
@@ -150,6 +156,7 @@ class CaseExportData(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
+
 class EvidenceExportData(BaseModel):
     """Structured data for evidence list exports."""
 
@@ -160,6 +167,7 @@ class EvidenceExportData(BaseModel):
     exported_by: str
     total_items: int
     category_summary: Dict[str, int] = Field(default_factory=dict)
+
 
 class TimelineExportData(BaseModel):
     """Structured data for timeline report exports."""
@@ -173,6 +181,7 @@ class TimelineExportData(BaseModel):
     upcoming_deadlines: List[Dict[str, Any]] = Field(default_factory=list)
     completed_events: List[TimelineEvent] = Field(default_factory=list)
 
+
 class NotesExportData(BaseModel):
     """Structured data for case notes exports."""
 
@@ -182,6 +191,7 @@ class NotesExportData(BaseModel):
     export_date: datetime
     exported_by: str
     total_notes: int
+
 
 class ExportResult(BaseModel):
     """
@@ -213,7 +223,9 @@ class ExportResult(BaseModel):
         }
     )
 
+
 # ===== EXPORT SERVICE =====
+
 
 class ExportService:
     """
@@ -361,7 +373,8 @@ class ExportService:
                     }
                 )
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail=f"Case with ID {case_id} not found"
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Case with ID {case_id} not found",
             )
 
         # Verify ownership
@@ -376,7 +389,8 @@ class ExportService:
                         "success": False,
                         "details": {
                             "reason": "User does not own this case",
-                            "case_owner": case_data.get("user_id") or case_data.get("userId"),
+                            "case_owner": case_data.get("user_id")
+                            or case_data.get("userId"),
                             "requesting_user": user_id,
                         },
                     }
@@ -440,13 +454,17 @@ class ExportService:
         # Get user data
         user = await self.user_repo.find_by_id(user_id)
         if not user:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
+            )
         username = user.get("username", "Unknown User")
 
         # Get case data
         case_data = await self.case_repo.find_by_id(case_id)
         if not case_data:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Case not found")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Case not found"
+            )
 
         # Decrypt case fields
         decrypted_case = {
@@ -521,19 +539,23 @@ class ExportService:
                 )
                 for fact in raw_facts:
                     # Convert fact model to dict for export
-                    fact_dict = fact.to_dict() if hasattr(fact, "to_dict") else {
-                        "id": fact.id,
-                        "caseId": fact.case_id,
-                        "factContent": fact.fact_content,
-                        "factCategory": fact.fact_category,
-                        "importance": fact.importance,
-                        "createdAt": (
-                            fact.created_at.isoformat() if fact.created_at else None
-                        ),
-                        "updatedAt": (
-                            fact.updated_at.isoformat() if fact.updated_at else None
-                        ),
-                    }
+                    fact_dict = (
+                        fact.to_dict()
+                        if hasattr(fact, "to_dict")
+                        else {
+                            "id": fact.id,
+                            "caseId": fact.case_id,
+                            "factContent": fact.fact_content,
+                            "factCategory": fact.fact_category,
+                            "importance": fact.importance,
+                            "createdAt": (
+                                fact.created_at.isoformat() if fact.created_at else None
+                            ),
+                            "updatedAt": (
+                                fact.updated_at.isoformat() if fact.updated_at else None
+                            ),
+                        }
+                    )
                     # Decrypt fact content if encrypted
                     if "factContent" in fact_dict:
                         fact_dict["factContent"] = await self._decrypt_field(
@@ -587,7 +609,9 @@ class ExportService:
         category_summary: Dict[str, int] = {}
         for evidence in case_data.evidence:
             category = (
-                evidence.get("evidence_type") or evidence.get("evidenceType") or "Uncategorized"
+                evidence.get("evidence_type")
+                or evidence.get("evidenceType")
+                or "Uncategorized"
             )
             category_summary[category] = category_summary.get(category, 0) + 1
 
@@ -615,7 +639,8 @@ class ExportService:
         upcoming_deadlines = [
             d
             for d in case_data.deadlines
-            if datetime.fromisoformat(d.get("deadline_date") or d.get("deadlineDate")) > now
+            if datetime.fromisoformat(d.get("deadline_date") or d.get("deadlineDate"))
+            > now
             and d.get("status") != "completed"
         ]
         completed_events = [e for e in case_data.timeline if e.completed]
@@ -651,7 +676,11 @@ class ExportService:
         )
 
     async def _save_file(
-        self, buffer: bytes, case_data: CaseExportData, options: ExportOptions, extension: str
+        self,
+        buffer: bytes,
+        case_data: CaseExportData,
+        options: ExportOptions,
+        extension: str,
     ) -> str:
         """
         Save export buffer to file with proper naming and permissions.
@@ -669,7 +698,9 @@ class ExportService:
             file_path = Path(options.output_path)
         else:
             # Generate filename
-            timestamp = datetime.now().isoformat().replace(":", "-").replace(".", "-")[:19]
+            timestamp = (
+                datetime.now().isoformat().replace(":", "-").replace(".", "-")[:19]
+            )
             file_name = (
                 options.file_name
                 or f"case-{case_data.case.get('id')}-{options.template}-{timestamp}.{extension}"
@@ -734,10 +765,14 @@ class ExportService:
                 pdf_buffer = await self.pdf_generator.generate_case_summary(case_data)
             elif options.template == "evidence-list":
                 evidence_data = self._prepare_evidence_data(case_data)
-                pdf_buffer = await self.pdf_generator.generate_evidence_list(evidence_data)
+                pdf_buffer = await self.pdf_generator.generate_evidence_list(
+                    evidence_data
+                )
             elif options.template == "timeline-report":
                 timeline_data = self._prepare_timeline_data(case_data)
-                pdf_buffer = await self.pdf_generator.generate_timeline_report(timeline_data)
+                pdf_buffer = await self.pdf_generator.generate_timeline_report(
+                    timeline_data
+                )
             elif options.template == "case-notes":
                 notes_data = self._prepare_notes_data(case_data)
                 pdf_buffer = await self.pdf_generator.generate_case_notes(notes_data)
@@ -844,10 +879,14 @@ class ExportService:
                 docx_buffer = await self.docx_generator.generate_case_summary(case_data)
             elif options.template == "evidence-list":
                 evidence_data = self._prepare_evidence_data(case_data)
-                docx_buffer = await self.docx_generator.generate_evidence_list(evidence_data)
+                docx_buffer = await self.docx_generator.generate_evidence_list(
+                    evidence_data
+                )
             elif options.template == "timeline-report":
                 timeline_data = self._prepare_timeline_data(case_data)
-                docx_buffer = await self.docx_generator.generate_timeline_report(timeline_data)
+                docx_buffer = await self.docx_generator.generate_timeline_report(
+                    timeline_data
+                )
             elif options.template == "case-notes":
                 notes_data = self._prepare_notes_data(case_data)
                 docx_buffer = await self.docx_generator.generate_case_notes(notes_data)
@@ -904,7 +943,9 @@ class ExportService:
                 detail=f"Failed to export case to DOCX: {str(error)}",
             )
 
-    async def export_evidence_list_to_pdf(self, case_id: int, user_id: int) -> ExportResult:
+    async def export_evidence_list_to_pdf(
+        self, case_id: int, user_id: int
+    ) -> ExportResult:
         """
         Export evidence list to PDF format.
 
@@ -931,7 +972,9 @@ class ExportService:
             ),
         )
 
-    async def export_timeline_report_to_pdf(self, case_id: int, user_id: int) -> ExportResult:
+    async def export_timeline_report_to_pdf(
+        self, case_id: int, user_id: int
+    ) -> ExportResult:
         """
         Export timeline report to PDF format.
 
@@ -958,7 +1001,9 @@ class ExportService:
             ),
         )
 
-    async def export_case_notes_to_pdf(self, case_id: int, user_id: int) -> ExportResult:
+    async def export_case_notes_to_pdf(
+        self, case_id: int, user_id: int
+    ) -> ExportResult:
         """
         Export case notes to PDF format.
 
@@ -985,7 +1030,9 @@ class ExportService:
             ),
         )
 
-    async def export_case_notes_to_word(self, case_id: int, user_id: int) -> ExportResult:
+    async def export_case_notes_to_word(
+        self, case_id: int, user_id: int
+    ) -> ExportResult:
         """
         Export case notes to DOCX format.
 
@@ -1068,7 +1115,10 @@ class ExportService:
                         "resource_id": str(case_id),
                         "action": "export",
                         "success": True,
-                        "details": {"file_path": file_path, "file_size": len(json_bytes)},
+                        "details": {
+                            "file_path": file_path,
+                            "file_size": len(json_bytes),
+                        },
                     }
                 )
 

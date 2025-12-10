@@ -1,5 +1,6 @@
+/// <reference types="vitest/globals" />
 import { randomUUID } from "node:crypto";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
 import { databaseManager } from "../db/database";
 import { initializeTestRepositories, resetRepositories } from "../repositories";
 import { SessionRepository } from "../repositories/SessionRepository";

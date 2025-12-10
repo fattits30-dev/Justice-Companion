@@ -1,469 +1,484 @@
 /**
  * AI Service Settings Tab
  * =======================
- * Configure HuggingFace token and AI preferences.
+ * Configure AI providers (HuggingFace, OpenAI, Ollama, etc.)
  */
 
-import React, { useState, useEffect } from "react";
-import { motion } from "framer-motion";
 import {
+  AlertTriangle,
   Brain,
-  Zap,
-  Scale,
-  Sparkles,
   CheckCircle2,
-  XCircle,
-  RefreshCw,
+  Cpu,
   Info,
   Key,
-  Eye,
-  EyeOff,
-  ExternalLink,
+  Play,
+  RefreshCw,
+  Save,
+  Server,
+  Settings,
+  XCircle,
 } from "lucide-react";
-import { Card } from "../../components/ui/Card.tsx";
-import { Button } from "../../components/ui/Button.tsx";
+import { useEffect, useState } from "react";
 import { Badge } from "../../components/ui/Badge.tsx";
+import { Button } from "../../components/ui/Button.tsx";
+import { Card } from "../../components/ui/Card.tsx";
 import { apiClient } from "../../lib/apiClient.ts";
 
-type ModelPreference = "fast" | "balanced" | "thorough";
-
-interface AIServiceHealth {
-  status: string;
-  service: string;
-  version: string;
-  hf_connected: boolean;
-}
-
-interface ModelOption {
-  id: ModelPreference;
+// Types
+interface ProviderMetadata {
   name: string;
-  description: string;
-  icon: React.ComponentType<{ className?: string }>;
-  speed: string;
-  quality: string;
+  description?: string;
+  default_model: string;
+  available_models: string[];
+  requires_api_key?: boolean;
+  supports_streaming: boolean;
+  default_endpoint: string;
 }
 
-const MODEL_OPTIONS: ModelOption[] = [
-  {
-    id: "fast",
-    name: "Fast",
-    description: "Quick responses for simple questions",
-    icon: Zap,
-    speed: "~2-3s",
-    quality: "Good",
-  },
-  {
-    id: "balanced",
-    name: "Balanced",
-    description: "Best mix of speed and quality",
-    icon: Scale,
-    speed: "~5-8s",
-    quality: "Great",
-  },
-  {
-    id: "thorough",
-    name: "Thorough",
-    description: "Detailed analysis for complex cases",
-    icon: Sparkles,
-    speed: "~10-15s",
-    quality: "Best",
-  },
-];
+interface AIConfig {
+  provider: string;
+  api_key: string;
+  model: string;
+  endpoint?: string;
+  temperature?: number;
+  max_tokens?: number;
+  enabled: boolean;
+}
 
 export function AIServiceSettingsTab() {
-  const [modelPreference, setModelPreference] =
-    useState<ModelPreference>("balanced");
-  const [aiHealth, setAiHealth] = useState<AIServiceHealth | null>(null);
-  const [isChecking, setIsChecking] = useState(false);
+  const [providers, setProviders] = useState<Record<string, ProviderMetadata>>(
+    {}
+  );
+  const [activeProvider, setActiveProvider] = useState<string | null>(null);
+  const [selectedProvider, setSelectedProvider] = useState<string | null>(null);
+
+  // Form state
+  const [apiKey, setApiKey] = useState("");
+  const [model, setModel] = useState("");
+  const [endpoint, setEndpoint] = useState("");
+
+  // Status state
+  const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
-  const [saveSuccess, setSaveSuccess] = useState(false);
+  const [isTesting, setIsTesting] = useState(false);
+  const [isActivating, setIsActivating] = useState(false);
 
-  // Token state
-  const [hfToken, setHfToken] = useState("");
-  const [showToken, setShowToken] = useState(false);
-  const [tokenSaving, setTokenSaving] = useState(false);
-  const [tokenSuccess, setTokenSuccess] = useState(false);
-  const [tokenError, setTokenError] = useState("");
+  // Feedback state
+  const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [testResult, setTestResult] = useState<{
+    success: boolean;
+    message: string;
+  } | null>(null);
 
-  // Check AI service health on mount
   useEffect(() => {
-    checkAIHealth();
-    // Load saved preference
-    const saved = localStorage.getItem("ai_model_preference");
-    if (saved && ["fast", "balanced", "thorough"].includes(saved)) {
-      setModelPreference(saved as ModelPreference);
-    }
+    loadData();
   }, []);
 
-  const checkAIHealth = async () => {
-    setIsChecking(true);
+  // When selected provider changes, update form fields
+  useEffect(() => {
+    if (selectedProvider && providers[selectedProvider]) {
+      loadProviderConfig(selectedProvider);
+    }
+  }, [selectedProvider, providers]);
+
+  const loadData = async () => {
+    setIsLoading(true);
+    setError(null);
     try {
-      // Call backend API for health check (port 8000, not 8001)
-      const response = await fetch("http://localhost:8000/health");
-      if (response.ok) {
-        const data = await response.json();
-        setAiHealth(data);
-      } else {
-        setAiHealth(null);
+      // Load providers metadata
+      const providersRes = await apiClient.aiConfig.listProviders();
+      if (providersRes.success && providersRes.data) {
+        setProviders(providersRes.data);
+
+        // Set default selected provider if none selected
+        if (!selectedProvider) {
+          const providerKeys = Object.keys(providersRes.data);
+          if (providerKeys.length > 0) {
+            // Prefer active provider if known, otherwise first one
+            setSelectedProvider(providerKeys[0]);
+          }
+        }
       }
-    } catch (error) {
-      console.error("Failed to check AI health:", error);
-      setAiHealth(null);
+
+      // Load active provider
+      const activeRes = await apiClient.aiConfig.getActive();
+      if (activeRes.success && activeRes.data) {
+        setActiveProvider(activeRes.data.provider);
+        if (!selectedProvider) {
+          setSelectedProvider(activeRes.data.provider);
+        }
+      }
+    } catch (err) {
+      console.error("Failed to load AI settings:", err);
+      setError("Failed to load AI settings. Please try again.");
     } finally {
-      setIsChecking(false);
+      setIsLoading(false);
     }
   };
 
-  const handleSavePreference = async () => {
-    setIsSaving(true);
+  const loadProviderConfig = async (provider: string) => {
     try {
-      localStorage.setItem("ai_model_preference", modelPreference);
-      setSaveSuccess(true);
-      setTimeout(() => setSaveSuccess(false), 3000);
-    } catch (error) {
-      console.error("Failed to save settings:", error);
+      const res = await apiClient.aiConfig.get(provider);
+      if (res.success && res.data) {
+        const requiresKey = providers[provider]?.requires_api_key !== false;
+        setApiKey(requiresKey ? res.data.api_key || "" : "");
+        setModel(res.data.model || providers[provider].default_model);
+        setEndpoint(
+          res.data.endpoint || providers[provider].default_endpoint || ""
+        );
+      } else {
+        // Defaults
+        const requiresKey = providers[provider]?.requires_api_key !== false;
+        setApiKey(requiresKey ? "" : "");
+        setModel(providers[provider].default_model);
+        setEndpoint(providers[provider].default_endpoint || "");
+      }
+    } catch (err) {
+      console.error(`Failed to load config for ${provider}:`, err);
+      // Fallback to defaults
+      setApiKey("");
+      setModel(providers[provider]?.default_model || "");
+      setEndpoint(providers[provider]?.default_endpoint || "");
+    }
+  };
+
+  const handleSave = async () => {
+    if (!selectedProvider) {
+      return;
+    }
+
+    setIsSaving(true);
+    setError(null);
+    setSuccessMessage(null);
+
+    try {
+      const requiresKey = currentProviderMeta?.requires_api_key !== false;
+      const payload: {
+        api_key?: string;
+        model: string;
+        endpoint?: string;
+        enabled: boolean;
+      } = {
+        model: model,
+        endpoint: endpoint || undefined,
+        enabled: true,
+      };
+
+      if (requiresKey) {
+        payload.api_key = apiKey;
+      }
+
+      const res = await apiClient.aiConfig.configure(selectedProvider, payload);
+
+      if (res.success) {
+        setSuccessMessage("Settings saved successfully");
+        setTimeout(() => setSuccessMessage(null), 3000);
+      } else {
+        setError(res.error?.message || "Failed to save settings");
+      }
+    } catch (err) {
+      console.error("Failed to save settings:", err);
+      setError("An error occurred while saving settings");
     } finally {
       setIsSaving(false);
     }
   };
 
-  const handleSaveToken = async () => {
-    if (!hfToken.trim()) {
-      setTokenError("Please enter a token");
+  const handleTest = async () => {
+    if (!selectedProvider) {
       return;
     }
 
-    if (!hfToken.startsWith("hf_")) {
-      setTokenError("Token should start with 'hf_'");
-      return;
-    }
-
-    setTokenSaving(true);
-    setTokenError("");
+    setIsTesting(true);
+    setTestResult(null);
 
     try {
-      // Save token via backend API
-      const response = await apiClient.aiConfig.updateApiKey(
-        "huggingface",
-        hfToken,
-      );
+      // First save current settings to ensure we test what's in the form
+      await handleSave();
 
-      if (response.success) {
-        setTokenSuccess(true);
-        setHfToken(""); // Clear for security
-        setTimeout(() => setTokenSuccess(false), 3000);
-        // Refresh health check
-        await checkAIHealth();
-      } else {
-        setTokenError(response.error?.message || "Failed to save token");
-      }
-    } catch (error: unknown) {
-      console.error("Failed to save token:", error);
-      const errorMessage =
-        error instanceof Error ? error.message : "Failed to save token";
-      setTokenError(errorMessage);
+      const res = await apiClient.aiConfig.test(selectedProvider);
+      setTestResult({
+        success: res.success,
+        message: res.success
+          ? "Connection successful!"
+          : res.error || "Connection failed",
+      });
+    } catch (err) {
+      console.error("Test failed:", err);
+      setTestResult({
+        success: false,
+        message: "Test request failed",
+      });
     } finally {
-      setTokenSaving(false);
+      setIsTesting(false);
     }
   };
 
-  const isConnected = aiHealth?.status === "healthy" && aiHealth?.hf_connected;
+  const handleActivate = async () => {
+    if (!selectedProvider) {
+      return;
+    }
+
+    setIsActivating(true);
+    try {
+      const res = await apiClient.aiConfig.activate(selectedProvider);
+      if (res.success) {
+        setActiveProvider(selectedProvider);
+        setSuccessMessage(`Activated ${providers[selectedProvider].name}`);
+        setTimeout(() => setSuccessMessage(null), 3000);
+      } else {
+        setError(res.error?.message || "Failed to activate provider");
+      }
+    } catch (err) {
+      console.error("Activation failed:", err);
+      setError("An error occurred while activating provider");
+    } finally {
+      setIsActivating(false);
+    }
+  };
+
+  if (isLoading && Object.keys(providers).length === 0) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <RefreshCw className="w-8 h-8 text-purple-500 animate-spin" />
+      </div>
+    );
+  }
+
+  const currentProviderMeta = selectedProvider
+    ? providers[selectedProvider]
+    : null;
 
   return (
-    <div className="space-y-6 w-full">
+    <div className="space-y-6 w-full max-w-4xl">
       {/* Header */}
       <div>
         <h2 className="text-2xl font-bold text-white mb-2">
-          AI Assistant Settings
+          AI Provider Settings
         </h2>
         <p className="text-white/60">
-          Configure HuggingFace Pro for intelligent legal assistance
+          Configure and switch between different AI providers
         </p>
       </div>
 
-      {/* Connection Status Card */}
-      <Card className="bg-white/5 border-white/10 backdrop-blur-md">
-        <div className="p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-white flex items-center gap-2">
-              <Brain className="w-5 h-5 text-purple-400" />
-              AI Service Status
-            </h3>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={checkAIHealth}
-              disabled={isChecking}
-              className="text-white/60 hover:text-white"
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        {/* Provider List */}
+        <div className="md:col-span-1 space-y-2">
+          {Object.entries(providers).map(([key, meta]) => (
+            <button
+              key={key}
+              onClick={() => setSelectedProvider(key)}
+              className={`w-full text-left p-3 rounded-lg border transition-all flex items-center justify-between group ${
+                selectedProvider === key
+                  ? "bg-purple-500/20 border-purple-500 text-white"
+                  : "bg-white/5 border-white/10 text-white/60 hover:bg-white/10 hover:text-white"
+              }`}
             >
-              <RefreshCw
-                className={`w-4 h-4 ${isChecking ? "animate-spin" : ""}`}
-              />
-            </Button>
-          </div>
-
-          <div className="flex items-center gap-4">
-            {isConnected ? (
-              <>
-                <div className="flex items-center gap-2 text-green-400">
-                  <CheckCircle2 className="w-6 h-6" />
-                  <span className="font-medium">Connected</span>
-                </div>
-                <Badge
-                  variant="success"
-                  className="bg-green-500/20 text-green-400"
-                >
-                  HuggingFace Pro Active
-                </Badge>
-              </>
-            ) : aiHealth ? (
-              <>
-                <div className="flex items-center gap-2 text-yellow-400">
-                  <XCircle className="w-6 h-6" />
-                  <span className="font-medium">Limited</span>
-                </div>
-                <Badge
-                  variant="warning"
-                  className="bg-yellow-500/20 text-yellow-400"
-                >
-                  HuggingFace Not Connected
-                </Badge>
-              </>
-            ) : (
-              <>
-                <div className="flex items-center gap-2 text-red-400">
-                  <XCircle className="w-6 h-6" />
-                  <span className="font-medium">Offline</span>
-                </div>
-                <Badge variant="danger" className="bg-red-500/20 text-red-400">
-                  AI Service Unavailable
-                </Badge>
-              </>
-            )}
-          </div>
-
-          {aiHealth && (
-            <div className="mt-4 pt-4 border-t border-white/10">
-              <div className="grid grid-cols-3 gap-4 text-sm">
-                <div>
-                  <span className="text-white/40">Service</span>
-                  <p className="text-white font-medium">{aiHealth.service}</p>
-                </div>
-                <div>
-                  <span className="text-white/40">Version</span>
-                  <p className="text-white font-medium">{aiHealth.version}</p>
-                </div>
-                <div>
-                  <span className="text-white/40">Provider</span>
-                  <p className="text-white font-medium">HuggingFace Pro</p>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-      </Card>
-
-      {/* HuggingFace Token Configuration */}
-      <Card className="bg-white/5 border-white/10 backdrop-blur-md">
-        <div className="p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-white flex items-center gap-2">
-              <Key className="w-5 h-5 text-amber-400" />
-              HuggingFace API Token
-            </h3>
-            <a
-              href="https://huggingface.co/settings/tokens"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-sm text-purple-400 hover:text-purple-300 flex items-center gap-1"
-            >
-              Get Token <ExternalLink className="w-3 h-3" />
-            </a>
-          </div>
-
-          <p className="text-white/60 text-sm mb-4">
-            Enter your HuggingFace Pro API token to enable AI features.
-            {isConnected && (
-              <span className="text-green-400 ml-2">
-                Token is currently configured.
-              </span>
-            )}
-          </p>
-
-          <div className="flex gap-3">
-            <div className="flex-1 relative">
-              <input
-                type={showToken ? "text" : "password"}
-                value={hfToken}
-                onChange={(e) => {
-                  setHfToken(e.target.value);
-                  setTokenError("");
-                }}
-                placeholder="hf_xxxxxxxxxxxxxxxxxxxxxxxxx"
-                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:border-purple-500 focus:ring-1 focus:ring-purple-500 outline-none font-mono text-sm"
-              />
-              <button
-                type="button"
-                onClick={() => setShowToken(!showToken)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white/60"
-              >
-                {showToken ? (
-                  <EyeOff className="w-4 h-4" />
-                ) : (
-                  <Eye className="w-4 h-4" />
-                )}
-              </button>
-            </div>
-
-            <Button
-              onClick={handleSaveToken}
-              disabled={tokenSaving || !hfToken.trim()}
-              className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white px-6"
-            >
-              {tokenSaving ? (
-                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-              ) : (
-                "Save Token"
+              <span className="font-medium">{meta.name}</span>
+              {activeProvider === key && (
+                <CheckCircle2 className="w-4 h-4 text-green-400" />
               )}
-            </Button>
-          </div>
-
-          {tokenError && (
-            <p className="text-red-400 text-sm mt-2">{tokenError}</p>
-          )}
-
-          {tokenSuccess && (
-            <motion.p
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="text-green-400 text-sm mt-2 flex items-center gap-2"
-            >
-              <CheckCircle2 className="w-4 h-4" />
-              Token saved successfully!
-            </motion.p>
-          )}
+            </button>
+          ))}
         </div>
-      </Card>
 
-      {/* Model Preference Selection */}
-      <Card className="bg-white/5 border-white/10 backdrop-blur-md">
-        <div className="p-6">
-          <h3 className="text-lg font-semibold text-white mb-2">
-            Response Preference
-          </h3>
-          <p className="text-white/60 text-sm mb-4">
-            Choose how the AI balances speed vs. thoroughness
-          </p>
+        {/* Configuration Area */}
+        <div className="md:col-span-3 space-y-6">
+          {currentProviderMeta ? (
+            <>
+              <Card className="bg-white/5 border-white/10 backdrop-blur-md p-6">
+                <div className="flex items-center justify-between mb-6">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-purple-500/20 rounded-lg">
+                      <Brain className="w-6 h-6 text-purple-400" />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-semibold text-white">
+                        {currentProviderMeta.name}
+                      </h3>
+                      <p className="text-sm text-white/60">
+                        {currentProviderMeta.description}
+                      </p>
+                    </div>
+                  </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {MODEL_OPTIONS.map((option) => {
-              const Icon = option.icon;
-              const isSelected = modelPreference === option.id;
+                  {activeProvider === selectedProvider ? (
+                    <Badge
+                      variant="success"
+                      className="bg-green-500/20 text-green-400 border-green-500/30"
+                    >
+                      Active Provider
+                    </Badge>
+                  ) : (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={handleActivate}
+                      disabled={isActivating}
+                      className="border-purple-500/50 text-purple-400 hover:bg-purple-500/10"
+                    >
+                      {isActivating ? "Activating..." : "Set as Active"}
+                    </Button>
+                  )}
+                </div>
 
-              return (
-                <button
-                  key={option.id}
-                  type="button"
-                  onClick={() => setModelPreference(option.id)}
-                  className={`
-                    relative p-4 rounded-lg border-2 transition-all text-left
-                    ${
-                      isSelected
-                        ? "border-purple-500 bg-purple-500/10"
-                        : "border-white/10 bg-white/5 hover:border-white/20"
-                    }
-                  `}
-                >
-                  {isSelected && (
-                    <motion.div
-                      layoutId="selectedModel"
-                      className="absolute inset-0 rounded-lg border-2 border-purple-500"
-                      transition={{
-                        type: "spring",
-                        bounce: 0.2,
-                        duration: 0.4,
-                      }}
+                <div className="space-y-4">
+                  {/* API Key Field */}
+                  {currentProviderMeta.requires_api_key !== false && (
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium text-white/80 flex items-center gap-2">
+                          <Key className="w-4 h-4" />
+                          API Key
+                        </label>
+                        <input
+                          type="password"
+                          value={apiKey}
+                          onChange={(e) => setApiKey(e.target.value)}
+                          placeholder={`Enter your ${currentProviderMeta.name} API Key`}
+                          className="w-full px-4 py-2 bg-black/20 border border-white/10 rounded-lg text-white placeholder-white/30 focus:border-purple-500 focus:ring-1 focus:ring-purple-500 outline-none font-mono text-sm"
+                        />
+                      </div>
+                    )}
+
+                  {/* Model Selection */}
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-white/80 flex items-center gap-2">
+                      <Cpu className="w-4 h-4" />
+                      Model
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        value={model}
+                        onChange={(e) => setModel(e.target.value)}
+                        list="model-options"
+                        className="w-full px-4 py-2 bg-black/20 border border-white/10 rounded-lg text-white placeholder-white/30 focus:border-purple-500 focus:ring-1 focus:ring-purple-500 outline-none font-mono text-sm"
+                      />
+                      <datalist id="model-options">
+                        {currentProviderMeta.available_models.map((m) => (
+                          <option key={m} value={m} />
+                        ))}
+                      </datalist>
+                    </div>
+                    <p className="text-xs text-white/40">
+                      Default: {currentProviderMeta.default_model}
+                    </p>
+                  </div>
+
+                  {/* Endpoint Configuration (for Ollama/Custom) */}
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-white/80 flex items-center gap-2">
+                      <Server className="w-4 h-4" />
+                      API Endpoint{" "}
+                      {selectedProvider !== "ollama" && "(Optional)"}
+                    </label>
+                    <input
+                      type="text"
+                      value={endpoint}
+                      onChange={(e) => setEndpoint(e.target.value)}
+                      placeholder={
+                        currentProviderMeta.default_endpoint ||
+                        "https://api.example.com/v1"
+                      }
+                      className="w-full px-4 py-2 bg-black/20 border border-white/10 rounded-lg text-white placeholder-white/30 focus:border-purple-500 focus:ring-1 focus:ring-purple-500 outline-none font-mono text-sm"
                     />
+                    {selectedProvider === "ollama" && (
+                      <p className="text-xs text-white/40">
+                        Usually http://localhost:11434/v1 for local Ollama
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="flex items-center gap-3 pt-4 border-t border-white/10">
+                    <Button
+                      onClick={handleSave}
+                      disabled={isSaving}
+                      className="bg-purple-600 hover:bg-purple-700 text-white"
+                    >
+                      {isSaving ? (
+                        <RefreshCw className="w-4 h-4 animate-spin mr-2" />
+                      ) : (
+                        <Save className="w-4 h-4 mr-2" />
+                      )}
+                      Save Settings
+                    </Button>
+
+                    <Button
+                      onClick={handleTest}
+                      disabled={isTesting}
+                      variant="outline"
+                      className="border-white/20 text-white hover:bg-white/10"
+                    >
+                      {isTesting ? (
+                        <RefreshCw className="w-4 h-4 animate-spin mr-2" />
+                      ) : (
+                        <Play className="w-4 h-4 mr-2" />
+                      )}
+                      Test Connection
+                    </Button>
+                  </div>
+
+                  {/* Feedback Messages */}
+                  {error && (
+                    <div className="p-3 bg-red-500/20 border border-red-500/30 rounded-lg flex items-center gap-2 text-red-200 text-sm">
+                      <AlertTriangle className="w-4 h-4 shrink-0" />
+                      {error}
+                    </div>
                   )}
 
-                  <div className="flex items-center gap-2 mb-2">
-                    <Icon
-                      className={`w-5 h-5 ${isSelected ? "text-purple-400" : "text-white/60"}`}
-                    />
-                    <span
-                      className={`font-semibold ${isSelected ? "text-white" : "text-white/80"}`}
+                  {successMessage && (
+                    <div className="p-3 bg-green-500/20 border border-green-500/30 rounded-lg flex items-center gap-2 text-green-200 text-sm">
+                      <CheckCircle2 className="w-4 h-4 shrink-0" />
+                      {successMessage}
+                    </div>
+                  )}
+
+                  {testResult && (
+                    <div
+                      className={`p-3 rounded-lg flex items-center gap-2 text-sm ${
+                        testResult.success
+                          ? "bg-blue-500/20 border border-blue-500/30 text-blue-200"
+                          : "bg-red-500/20 border border-red-500/30 text-red-200"
+                      }`}
                     >
-                      {option.name}
-                    </span>
+                      {testResult.success ? (
+                        <CheckCircle2 className="w-4 h-4 shrink-0" />
+                      ) : (
+                        <XCircle className="w-4 h-4 shrink-0" />
+                      )}
+                      {testResult.message}
+                    </div>
+                  )}
+                </div>
+              </Card>
+
+              {/* Info Card */}
+              <Card className="bg-blue-500/10 border-blue-500/20 p-4">
+                <div className="flex items-start gap-3">
+                  <Info className="w-5 h-5 text-blue-400 shrink-0 mt-0.5" />
+                  <div className="text-sm">
+                    <p className="text-blue-200 font-medium mb-1">
+                      Provider Information
+                    </p>
+                    <p className="text-blue-200/70">
+                      {selectedProvider === "ollama"
+                        ? "Ollama runs locally on your machine. Ensure Ollama is running and accessible."
+                        : "API keys are stored securely using encryption. Your keys never leave your device except to communicate with the provider."}
+                    </p>
                   </div>
-
-                  <p className="text-sm text-white/60 mb-3">
-                    {option.description}
-                  </p>
-
-                  <div className="flex items-center gap-4 text-xs">
-                    <span className="text-white/40">
-                      Speed:{" "}
-                      <span className="text-white/70">{option.speed}</span>
-                    </span>
-                    <span className="text-white/40">
-                      Quality:{" "}
-                      <span className="text-white/70">{option.quality}</span>
-                    </span>
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Save Button */}
-          <div className="flex items-center gap-3 mt-6">
-            <Button
-              onClick={handleSavePreference}
-              disabled={isSaving}
-              className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white"
-            >
-              {isSaving ? (
-                <>
-                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  Saving...
-                </>
-              ) : (
-                "Save Preference"
-              )}
-            </Button>
-
-            {saveSuccess && (
-              <motion.div
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                className="flex items-center gap-2 text-green-400"
-              >
-                <CheckCircle2 className="w-5 h-5" />
-                <span className="text-sm font-medium">Saved!</span>
-              </motion.div>
-            )}
-          </div>
+                </div>
+              </Card>
+            </>
+          ) : (
+            <div className="flex flex-col items-center justify-center h-64 text-white/40">
+              <Settings className="w-12 h-12 mb-4 opacity-50" />
+              <p>Select a provider to configure</p>
+            </div>
+          )}
         </div>
-      </Card>
-
-      {/* Info Card */}
-      <Card className="bg-blue-500/10 border-blue-500/20">
-        <div className="p-4 flex items-start gap-3">
-          <Info className="w-5 h-5 text-blue-400 shrink-0 mt-0.5" />
-          <div className="text-sm">
-            <p className="text-blue-200 font-medium mb-1">
-              About the AI Assistant
-            </p>
-            <p className="text-blue-200/70">
-              Justice Companion uses privacy-focused AI powered by HuggingFace
-              Pro. All processing is done securely - your case data never leaves
-              your control. The AI provides legal information and document
-              assistance, not legal advice.
-            </p>
-          </div>
-        </div>
-      </Card>
+      </div>
     </div>
   );
 }

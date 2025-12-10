@@ -527,6 +527,7 @@ async def logout(
 )
 async def get_session(
     session_id: str,
+    db: Session = Depends(get_db),
     session_manager: SessionManager = Depends(get_session_manager),
     auth_service: AuthenticationService = Depends(get_auth_service),
 ):

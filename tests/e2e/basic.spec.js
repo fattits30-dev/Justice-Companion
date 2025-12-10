@@ -1,33 +1,71 @@
-import { test, expect } from '@playwright/test';
-test.describe('End-to-End Tests', () => {
-    test.beforeEach(async ({ page }) => {
-        // Runs before each test - navigate to home page
-        await page.goto('http://localhost:3000');
+import { expect, test } from "@playwright/test";
+
+/**
+ * Basic Smoke Tests for Justice Companion
+ *
+ * These tests verify core functionality is working.
+ * Run with: npx playwright test tests/e2e/basic.spec.js
+ *
+ * IMPORTANT: Ensure the dev server is running first:
+ *   pnpm dev (or npm run dev)
+ */
+
+test.describe("Justice Companion - Basic Smoke Tests", () => {
+  test("Login page loads successfully", async ({ page }) => {
+    await page.goto("/login");
+
+    // Verify page title
+    await expect(page).toHaveTitle(/Justice Companion/i);
+
+    // Verify login form elements exist
+    await expect(
+      page.getByRole("heading", { name: /sign in|login/i })
+    ).toBeVisible();
+    await expect(page.getByLabel(/username|email/i)).toBeVisible();
+    await expect(page.locator('input[type="password"]')).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: /sign in|login/i })
+    ).toBeVisible();
+  });
+
+  test("Registration page is accessible", async ({ page }) => {
+    await page.goto("/login");
+
+    // Look for registration button and click it
+    // The login page has a "Create account" button (not a link)
+    const registerButton = page.getByRole("button", {
+      name: /create account/i,
     });
-    test('Main page loads successfully', async ({ page }) => {
-        // Verify page title and critical elements exist
-        await expect(page).toHaveTitle(/Your App Name/);
-        await expect(page.getByRole('heading', { name: 'Welcome' })).toBeVisible();
-        await expect(page.getByRole('main')).toBeVisible();
-    });
-    test('Navigation to key sections works', async ({ page }) => {
-        // Test navigation to different sections
-        await page.getByRole('link', { name: 'About' }).click();
-        await expect(page).toHaveURL(/.*about/);
-        await expect(page.getByRole('heading', { name: 'About Us' })).toBeVisible();
-        await page.getByRole('link', { name: 'Contact' }).click();
-        await expect(page).toHaveURL(/.*contact/);
-        await expect(page.getByRole('heading', { name: 'Contact Us' })).toBeVisible();
-    });
-    test('Core user interactions work', async ({ page }) => {
-        // Test form submission
-        await page.getByLabel('Name').fill('Test User');
-        await page.getByLabel('Email').fill('test@example.com');
-        await page.getByRole('button', { name: 'Submit' }).click();
-        await expect(page.getByText('Thank you for your submission')).toBeVisible();
-        // Test search functionality
-        await page.getByPlaceholder('Search').fill('test query');
-        await page.getByRole('button', { name: 'Search' }).click();
-        await expect(page.getByText('Search results for: test query')).toBeVisible();
-    });
+    await expect(registerButton).toBeVisible();
+    await registerButton.click();
+
+    // Verify we're on registration page
+    await expect(page).toHaveURL(/register/);
+    await expect(
+      page.getByRole("heading", { name: /register|sign up|create/i })
+    ).toBeVisible();
+  });
+
+  test("Unauthenticated users are redirected to login", async ({ page }) => {
+    // Try to access a protected route
+    await page.goto("/dashboard");
+
+    // Should redirect to login
+    await expect(page).toHaveURL(/login/);
+  });
+
+  test("App responds to login attempt", async ({ page }) => {
+    await page.goto("/login");
+
+    // Fill in login form with test credentials
+    await page.getByLabel(/username|email/i).fill("test@example.com");
+    await page.locator('input[type="password"]').fill("wrongpassword");
+    await page.getByRole("button", { name: /sign in|login/i }).click();
+
+    // Should show some response (error message for invalid credentials)
+    // Wait for either error message or redirect
+    await expect(
+      page.getByText(/invalid|incorrect|error|failed/i).first()
+    ).toBeVisible({ timeout: 5000 });
+  });
 });

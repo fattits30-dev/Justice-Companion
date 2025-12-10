@@ -1,5 +1,6 @@
+/// <reference types="vitest/globals" />
 import { v4 as uuidv4 } from "uuid";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
 
 import { logger } from "../lib/logger";
 import { SessionPersistenceService } from "./SessionPersistenceService";

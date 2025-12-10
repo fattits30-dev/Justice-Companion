@@ -1,6 +1,6 @@
-import type { ProviderMetadata } from "ai";
 import type { ApiClient } from "./client.ts";
 import type { ApiResponse } from "./types.ts";
+import type { AIProviderMetadata, ConfigureProviderRequest } from "../types/api.ts";
 
 export function createAiConfigApi(client: ApiClient) {
   return {
@@ -18,15 +18,7 @@ export function createAiConfigApi(client: ApiClient) {
 
     configure: async (
       provider: string,
-      params: {
-        api_key: string;
-        model: string;
-        endpoint?: string;
-        temperature?: number;
-        max_tokens?: number;
-        top_p?: number;
-        enabled?: boolean;
-      }
+      params: ConfigureProviderRequest
     ): Promise<
       ApiResponse<{ provider: string; message: string; config_id: number }>
     > => {
@@ -58,15 +50,7 @@ export function createAiConfigApi(client: ApiClient) {
 
     validate: async (
       provider: string,
-      params: {
-        api_key: string;
-        model: string;
-        endpoint?: string;
-        temperature?: number;
-        max_tokens?: number;
-        top_p?: number;
-        enabled?: boolean;
-      }
+      params: ConfigureProviderRequest
     ): Promise<ApiResponse<{ valid: boolean; errors: string[] }>> => {
       return client.post<ApiResponse<{ valid: boolean; errors: string[] }>>(
         `/ai/config/${provider}/validate`,
@@ -93,17 +77,17 @@ export function createAiConfigApi(client: ApiClient) {
     },
 
     listProviders: async (): Promise<
-      ApiResponse<Record<string, ProviderMetadata>>
+      ApiResponse<Record<string, AIProviderMetadata>>
     > => {
-      return client.get<ApiResponse<Record<string, ProviderMetadata>>>(
+      return client.get<ApiResponse<Record<string, AIProviderMetadata>>>(
         "/ai/providers"
       );
     },
 
     getProviderMetadata: async (
       provider: string
-    ): Promise<ApiResponse<ProviderMetadata>> => {
-      return client.get<ApiResponse<ProviderMetadata>>(
+    ): Promise<ApiResponse<AIProviderMetadata>> => {
+      return client.get<ApiResponse<AIProviderMetadata>>(
         `/ai/providers/${provider}`
       );
     },

@@ -4,9 +4,17 @@ from __future__ import annotations
 
 from datetime import datetime
 from enum import Enum
-from typing import TYPE_CHECKING, Dict, Any, Optional
+from typing import TYPE_CHECKING, Any, Dict, Optional
 
-from sqlalchemy import Boolean, DateTime, Float, ForeignKey, Integer, String, CheckConstraint
+from sqlalchemy import (
+    Boolean,
+    CheckConstraint,
+    DateTime,
+    Float,
+    ForeignKey,
+    Integer,
+    String,
+)
 from sqlalchemy.orm import Mapped, mapped_column, relationship, validates
 from sqlalchemy.sql import func
 
@@ -18,6 +26,7 @@ if TYPE_CHECKING:
 
 class AIProvider(str, Enum):
     """Supported AI providers."""
+
     OPENAI = "openai"
     ANTHROPIC = "anthropic"
     HUGGINGFACE = "huggingface"
@@ -28,6 +37,13 @@ class AIProvider(str, Enum):
     ANYSCALE = "anyscale"
     MISTRAL = "mistral"
     PERPLEXITY = "perplexity"
+    EMBERTON = "emberton"
+    OLLAMA = "ollama"
+    GROQ = "groq"
+
+
+# Provider constraint helper (keeps CheckConstraint aligned with enum)
+PROVIDER_ALLOWED_VALUES = ", ".join(f"'{provider.value}'" for provider in AIProvider)
 
 
 # Parameter constraints
@@ -90,22 +106,21 @@ class AIProviderConfig(Base):
         CheckConstraint(
             f"temperature IS NULL OR (temperature >= {TEMPERATURE_MIN} AND "
             f"temperature <= {TEMPERATURE_MAX})",
-            name="temperature_range"
+            name="temperature_range",
         ),
         CheckConstraint(
             f"top_p IS NULL OR (top_p >= {TOP_P_MIN} AND top_p <= {TOP_P_MAX})",
-            name="top_p_range"
+            name="top_p_range",
         ),
         CheckConstraint(
             f"max_tokens IS NULL OR (max_tokens >= {MAX_TOKENS_MIN} AND "
             f"max_tokens <= {MAX_TOKENS_MAX})",
-            name="max_tokens_range"
+            name="max_tokens_range",
         ),
         # Provider constraint - dynamically build from enum
         CheckConstraint(
-            "provider IN ('openai', 'anthropic', 'huggingface', 'qwen', "
-            "'google', 'cohere', 'together', 'anyscale', 'mistral', 'perplexity')",
-            name="valid_provider"
+            f"provider IN ({PROVIDER_ALLOWED_VALUES})",
+            name="valid_provider",
         ),
     )
 
@@ -115,9 +130,7 @@ class AIProviderConfig(Base):
     user_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
     )
-    provider: Mapped[str] = mapped_column(
-        String, nullable=False, index=True
-    )
+    provider: Mapped[str] = mapped_column(String, nullable=False, index=True)
     encrypted_api_key: Mapped[str] = mapped_column(String, nullable=False)
     model: Mapped[str] = mapped_column(String, nullable=False)
     endpoint: Mapped[str | None] = mapped_column(String, nullable=True)
@@ -171,17 +184,19 @@ class AIProviderConfig(Base):
         return AIProvider(self.provider)
 
     # Field validators
-    @validates('provider')
+    @validates("provider")
     def validate_provider(self, key: str, value: str) -> str:
         """Validate that the provider is supported."""
         try:
             AIProvider(value)  # This will raise ValueError if invalid
         except ValueError:
             valid_providers = [p.value for p in AIProvider]
-            raise ValueError(f"Invalid provider '{value}'. Must be one of: {valid_providers}")
+            raise ValueError(
+                f"Invalid provider '{value}'. Must be one of: {valid_providers}"
+            )
         return value
 
-    @validates('temperature')
+    @validates("temperature")
     def validate_temperature(self, key: str, value: Optional[float]) -> Optional[float]:
         """Validate temperature parameter range."""
         if value is not None and not (TEMPERATURE_MIN <= value <= TEMPERATURE_MAX):
@@ -190,7 +205,7 @@ class AIProviderConfig(Base):
             )
         return value
 
-    @validates('top_p')
+    @validates("top_p")
     def validate_top_p(self, key: str, value: Optional[float]) -> Optional[float]:
         """Validate top_p parameter range."""
         if value is not None and not (TOP_P_MIN <= value <= TOP_P_MAX):
@@ -199,7 +214,7 @@ class AIProviderConfig(Base):
             )
         return value
 
-    @validates('max_tokens')
+    @validates("max_tokens")
     def validate_max_tokens(self, key: str, value: Optional[int]) -> Optional[int]:
         """Validate max_tokens parameter range."""
         if value is not None and not (MAX_TOKENS_MIN <= value <= MAX_TOKENS_MAX):

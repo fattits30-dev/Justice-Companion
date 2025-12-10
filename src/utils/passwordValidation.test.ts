@@ -1,3 +1,4 @@
+/// <reference types="vitest/globals" />
 /**
  * Password Validation Utilities Tests
  *
@@ -12,7 +13,7 @@ import {
   generateStrongTestPassword,
 } from "../test-utils/passwords";
 import { randomUUID } from "node:crypto";
-import { describe, expect, it } from "vitest";
+
 import { validatePasswordChange } from "./passwordValidation";
 
 describe("validatePasswordChange", () => {

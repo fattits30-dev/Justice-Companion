@@ -2,76 +2,130 @@
 Services module for Justice Companion backend.
 
 Domain-organized services:
-- ai/: AI and ML services
+- ai/: AI and ML services (LAZY LOADED - imported on demand)
 - auth/: Authentication and authorization
 - security/: Encryption and secure storage
 - export/: Document export (PDF, DOCX)
 - gdpr/: GDPR compliance
 - backup/: Backup management
+
+Performance Note:
+AI services (OpenAI, HuggingFace clients) are lazy-loaded to reduce startup time.
+Import them directly when needed: from backend.services.ai import UnifiedAIService
 """
 
-# AI Services
-from .ai import (
-    UnifiedAIService,
-    AIServiceFactory,
-    RAGService,
-    AIProviderConfigService,
-    AIToolDefinitions,
-    AISDKService,
-    StubAIService,
-    PythonAIClient,
-    ModelDownloadService,
-    UKJurisdiction,
-    LegalCaseType,
-    DocumentType,
-    ActionPriority,
-    IssueSeverity,
-    EvidenceImportance,
-)
+from typing import TYPE_CHECKING
 
-# Auth Services
+# Core Services - loaded eagerly (fast, needed at startup)
+from .audit_logger import AuditLogger
+
+# Auth Services - loaded eagerly (fast, needed at startup)
 from .auth import (
-    AuthenticationService,
     AuthenticationError,
-    AuthService,
+    AuthenticationService,
     AuthorizationService,
+    AuthService,
     SessionManager,
     SessionPersistenceService,
 )
-
-# Security Services
-from .security import (
-    EncryptionService,
-    EncryptedData,
-    DecryptionCache,
-    KeyManager,
-    SecureStorageService,
-    SecureStorageError,
-    EncryptionNotAvailableError,
-)
-
-# Core Services (remaining in services/)
-from .audit_logger import AuditLogger
 from .consent_service import ConsentService
-from .document_parser_service import DocumentParserService, ParsedDocument
 from .port_manager import (
-    PortManager,
-    PortConfig,
     PortAllocation,
-    PortStatus,
+    PortConfig,
+    PortManager,
     PortManagerConfig,
+    PortStatus,
     get_port_manager,
 )
 from .process_manager import (
-    ProcessManager as ProcessManagerClass,
     ProcessInfo,
-    ProcessStatus as ProcessManagerStatus,
     get_process_manager,
     reset_process_manager,
 )
+from .process_manager import (
+    ProcessManager as ProcessManagerClass,
+)
+from .process_manager import (
+    ProcessStatus as ProcessManagerStatus,
+)
+
+# Security Services - loaded eagerly (fast, needed at startup)
+from .security import (
+    DecryptionCache,
+    EncryptedData,
+    EncryptionNotAvailableError,
+    EncryptionService,
+    KeyManager,
+    SecureStorageError,
+    SecureStorageService,
+)
+
+# Type hints for lazy-loaded AI services (for IDE support)
+if TYPE_CHECKING:
+    from .ai import (
+        ActionPriority,
+        AIProviderConfigService,
+        AISDKService,
+        AIServiceFactory,
+        AIToolDefinitions,
+        DocumentType,
+        EvidenceImportance,
+        IssueSeverity,
+        LegalCaseType,
+        ModelDownloadService,
+        PythonAIClient,
+        RAGService,
+        StubAIService,
+        UKJurisdiction,
+        UnifiedAIService,
+    )
+    from .document_parser_service import DocumentParserService, ParsedDocument
+
+
+def __getattr__(name: str):
+    """
+    Lazy import for AI services to reduce startup time.
+    AI services import OpenAI/HuggingFace which add ~2 seconds to startup.
+    """
+    # AI Services - lazy loaded
+    ai_exports = {
+        "UnifiedAIService",
+        "AIServiceFactory",
+        "RAGService",
+        "AIProviderConfigService",
+        "AIToolDefinitions",
+        "AISDKService",
+        "StubAIService",
+        "PythonAIClient",
+        "ModelDownloadService",
+        "UKJurisdiction",
+        "LegalCaseType",
+        "DocumentType",
+        "ActionPriority",
+        "IssueSeverity",
+        "EvidenceImportance",
+    }
+
+    if name in ai_exports:
+        from . import ai
+
+        return getattr(ai, name)
+
+    # Document parser - lazy loaded (imports PDF/OCR libraries)
+    if name == "DocumentParserService":
+        from .document_parser_service import DocumentParserService
+
+        return DocumentParserService
+    if name == "ParsedDocument":
+        from .document_parser_service import ParsedDocument
+
+        return ParsedDocument
+
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
 
 __all__ = [
-    # AI
+    # AI (lazy loaded - imported on demand for faster startup)
     "UnifiedAIService",
     "AIServiceFactory",
     "RAGService",
@@ -87,14 +141,14 @@ __all__ = [
     "ActionPriority",
     "IssueSeverity",
     "EvidenceImportance",
-    # Auth
+    # Auth (eager)
     "AuthenticationService",
     "AuthenticationError",
     "AuthService",
     "AuthorizationService",
     "SessionManager",
     "SessionPersistenceService",
-    # Security
+    # Security (eager)
     "EncryptionService",
     "EncryptedData",
     "DecryptionCache",
@@ -102,7 +156,7 @@ __all__ = [
     "SecureStorageService",
     "SecureStorageError",
     "EncryptionNotAvailableError",
-    # Core
+    # Core (eager, except DocumentParserService which is lazy)
     "AuditLogger",
     "ConsentService",
     "DocumentParserService",

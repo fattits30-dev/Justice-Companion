@@ -55,15 +55,14 @@ Usage:
     response = await factory.handle_chat_request(request)
 """
 
-import os
 import logging
-from typing import Optional, Any, Literal
-from threading import Lock
+import os
 from enum import Enum
-
-from pydantic import BaseModel, Field, ConfigDict
+from threading import Lock
+from typing import Any, Literal, Optional
 
 from fastapi import HTTPException
+from pydantic import BaseModel, ConfigDict, Field
 
 # Configure logger
 logger = logging.getLogger(__name__)
@@ -72,15 +71,18 @@ logger = logging.getLogger(__name__)
 # ENUMS
 # ============================================================================
 
+
 class AIProviderType(str, Enum):
     """AI Provider Types"""
 
     OPENAI = "openai"
     INTEGRATED = "integrated"
 
+
 # ============================================================================
 # PYDANTIC MODELS
 # ============================================================================
+
 
 class AIChatMessage(BaseModel):
     """Chat message structure"""
@@ -92,6 +94,7 @@ class AIChatMessage(BaseModel):
     timestamp: Optional[str] = None
     thinking_content: Optional[str] = None  # AI's internal reasoning from <think> tags
 
+
 class LegislationResult(BaseModel):
     """Legislation search result from UK legal APIs"""
 
@@ -102,6 +105,7 @@ class LegislationResult(BaseModel):
     content: str
     url: str
     relevance: Optional[float] = None
+
 
 class CaseResult(BaseModel):
     """Case law search result from UK legal APIs"""
@@ -116,6 +120,7 @@ class CaseResult(BaseModel):
     url: str
     relevance: Optional[float] = None
 
+
 class KnowledgeEntry(BaseModel):
     """Knowledge base entry (cached FAQs, guides)"""
 
@@ -126,6 +131,7 @@ class KnowledgeEntry(BaseModel):
     content: str
     sources: list[str]
 
+
 class LegalContext(BaseModel):
     """Legal context from RAG retrieval"""
 
@@ -134,6 +140,7 @@ class LegalContext(BaseModel):
     legislation: list[LegislationResult] = Field(default_factory=list)
     case_law: list[CaseResult] = Field(default_factory=list)
     knowledge_base: list[KnowledgeEntry] = Field(default_factory=list)
+
 
 class AIConfig(BaseModel):
     """AI model configuration"""
@@ -149,6 +156,7 @@ class AIConfig(BaseModel):
     threads: Optional[int] = None  # Auto-detect CPU threads
     batch_size: Optional[int] = None  # Use library default
 
+
 class AIChatRequest(BaseModel):
     """AI chat request with legal context"""
 
@@ -158,6 +166,7 @@ class AIChatRequest(BaseModel):
     context: Optional[LegalContext] = None
     config: Optional[AIConfig] = None
     case_id: Optional[int] = None
+
 
 class AIChatResponse(BaseModel):
     """Successful AI chat response"""
@@ -169,6 +178,7 @@ class AIChatResponse(BaseModel):
     sources: list[str] = Field(default_factory=list)
     tokens_used: Optional[int] = None
 
+
 class AIErrorResponse(BaseModel):
     """AI error response"""
 
@@ -178,12 +188,14 @@ class AIErrorResponse(BaseModel):
     error: str
     code: Optional[str] = None
 
+
 # Union type for all AI responses
 AIResponse = AIChatResponse | AIErrorResponse
 
 # ============================================================================
 # STUB CLASSES (Temporary - Replace with Real Implementations)
 # ============================================================================
+
 
 class IntegratedAIService:
     """
@@ -259,7 +271,9 @@ class IntegratedAIService:
 
             # Stub implementation - replace with actual AI logic
             return AIErrorResponse(
-                success=False, error="Integrated AI service not implemented", code="NOT_IMPLEMENTED"
+                success=False,
+                error="Integrated AI service not implemented",
+                code="NOT_IMPLEMENTED",
             )
 
         except Exception as exc:
@@ -277,7 +291,10 @@ class IntegratedAIService:
                     error_message=str(e),
                 )
 
-            raise HTTPException(status_code=500, detail=f"Integrated AI service error: {str(e)}")
+            raise HTTPException(
+                status_code=500, detail=f"Integrated AI service error: {str(e)}"
+            )
+
 
 class OpenAIService:
     """
@@ -363,7 +380,9 @@ class OpenAIService:
 
             # Stub implementation - replace with actual OpenAI API calls
             return AIErrorResponse(
-                success=False, error="OpenAI service not implemented", code="NOT_IMPLEMENTED"
+                success=False,
+                error="OpenAI service not implemented",
+                code="NOT_IMPLEMENTED",
             )
 
         except Exception as exc:
@@ -381,11 +400,15 @@ class OpenAIService:
                     error_message=str(e),
                 )
 
-            raise HTTPException(status_code=500, detail=f"OpenAI service error: {str(e)}")
+            raise HTTPException(
+                status_code=500, detail=f"OpenAI service error: {str(e)}"
+            )
+
 
 # ============================================================================
 # AI SERVICE FACTORY
 # ============================================================================
+
 
 class AIServiceFactory:
     """
@@ -488,7 +511,9 @@ class AIServiceFactory:
                 # Double-checked locking pattern
                 if cls._instance is None:
                     if model_path is None:
-                        raise ValueError("model_path required on first call to get_instance()")
+                        raise ValueError(
+                            "model_path required on first call to get_instance()"
+                        )
 
                     cls._instance = cls(model_path, audit_logger)
 
@@ -730,7 +755,9 @@ class AIServiceFactory:
                 else "local-qwen"
             )
 
-            logger.info(f"Handling chat request with provider={provider}, model={model}")
+            logger.info(
+                f"Handling chat request with provider={provider}, model={model}"
+            )
 
             # Handle request
             response = await service.handle_chat_request(request)
@@ -746,7 +773,9 @@ class AIServiceFactory:
                     details={
                         "provider": provider,
                         "model": model,
-                        "success": response.success if hasattr(response, "success") else True,
+                        "success": (
+                            response.success if hasattr(response, "success") else True
+                        ),
                         "message_count": len(request.messages),
                         "case_id": request.case_id,
                     },
@@ -754,14 +783,16 @@ class AIServiceFactory:
                 )
 
             logger.info(
-                f"AI request completed successfully: provider={provider}, " f"model={model}"
+                f"AI request completed successfully: provider={provider}, "
+                f"model={model}"
             )
 
             return response
 
         except Exception as exc:
             logger.error(
-                f"AI request failed: provider={self.current_provider}, error={e}", exc_info=True
+                f"AI request failed: provider={self.current_provider}, error={exc}",
+                exc_info=True,
             )
 
             if self.audit_logger:
@@ -771,9 +802,9 @@ class AIServiceFactory:
                     resource_type="ai_factory",
                     resource_id="singleton",
                     action="chat",
-                    details={"provider": self.current_provider, "error": str(e)},
+                    details={"provider": self.current_provider, "error": str(exc)},
                     success=False,
-                    error_message=str(e),
+                    error_message=str(exc),
                 )
 
             raise
@@ -793,6 +824,7 @@ class AIServiceFactory:
         """
         return await self.handle_chat_request(request)
 
+
 # ============================================================================
 # SINGLETON EXPORT (for convenience)
 # ============================================================================
@@ -807,6 +839,7 @@ class AIServiceFactory:
 #       model_path="/path/to/models/Qwen_Qwen3-8B-Q4_K_M.ggu",
 #       audit_logger=audit_logger
 #   )
+
 
 def get_ai_service_factory() -> AIServiceFactory:
     """

@@ -35,7 +35,7 @@ export function createChatApi(client: ApiClient) {
 
         const sessionId = client.getSessionId();
         if (sessionId) {
-          headers["X-Session-Id"] = sessionId;
+          headers["X-Session-ID"] = sessionId;
         }
 
         const response = await fetch(url, {

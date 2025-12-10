@@ -1,7 +1,8 @@
+/// <reference types="vitest/globals" />
 /**
  * @vitest-environment node
  */
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
+
 import { chatConversationService } from "./ChatConversationService";
 import { AuditLogger } from "./AuditLogger";
 import { TestDatabaseHelper } from "../test-utils/database-test-helper";

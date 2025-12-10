@@ -1,4 +1,5 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+/// <reference types="vitest/globals" />
+
 import type { Case } from "../domains/cases/entities/Case";
 import { apiClient } from "../lib/apiClient";
 import {

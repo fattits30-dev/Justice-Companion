@@ -44,17 +44,18 @@ Usage:
 """
 
 import logging
-from typing import List, Optional, Dict, Any
 from datetime import datetime, timezone
+from typing import Any, Dict, List, Optional
 from uuid import uuid4
-from sqlalchemy.orm import Session
-from sqlalchemy.exc import SQLAlchemyError
-from fastapi import HTTPException
-from pydantic import BaseModel, Field, ConfigDict
 
-from backend.services.audit_logger import AuditLogger
+from fastapi import HTTPException
+from pydantic import BaseModel, ConfigDict, Field
+from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.orm import Session
+
 from backend.models.case import Case, CaseStatus
 from backend.models.evidence import Evidence
+from backend.services.audit_logger import AuditLogger
 
 # Configure logger
 logger = logging.getLogger(__name__)
@@ -62,6 +63,7 @@ logger = logging.getLogger(__name__)
 # ============================================================================
 # Pydantic Models for Input/Output
 # ============================================================================
+
 
 class BulkOperationOptions(BaseModel):
     """
@@ -73,11 +75,18 @@ class BulkOperationOptions(BaseModel):
         batch_size: Maximum items to process in a single transaction (default: 1000)
     """
 
-    fail_fast: bool = Field(default=True, description="Stop on first error and rollback")
-    progress_interval: int = Field(default=10, ge=1, description="Progress notification interval")
-    batch_size: int = Field(default=1000, ge=1, le=10000, description="Items per transaction batch")
+    fail_fast: bool = Field(
+        default=True, description="Stop on first error and rollback"
+    )
+    progress_interval: int = Field(
+        default=10, ge=1, description="Progress notification interval"
+    )
+    batch_size: int = Field(
+        default=1000, ge=1, le=10000, description="Items per transaction batch"
+    )
 
     model_config = ConfigDict(use_enum_values=True)
+
 
 class BulkOperationError(BaseModel):
     """Individual item error in bulk operation."""
@@ -86,6 +95,7 @@ class BulkOperationError(BaseModel):
     error: str = Field(..., description="Error message")
 
     model_config = ConfigDict(from_attributes=True)
+
 
 class BulkOperationResult(BaseModel):
     """
@@ -104,21 +114,29 @@ class BulkOperationResult(BaseModel):
     total_items: int = Field(..., ge=0, description="Total items to process")
     success_count: int = Field(..., ge=0, description="Successfully processed items")
     failure_count: int = Field(..., ge=0, description="Failed items")
-    errors: List[BulkOperationError] = Field(default_factory=list, description="List of errors")
-    rolled_back: bool = Field(default=False, description="Whether operation was rolled back")
+    errors: List[BulkOperationError] = Field(
+        default_factory=list, description="List of errors"
+    )
+    rolled_back: bool = Field(
+        default=False, description="Whether operation was rolled back"
+    )
 
     model_config = ConfigDict(from_attributes=True)
+
 
 class CaseUpdate(BaseModel):
     """Individual case update in bulk operation."""
 
     id: int = Field(..., ge=1, description="Case ID to update")
-    title: Optional[str] = Field(None, min_length=1, max_length=255, description="New case title")
+    title: Optional[str] = Field(
+        None, min_length=1, max_length=255, description="New case title"
+    )
     description: Optional[str] = Field(None, description="New case description")
     case_type: Optional[str] = Field(None, description="New case type")
     status: Optional[CaseStatus] = Field(None, description="New case status")
 
     model_config = ConfigDict(use_enum_values=True)
+
 
 class BulkOperationProgress(BaseModel):
     """
@@ -134,12 +152,19 @@ class BulkOperationProgress(BaseModel):
     processed_items: int = Field(..., ge=0, description="Items processed so far")
     success_count: int = Field(..., ge=0, description="Successful items")
     failure_count: int = Field(..., ge=0, description="Failed items")
-    status: str = Field(..., description="Operation status (pending, running, completed, failed)")
-    errors: List[BulkOperationError] = Field(default_factory=list, description="Errors encountered")
+    status: str = Field(
+        ..., description="Operation status (pending, running, completed, failed)"
+    )
+    errors: List[BulkOperationError] = Field(
+        default_factory=list, description="Errors encountered"
+    )
     started_at: datetime = Field(..., description="Operation start time")
-    completed_at: Optional[datetime] = Field(None, description="Operation completion time")
+    completed_at: Optional[datetime] = Field(
+        None, description="Operation completion time"
+    )
 
     model_config = ConfigDict(from_attributes=True)
+
 
 # ============================================================================
 # BulkOperationService Class
@@ -244,7 +269,9 @@ class BulkOperationService:
         if not case:
             raise HTTPException(status_code=404, detail=f"Case {case_id} not found")
         if case.user_id != user_id:
-            raise HTTPException(status_code=403, detail=f"Unauthorized access to case {case_id}")
+            raise HTTPException(
+                status_code=403, detail=f"Unauthorized access to case {case_id}"
+            )
 
     def _verify_evidence_ownership(self, evidence_id: int, user_id: int) -> None:
         """
@@ -260,7 +287,9 @@ class BulkOperationService:
         """
         evidence = self.db.query(Evidence).filter(Evidence.id == evidence_id).first()
         if not evidence:
-            raise HTTPException(status_code=404, detail=f"Evidence {evidence_id} not found")
+            raise HTTPException(
+                status_code=404, detail=f"Evidence {evidence_id} not found"
+            )
 
         # Verify case ownership
         case = self.db.query(Case).filter(Case.id == evidence.case_id).first()
@@ -367,7 +396,10 @@ class BulkOperationService:
     # ========================================================================
 
     async def bulk_delete_cases(
-        self, case_ids: List[int], user_id: int, options: Optional[BulkOperationOptions] = None
+        self,
+        case_ids: List[int],
+        user_id: int,
+        options: Optional[BulkOperationOptions] = None,
     ) -> BulkOperationResult:
         """
         Delete multiple cases in a transaction.
@@ -435,10 +467,14 @@ class BulkOperationService:
                             self._verify_case_ownership(case_id, user_id)
 
                             # Delete associated evidence first (cascade)
-                            self.db.query(Evidence).filter(Evidence.case_id == case_id).delete()
+                            self.db.query(Evidence).filter(
+                                Evidence.case_id == case_id
+                            ).delete()
 
                             # Delete case
-                            deleted = self.db.query(Case).filter(Case.id == case_id).delete()
+                            deleted = (
+                                self.db.query(Case).filter(Case.id == case_id).delete()
+                            )
                             if deleted == 0:
                                 raise HTTPException(
                                     status_code=404, detail=f"Case {case_id} not found"
@@ -472,7 +508,9 @@ class BulkOperationService:
                                 if isinstance(item_error, HTTPException)
                                 else item_error
                             )
-                            bulk_error = BulkOperationError(item_id=case_id, error=error_message)
+                            bulk_error = BulkOperationError(
+                                item_id=case_id, error=error_message
+                            )
                             errors.append(bulk_error)
                             failure_count += 1
 
@@ -491,7 +529,10 @@ class BulkOperationService:
                                 resource_type="case",
                                 resource_id=str(case_id),
                                 action="delete",
-                                details={"operation_id": operation_id, "error": error_message},
+                                details={
+                                    "operation_id": operation_id,
+                                    "error": error_message,
+                                },
                                 success=False,
                                 error_message=error_message,
                             )
@@ -671,11 +712,14 @@ class BulkOperationService:
 
                             # Update case
                             updated = (
-                                self.db.query(Case).filter(Case.id == update.id).update(update_data)
+                                self.db.query(Case)
+                                .filter(Case.id == update.id)
+                                .update(update_data)
                             )
                             if updated == 0:
                                 raise HTTPException(
-                                    status_code=404, detail=f"Case {update.id} not found"
+                                    status_code=404,
+                                    detail=f"Case {update.id} not found",
                                 )
 
                             success_count += 1
@@ -701,13 +745,19 @@ class BulkOperationService:
                                 },
                             )
 
-                        except (HTTPException, SQLAlchemyError, ValueError) as item_error:
+                        except (
+                            HTTPException,
+                            SQLAlchemyError,
+                            ValueError,
+                        ) as item_error:
                             error_message = str(
                                 item_error.detail
                                 if isinstance(item_error, HTTPException)
                                 else item_error
                             )
-                            bulk_error = BulkOperationError(item_id=update.id, error=error_message)
+                            bulk_error = BulkOperationError(
+                                item_id=update.id, error=error_message
+                            )
                             errors.append(bulk_error)
                             failure_count += 1
 
@@ -726,7 +776,10 @@ class BulkOperationService:
                                 resource_type="case",
                                 resource_id=str(update.id),
                                 action="update",
-                                details={"operation_id": operation_id, "error": error_message},
+                                details={
+                                    "operation_id": operation_id,
+                                    "error": error_message,
+                                },
                                 success=False,
                                 error_message=error_message,
                             )
@@ -817,7 +870,10 @@ class BulkOperationService:
             raise
 
     async def bulk_archive_cases(
-        self, case_ids: List[int], user_id: int, options: Optional[BulkOperationOptions] = None
+        self,
+        case_ids: List[int],
+        user_id: int,
+        options: Optional[BulkOperationOptions] = None,
     ) -> BulkOperationResult:
         """
         Archive multiple cases by setting status to 'closed'.
@@ -928,7 +984,9 @@ class BulkOperationService:
                                 if isinstance(item_error, HTTPException)
                                 else item_error
                             )
-                            bulk_error = BulkOperationError(item_id=case_id, error=error_message)
+                            bulk_error = BulkOperationError(
+                                item_id=case_id, error=error_message
+                            )
                             errors.append(bulk_error)
                             failure_count += 1
 
@@ -947,7 +1005,10 @@ class BulkOperationService:
                                 resource_type="case",
                                 resource_id=str(case_id),
                                 action="archive",
-                                details={"operation_id": operation_id, "error": error_message},
+                                details={
+                                    "operation_id": operation_id,
+                                    "error": error_message,
+                                },
                                 success=False,
                                 error_message=error_message,
                             )
@@ -1038,7 +1099,10 @@ class BulkOperationService:
             raise
 
     async def bulk_delete_evidence(
-        self, evidence_ids: List[int], user_id: int, options: Optional[BulkOperationOptions] = None
+        self,
+        evidence_ids: List[int],
+        user_id: int,
+        options: Optional[BulkOperationOptions] = None,
     ) -> BulkOperationResult:
         """
         Delete multiple evidence items in a transaction.
@@ -1107,11 +1171,14 @@ class BulkOperationService:
 
                             # Delete evidence
                             deleted = (
-                                self.db.query(Evidence).filter(Evidence.id == evidence_id).delete()
+                                self.db.query(Evidence)
+                                .filter(Evidence.id == evidence_id)
+                                .delete()
                             )
                             if deleted == 0:
                                 raise HTTPException(
-                                    status_code=404, detail=f"Evidence {evidence_id} not found"
+                                    status_code=404,
+                                    detail=f"Evidence {evidence_id} not found",
                                 )
 
                             success_count += 1
@@ -1142,7 +1209,9 @@ class BulkOperationService:
                                 if isinstance(item_error, HTTPException)
                                 else item_error
                             )
-                            bulk_error = BulkOperationError(item_id=evidence_id, error=error_message)
+                            bulk_error = BulkOperationError(
+                                item_id=evidence_id, error=error_message
+                            )
                             errors.append(bulk_error)
                             failure_count += 1
 
@@ -1161,7 +1230,10 @@ class BulkOperationService:
                                 resource_type="evidence",
                                 resource_id=str(evidence_id),
                                 action="delete",
-                                details={"operation_id": operation_id, "error": error_message},
+                                details={
+                                    "operation_id": operation_id,
+                                    "error": error_message,
+                                },
                                 success=False,
                                 error_message=error_message,
                             )
@@ -1251,7 +1323,9 @@ class BulkOperationService:
             )
             raise
 
-    async def get_operation_progress(self, operation_id: str) -> Optional[BulkOperationProgress]:
+    async def get_operation_progress(
+        self, operation_id: str
+    ) -> Optional[BulkOperationProgress]:
         """
         Get operation progress from in-memory store.
 
@@ -1273,10 +1347,12 @@ class BulkOperationService:
             progress = _active_operations.get(operation_id)
             if progress:
                 return progress
-            
+
             # Operation not found in active store
             logger.debug(f"Operation {operation_id} not found in progress store")
             return None
         except Exception as exc:
-            logger.warning(f"Failed to get operation progress for {operation_id}: {exc}")
+            logger.warning(
+                f"Failed to get operation progress for {operation_id}: {exc}"
+            )
             return None

@@ -1,12 +1,4 @@
-import {
-  describe,
-  it,
-  expect,
-  beforeEach,
-  afterEach,
-  beforeAll,
-  afterAll,
-} from "vitest";
+/// <reference types="vitest/globals" />
 import { EvidenceRepository } from "./EvidenceRepository";
 import { EncryptionService } from "../services/EncryptionService";
 import { AuditLogger } from "../services/AuditLogger";

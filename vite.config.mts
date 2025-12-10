@@ -1,11 +1,10 @@
-import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
+import fs from "fs";
+import path, { dirname } from "path";
+import { fileURLToPath } from "url";
+import { defineConfig } from "vite";
 import { nodePolyfills } from "vite-plugin-node-polyfills";
 import { VitePWA } from "vite-plugin-pwa";
-import path from "path";
-import { fileURLToPath } from "url";
-import { dirname } from "path";
-import fs from "fs";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -61,7 +60,12 @@ export default defineConfig({
     }),
     VitePWA({
       registerType: "autoUpdate",
-      includeAssets: ["favicon.svg", "pwa-192x192.png", "pwa-512x512.png", "icons/apple-touch-icon.png"],
+      includeAssets: [
+        "favicon.svg",
+        "pwa-192x192.png",
+        "pwa-512x512.png",
+        "icons/apple-touch-icon.png",
+      ],
       manifest: {
         name: "Justice Companion - UK Legal AI Assistant",
         short_name: "JusticeAI",

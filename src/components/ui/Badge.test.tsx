@@ -1,3 +1,4 @@
+/// <reference types="vitest/globals" />
 /**
  * Badge Component Tests
  *
@@ -6,7 +7,7 @@
 
 import { render, screen } from "@testing-library/react";
 import { createRef } from "react";
-import { describe, expect, it } from "vitest";
+
 import { Badge, type BadgeProps } from "./Badge";
 
 type BadgeVariant = NonNullable<BadgeProps["variant"]>;

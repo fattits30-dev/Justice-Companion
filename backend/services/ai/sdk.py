@@ -29,14 +29,25 @@ Features:
 - Type hints for Python 3.9+
 """
 
-from typing import List, Dict, Any, Optional, Callable, TYPE_CHECKING, cast
-from enum import Enum
-from pydantic import BaseModel, Field, ConfigDict, field_validator
+import importlib
 import logging
 from datetime import datetime
-import importlib
+from enum import Enum
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    AsyncIterator,
+    Callable,
+    Dict,
+    List,
+    Optional,
+    cast,
+)
+
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 # AI Provider SDKs
+
 
 def _safe_import_attr(module_name: str, attr_name: str) -> Optional[Any]:
     """Attempt to import an attribute without raising across providers."""
@@ -47,6 +58,7 @@ def _safe_import_attr(module_name: str, attr_name: str) -> Optional[Any]:
         return None
 
     return getattr(module, attr_name, None)
+
 
 _RuntimeAsyncOpenAI: Optional[Any] = _safe_import_attr("openai", "AsyncOpenAI")
 _RuntimeAsyncAnthropic: Optional[Any] = _safe_import_attr("anthropic", "AsyncAnthropic")
@@ -70,6 +82,7 @@ logger = logging.getLogger(__name__)
 # Enums and Type Definitions
 # ============================================================================
 
+
 class AIProviderType(str, Enum):
     """Supported AI provider types."""
 
@@ -83,6 +96,9 @@ class AIProviderType(str, Enum):
     ANYSCALE = "anyscale"
     MISTRAL = "mistral"
     PERPLEXITY = "perplexity"
+    EMBERTON = "emberton"
+    OLLAMA = "ollama"
+
 
 class MessageRole(str, Enum):
     """Chat message role types."""
@@ -91,9 +107,11 @@ class MessageRole(str, Enum):
     USER = "user"
     ASSISTANT = "assistant"
 
+
 # ============================================================================
 # Pydantic Models
 # ============================================================================
+
 
 class ChatMessage(BaseModel):
     """Chat message model."""
@@ -102,6 +120,7 @@ class ChatMessage(BaseModel):
     content: str = Field(..., min_length=1, description="Message content")
 
     model_config = ConfigDict(from_attributes=True)
+
 
 class AIProviderConfig(BaseModel):
     """AI provider configuration."""
@@ -127,6 +146,7 @@ class AIProviderConfig(BaseModel):
             raise ValueError("API key cannot be empty")
         return v
 
+
 class StreamingCallbacks(BaseModel):
     """Streaming callback configuration.
 
@@ -145,6 +165,7 @@ class StreamingCallbacks(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
+
 class ProviderCapabilities(BaseModel):
     """Provider capabilities response."""
 
@@ -158,11 +179,20 @@ class ProviderCapabilities(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
+
 # ============================================================================
 # Provider Metadata
 # ============================================================================
 
+
 AI_PROVIDER_METADATA: Dict[AIProviderType, Dict[str, Any]] = {
+    AIProviderType.HUGGINGFACE: {
+        "name": "Hugging Face",
+        "default_endpoint": "https://api-inference.huggingface.co",
+        "supports_streaming": True,
+        "default_model": "meta-llama/Meta-Llama-3.1-70B-Instruct",
+        "max_context_tokens": 128000,
+    },
     AIProviderType.OPENAI: {
         "name": "OpenAI",
         "default_endpoint": "https://api.openai.com/v1",
@@ -172,24 +202,10 @@ AI_PROVIDER_METADATA: Dict[AIProviderType, Dict[str, Any]] = {
     },
     AIProviderType.ANTHROPIC: {
         "name": "Anthropic",
-        "default_endpoint": "https://api.anthropic.com/v1",
+        "default_endpoint": "https://api.anthropic.com",
         "supports_streaming": True,
         "default_model": "claude-3-5-sonnet-20241022",
         "max_context_tokens": 200000,
-    },
-    AIProviderType.HUGGINGFACE: {
-        "name": "Hugging Face",
-        "default_endpoint": "https://api-inference.huggingface.co",
-        "supports_streaming": True,
-        "default_model": "meta-llama/Llama-2-70b-chat-hf",
-        "max_context_tokens": 4096,
-    },
-    AIProviderType.QWEN: {
-        "name": "Qwen",
-        "default_endpoint": "https://api-inference.huggingface.co",
-        "supports_streaming": True,
-        "default_model": "Qwen/Qwen2.5-72B-Instruct",
-        "max_context_tokens": 32768,
     },
     AIProviderType.GOOGLE: {
         "name": "Google Gemini",
@@ -209,14 +225,14 @@ AI_PROVIDER_METADATA: Dict[AIProviderType, Dict[str, Any]] = {
         "name": "Together AI",
         "default_endpoint": "https://api.together.xyz/v1",
         "supports_streaming": True,
-        "default_model": "meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo",
+        "default_model": "meta-llama/Llama-3-70b-chat-hf",
         "max_context_tokens": 8192,
     },
     AIProviderType.ANYSCALE: {
         "name": "Anyscale",
         "default_endpoint": "https://api.endpoints.anyscale.com/v1",
         "supports_streaming": True,
-        "default_model": "meta-llama/Meta-Llama-3.1-70B-Instruct",
+        "default_model": "meta-llama/Meta-Llama-3-70B-Instruct",
         "max_context_tokens": 8192,
     },
     AIProviderType.MISTRAL: {
@@ -224,36 +240,64 @@ AI_PROVIDER_METADATA: Dict[AIProviderType, Dict[str, Any]] = {
         "default_endpoint": "https://api.mistral.ai/v1",
         "supports_streaming": True,
         "default_model": "mistral-large-latest",
-        "max_context_tokens": 128000,
+        "max_context_tokens": 32000,
     },
     AIProviderType.PERPLEXITY: {
         "name": "Perplexity",
         "default_endpoint": "https://api.perplexity.ai",
         "supports_streaming": True,
-        "default_model": "llama-3.1-sonar-large-128k-online",
-        "max_context_tokens": 127072,
+        "default_model": "llama-3-sonar-large-32k-online",
+        "max_context_tokens": 32768,
+    },
+    AIProviderType.EMBERTON: {
+        "name": "Emberton AI",
+        "default_endpoint": "https://api.emberton.ai/v1",
+        "supports_streaming": True,
+        "default_model": "emberton-legal-1.0",
+        "max_context_tokens": 128000,
+    },
+    AIProviderType.QWEN: {
+        "name": "Qwen",
+        "default_endpoint": "https://api-inference.huggingface.co",
+        "supports_streaming": True,
+        "default_model": "Qwen/Qwen2.5-72B-Instruct",
+        "max_context_tokens": 32768,
+    },
+    AIProviderType.OLLAMA: {
+        "name": "Ollama (Local)",
+        "default_endpoint": "http://localhost:11434/v1",
+        "supports_streaming": True,
+        "default_model": "llama3",
+        "max_context_tokens": 8192,
     },
 }
+
 
 # ============================================================================
 # Custom Exceptions
 # ============================================================================
 
+
 class AIServiceError(Exception):
     """Base exception for AI service errors."""
+
 
 class ProviderNotSupportedError(AIServiceError):
     """Exception raised when provider is not supported."""
 
+
 class ProviderNotConfiguredError(AIServiceError):
     """Exception raised when provider is not properly configured."""
+
 
 class StreamingError(AIServiceError):
     """Exception raised during streaming operations."""
 
+
 # ============================================================================
 # AI SDK Service
 # ============================================================================
+
 
 class AISDKService:
     """
@@ -286,11 +330,32 @@ class AISDKService:
         Raises:
             ProviderNotSupportedError: If required SDK is not installed
         """
-        self.config = config
+        normalized_provider = self._normalize_provider(config.provider)
+        self.config = config.model_copy(update={"provider": normalized_provider})
         self.audit_logger = audit_logger
         self.client: Optional[Any] = None
 
         self._initialize_client()
+
+    @staticmethod
+    def _normalize_provider(provider: AIProviderType | str) -> AIProviderType:
+        """Convert provider input to enum or raise a configuration error."""
+
+        if isinstance(provider, AIProviderType):
+            return provider
+
+        try:
+            return AIProviderType(provider)
+        except ValueError as exc:
+            raise ProviderNotConfiguredError(
+                f"Unsupported provider: {provider}"
+            ) from exc
+
+    @staticmethod
+    def _provider_str(provider: AIProviderType | str) -> str:
+        """Get provider identifier as string without assuming Enum presence."""
+
+        return provider.value if isinstance(provider, AIProviderType) else str(provider)
 
     def _initialize_client(self) -> None:
         """
@@ -301,10 +366,17 @@ class AISDKService:
             ProviderNotConfiguredError: If configuration is invalid
         """
         provider = self.config.provider
-        api_key = self.config.api_key
+        api_key = self.config.api_key or ""
         endpoint = (
             self.config.endpoint or AI_PROVIDER_METADATA[provider]["default_endpoint"]
         )
+
+        if provider == AIProviderType.OLLAMA and not api_key:
+            api_key = "ollama-local"
+        elif not api_key:
+            raise ProviderNotConfiguredError(
+                f"API key is required for provider {provider}"
+            )
 
         try:
             if provider == AIProviderType.ANTHROPIC:
@@ -325,6 +397,9 @@ class AISDKService:
                 AIProviderType.PERPLEXITY,
                 AIProviderType.COHERE,
                 AIProviderType.GOOGLE,
+                AIProviderType.EMBERTON,
+                AIProviderType.OLLAMA,
+                AIProviderType.GROQ,
             }:
                 # These providers use OpenAI-compatible API
                 if _RuntimeAsyncOpenAI is None:
@@ -333,7 +408,7 @@ class AISDKService:
                     )
                 self.client = _RuntimeAsyncOpenAI(api_key=api_key, base_url=endpoint)
                 logger.info(
-                    f"Initialized {provider.value} client with model: {self.config.model}"
+                    f"Initialized {provider} client with model: {self.config.model}"
                 )
 
             elif provider in {AIProviderType.QWEN, AIProviderType.HUGGINGFACE}:
@@ -342,6 +417,8 @@ class AISDKService:
                     raise ProviderNotSupportedError(
                         "HuggingFace SDK not installed. Install with: pip install huggingface-hub"
                     )
+                # AsyncInferenceClient uses token and base_url parameters
+                # Note: provider parameter only exists in sync InferenceClient
                 self.client = _RuntimeAsyncInferenceClient(
                     token=api_key, base_url=endpoint
                 )
@@ -353,16 +430,16 @@ class AISDKService:
                 raise ProviderNotSupportedError(f"Unsupported provider: {provider}")
 
         except Exception as exc:
-            logger.error(f"Failed to initialize {provider.value} client: {str(exc)}")
+            logger.error(f"Failed to initialize {provider} client: {str(exc)}")
             raise ProviderNotConfiguredError(
-                f"Failed to initialize {provider.value}: {str(exc)}"
+                f"Failed to initialize {provider}: {str(exc)}"
             ) from exc
 
     def _require_client(self) -> Any:
         """Return the configured client or raise if unavailable."""
         if not self.client:
             raise ProviderNotConfiguredError(
-                f"{self.config.provider.value} client not configured"
+                f"{self.config.provider} client not configured"
             )
         return self.client
 
@@ -389,11 +466,11 @@ class AISDKService:
                 {
                     "event_type": event_type,
                     "resource_type": "ai_service",
-                    "resource_id": self.config.provider.value,
+                    "resource_id": self.config.provider,
                     "action": action,
                     "success": success,
                     "details": {
-                        "provider": self.config.provider.value,
+                        "provider": self.config.provider,
                         "model": self.config.model,
                         **(details or {}),
                     },
@@ -427,9 +504,12 @@ class AISDKService:
         Args:
             config: New AI provider configuration
         """
-        self.config = config
+        normalized_provider = self._normalize_provider(config.provider)
+        self.config = config.model_copy(update={"provider": normalized_provider})
         self._initialize_client()
-        logger.info(f"Updated configuration to {config.provider.value}/{config.model}")
+        # Handle both enum and string provider types
+        provider_str = self._provider_str(normalized_provider)
+        logger.info(f"Updated configuration to {provider_str}/{config.model}")
 
     def is_configured(self) -> bool:
         """
@@ -457,20 +537,17 @@ class AISDKService:
         """
         if not self.client:
             raise ProviderNotConfiguredError(
-                f"{self.config.provider.value} client not configured"
+                f"{self.config.provider} client not configured"
             )
 
         try:
-            logger.info(
-                f"Starting non-streaming chat with {self.config.provider.value}"
-            )
+            # Convert provider to string for safe comparison
+            provider_str = self._provider_str(self.config.provider)
+            logger.info(f"Starting non-streaming chat with {provider_str}")
 
-            if self.config.provider == AIProviderType.ANTHROPIC:
+            if provider_str == "anthropic":
                 response = await self._chat_anthropic(messages, **kwargs)
-            elif self.config.provider in {
-                AIProviderType.QWEN,
-                AIProviderType.HUGGINGFACE,
-            }:
+            elif provider_str in {"qwen", "huggingface"}:
                 response = await self._chat_huggingface(messages, **kwargs)
             else:
                 # OpenAI-compatible providers
@@ -489,7 +566,7 @@ class AISDKService:
             return response
 
         except Exception as error:
-            logger.error(f"Chat error with {self.config.provider.value}: {str(error)}")
+            logger.error(f"Chat error with {self.config.provider}: {str(error)}")
             self._log_audit(
                 event_type="ai.chat",
                 action="completion",
@@ -514,7 +591,7 @@ class AISDKService:
         client = self._require_client()
 
         formatted_messages = [
-            {"role": msg.role.value, "content": msg.content} for msg in messages
+            {"role": msg.role, "content": msg.content} for msg in messages
         ]
 
         response = await client.chat.completions.create(
@@ -547,7 +624,7 @@ class AISDKService:
         )
 
         conversation_messages = [
-            {"role": msg.role.value, "content": msg.content}
+            {"role": msg.role, "content": msg.content}
             for msg in messages
             if msg.role != MessageRole.SYSTEM
         ]
@@ -583,7 +660,7 @@ class AISDKService:
         client = self._require_client()
 
         formatted_messages = [
-            {"role": msg.role.value, "content": msg.content} for msg in messages
+            {"role": msg.role, "content": msg.content} for msg in messages
         ]
 
         response = await client.chat_completion(
@@ -605,17 +682,20 @@ class AISDKService:
         on_error: Optional[Callable[[Exception], None]] = None,
         on_function_call: Optional[Callable[[str, Any, Any], None]] = None,
         **kwargs,
-    ) -> None:
+    ) -> AsyncIterator[str]:
         """
         Stream chat completion with token-by-token delivery.
 
         Args:
             messages: List of chat messages
-            on_token: Callback for each token
-            on_complete: Callback when streaming completes
-            on_error: Callback for errors
-            on_function_call: Callback for function calls
+            on_token: Callback for each token (deprecated - use async for instead)
+            on_complete: Callback when streaming completes (deprecated)
+            on_error: Callback for errors (deprecated)
+            on_function_call: Callback for function calls (deprecated)
             **kwargs: Additional provider-specific parameters
+
+        Yields:
+            Token strings as they arrive
 
         Raises:
             ProviderNotConfiguredError: If client is not initialized
@@ -623,50 +703,49 @@ class AISDKService:
         """
         if not self.client:
             error = ProviderNotConfiguredError(
-                f"{self.config.provider.value} client not configured"
+                f"{self.config.provider} client not configured"
             )
             if on_error:
                 on_error(error)
-            return
+            raise error
 
         try:
-            logger.info(f"Starting streaming chat with {self.config.provider.value}")
+            # Convert provider to string for safe comparison
+            provider_str = self._provider_str(self.config.provider)
+            logger.info(f"Starting streaming chat with {provider_str}")
+            full_response = ""
 
-            if self.config.provider == AIProviderType.ANTHROPIC:
-                await self._stream_anthropic(
-                    messages,
-                    on_token=on_token,
-                    on_complete=on_complete,
-                    on_error=on_error,
-                    on_function_call=on_function_call,
-                    **kwargs,
-                )
-            elif self.config.provider in {
-                AIProviderType.QWEN,
-                AIProviderType.HUGGINGFACE,
-            }:
-                await self._stream_huggingface(
-                    messages,
-                    on_token=on_token,
-                    on_complete=on_complete,
-                    on_error=on_error,
-                    **kwargs,
-                )
+            # Use internal streaming methods and yield tokens
+            if provider_str == "anthropic":
+                async for token in self._stream_anthropic_generator(messages, **kwargs):
+                    full_response += token
+                    if on_token:
+                        on_token(token)
+                    yield token
+
+            elif provider_str in {"qwen", "huggingface"}:
+                async for token in self._stream_huggingface_generator(
+                    messages, **kwargs
+                ):
+                    full_response += token
+                    if on_token:
+                        on_token(token)
+                    yield token
+
             else:
                 # OpenAI-compatible providers
-                await self._stream_openai_compatible(
-                    messages,
-                    on_token=on_token,
-                    on_complete=on_complete,
-                    on_error=on_error,
-                    on_function_call=on_function_call,
-                    **kwargs,
-                )
+                async for token in self._stream_openai_generator(messages, **kwargs):
+                    full_response += token
+                    if on_token:
+                        on_token(token)
+                    yield token
+
+            # Call on_complete callback if provided
+            if on_complete:
+                on_complete(full_response)
 
         except Exception as error:
-            logger.error(
-                f"Stream chat error with {self.config.provider.value}: {str(error)}"
-            )
+            logger.error(f"Stream chat error with {self.config.provider}: {str(error)}")
             self._log_audit(
                 event_type="ai.stream",
                 action="streaming",
@@ -677,6 +756,7 @@ class AISDKService:
                 on_error(
                     error if isinstance(error, Exception) else Exception(str(error))
                 )
+            raise
 
     async def _stream_openai_compatible(
         self,
@@ -702,7 +782,7 @@ class AISDKService:
         full_response = ""
 
         formatted_messages = [
-            {"role": msg.role.value, "content": msg.content} for msg in messages
+            {"role": msg.role, "content": msg.content} for msg in messages
         ]
 
         try:
@@ -780,7 +860,7 @@ class AISDKService:
         )
 
         conversation_messages = [
-            {"role": msg.role.value, "content": msg.content}
+            {"role": msg.role, "content": msg.content}
             for msg in messages
             if msg.role != MessageRole.SYSTEM
         ]
@@ -849,7 +929,7 @@ class AISDKService:
         full_response = ""
 
         formatted_messages = [
-            {"role": msg.role.value, "content": msg.content} for msg in messages
+            {"role": msg.role, "content": msg.content} for msg in messages
         ]
 
         try:
@@ -890,6 +970,136 @@ class AISDKService:
                 on_error(error)
             raise
 
+    async def _stream_huggingface_generator(
+        self,
+        messages: List[ChatMessage],
+        **kwargs,
+    ) -> AsyncIterator[str]:
+        """
+        Stream chat for HuggingFace Inference API (async generator version).
+
+        Args:
+            messages: List of chat messages
+            **kwargs: Additional parameters
+
+        Yields:
+            Token strings
+        """
+        client = self._require_client()
+
+        formatted_messages = [
+            {"role": msg.role, "content": msg.content} for msg in messages
+        ]
+
+        try:
+            stream = await client.chat_completion(
+                model=self.config.model,
+                messages=cast(Any, formatted_messages),
+                temperature=self.config.temperature,
+                max_tokens=self.config.max_tokens,
+                top_p=self.config.top_p,
+                stream=True,
+                **kwargs,
+            )
+
+            async for chunk in stream:
+                if chunk.choices and len(chunk.choices) > 0:
+                    delta = chunk.choices[0].delta
+                    if delta.content:
+                        yield delta.content
+
+        except Exception as error:
+            logger.error(f"HuggingFace streaming error: {str(error)}")
+            raise
+
+    async def _stream_anthropic_generator(
+        self,
+        messages: List[ChatMessage],
+        **kwargs,
+    ) -> AsyncIterator[str]:
+        """
+        Stream chat for Anthropic API (async generator version).
+
+        Args:
+            messages: List of chat messages
+            **kwargs: Additional parameters
+
+        Yields:
+            Token strings
+        """
+        client = self._require_client()
+
+        formatted_messages = []
+        for msg in messages:
+            role = "user" if msg.role == "user" else "assistant"
+            formatted_messages.append({"role": role, "content": msg.content})
+
+        system_message = next(
+            (msg.content for msg in messages if msg.role == "system"), None
+        )
+
+        try:
+            stream = await client.messages.create(
+                model=self.config.model,
+                max_tokens=self.config.max_tokens or 4096,
+                temperature=self.config.temperature or 0.7,
+                messages=formatted_messages,
+                system=system_message,
+                stream=True,
+                **kwargs,
+            )
+
+            async for event in stream:
+                if event.type == "content_block_delta":
+                    if hasattr(event.delta, "text"):
+                        yield event.delta.text
+
+        except Exception as error:
+            logger.error(f"Anthropic streaming error: {str(error)}")
+            raise
+
+    async def _stream_openai_generator(
+        self,
+        messages: List[ChatMessage],
+        **kwargs,
+    ) -> AsyncIterator[str]:
+        """
+        Stream chat for OpenAI-compatible APIs (async generator version).
+
+        Args:
+            messages: List of chat messages
+            **kwargs: Additional parameters
+
+        Yields:
+            Token strings
+        """
+        client = self._require_client()
+
+        formatted_messages = [
+            {"role": msg.role, "content": msg.content} for msg in messages
+        ]
+
+        try:
+            stream = await client.chat.completions.create(
+                model=self.config.model,
+                messages=formatted_messages,
+                temperature=self.config.temperature or 0.7,
+                max_tokens=self.config.max_tokens or 2048,
+                top_p=self.config.top_p or 1.0,
+                stream=True,
+                **kwargs,
+            )
+
+            async for chunk in stream:
+                if chunk.choices and len(chunk.choices) > 0:
+                    delta = chunk.choices[0].delta
+                    if hasattr(delta, "content") and delta.content:
+                        yield delta.content
+
+        except Exception as error:
+            logger.error(f"OpenAI-compatible streaming error: {str(error)}")
+            raise
+
     def get_provider_capabilities(self) -> ProviderCapabilities:
         """
         Get current provider capabilities.
@@ -907,9 +1117,11 @@ class AISDKService:
             endpoint=self.config.endpoint or metadata["default_endpoint"],
         )
 
+
 # ============================================================================
 # Helper Functions
 # ============================================================================
+
 
 def create_ai_sdk_service(
     provider: str,

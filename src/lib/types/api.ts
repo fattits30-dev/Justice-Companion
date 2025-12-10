@@ -1053,7 +1053,9 @@ export type AIProviderType =
   | "together"
   | "anyscale"
   | "mistral"
-  | "perplexity";
+  | "perplexity"
+  | "emberton"
+  | "ollama";
 
 export interface AIProviderConfig {
   id: number;
@@ -1070,7 +1072,7 @@ export interface AIProviderConfig {
 }
 
 export interface ConfigureProviderRequest {
-  api_key: string;
+  api_key?: string;
   model: string;
   endpoint?: string;
   temperature?: number;
@@ -1086,6 +1088,7 @@ export interface AIProviderMetadata {
   default_model: string;
   max_context_tokens: number;
   available_models: string[];
+  requires_api_key?: boolean;
 }
 
 export interface TestConnectionResponse {

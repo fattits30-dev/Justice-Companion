@@ -1,3 +1,4 @@
+/// <reference types="vitest/globals" />
 /**
  * Unit tests for HTTP API Client
  *
@@ -12,7 +13,7 @@
  * @vitest-environment happy-dom
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+
 import { ApiClient, ApiError } from "./apiClient";
 import type { CaseStatus } from "../domains/cases/entities/Case";
 

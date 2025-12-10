@@ -1,3 +1,4 @@
+/// <reference types="vitest/globals" />
 /**
  * Cursor Pagination Utility Tests
  *
@@ -5,7 +6,7 @@
  * and WHERE clause generation for pagination queries.
  */
 
-import { describe, it, expect, beforeEach, vi, afterEach } from "vitest";
+
 import {
   encodeSimpleCursor,
   decodeSimpleCursor,

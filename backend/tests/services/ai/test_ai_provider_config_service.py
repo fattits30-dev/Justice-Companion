@@ -3,28 +3,31 @@ Test suite for AIProviderConfigService
 Demonstrates complete functionality with comprehensive test cases.
 """
 
-import pytest
 import os
+
+import pytest
 from dotenv import load_dotenv
 
 load_dotenv()
 import base64
 import os
+
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
+from backend.models.ai_provider_config import AIProviderConfig
 from backend.models.base import Base
 from backend.models.user import User
-from backend.models.ai_provider_config import AIProviderConfig
 from backend.services.ai.providers import (
+    AIProviderConfigInput,
     AIProviderConfigService,
     AIProviderType,
-    AIProviderConfigInput,
 )
 from backend.services.security.encryption import EncryptionService
 
 # Test database setup
 TEST_DATABASE_URL = "sqlite:///:memory:"
+
 
 @pytest.fixture
 def db_engine():
@@ -34,6 +37,7 @@ def db_engine():
     yield engine
     Base.metadata.drop_all(bind=engine)
 
+
 @pytest.fixture
 def db_session(db_engine):
     """Create database session for testing."""
@@ -42,15 +46,18 @@ def db_session(db_engine):
     yield session
     session.close()
 
+
 @pytest.fixture
 def encryption_key():
     """Generate test encryption key."""
-    return base64.b64encode(os.urandom(32)).decode('utf-8')
+    return base64.b64encode(os.urandom(32)).decode("utf-8")
+
 
 @pytest.fixture
 def encryption_service(encryption_key):
     """Create encryption service for testing."""
     return EncryptionService(encryption_key)
+
 
 @pytest.fixture
 def test_user(db_session):
@@ -61,30 +68,28 @@ def test_user(db_session):
         password_hash="test_hash",
         password_salt="test_salt",
         role="user",
-        is_active=True
+        is_active=True,
     )
     db_session.add(user)
     db_session.commit()
     db_session.refresh(user)
     return user
 
+
 @pytest.fixture
 def ai_provider_config_service(db_session, encryption_service):
     """Create AI provider config service for testing."""
     return AIProviderConfigService(
-        db=db_session,
-        encryption_service=encryption_service,
-        audit_logger=None
+        db=db_session, encryption_service=encryption_service, audit_logger=None
     )
+
 
 class TestAIProviderConfigService:
     """Test suite for AI provider configuration service."""
 
     @pytest.mark.asyncio
     async def test_set_provider_config_creates_new(
-        self,
-        ai_provider_config_service,
-        test_user
+        self, ai_provider_config_service, test_user
     ):
         """Test creating a new provider configuration."""
         config_input = AIProviderConfigInput(
@@ -92,12 +97,11 @@ class TestAIProviderConfigService:
             api_key="sk-test-key-123",
             model="gpt-4-turbo",
             temperature=0.7,
-            max_tokens=4000
+            max_tokens=4000,
         )
 
         result = await ai_provider_config_service.set_provider_config(
-            user_id=test_user.id,
-            config=config_input
+            user_id=test_user.id, config=config_input
         )
 
         assert result is not None
@@ -109,20 +113,17 @@ class TestAIProviderConfigService:
 
     @pytest.mark.asyncio
     async def test_set_provider_config_updates_existing(
-        self,
-        ai_provider_config_service,
-        test_user
+        self, ai_provider_config_service, test_user
     ):
         """Test updating an existing provider configuration."""
         # Create initial config
         config_input1 = AIProviderConfigInput(
             provider=AIProviderType.OPENAI,
             api_key="sk-test-key-123",
-            model="gpt-3.5-turbo"
+            model="gpt-3.5-turbo",
         )
         await ai_provider_config_service.set_provider_config(
-            user_id=test_user.id,
-            config=config_input1
+            user_id=test_user.id, config=config_input1
         )
 
         # Update config
@@ -130,11 +131,10 @@ class TestAIProviderConfigService:
             provider=AIProviderType.OPENAI,
             api_key="sk-new-key-456",
             model="gpt-4-turbo",
-            temperature=0.8
+            temperature=0.8,
         )
         result = await ai_provider_config_service.set_provider_config(
-            user_id=test_user.id,
-            config=config_input2
+            user_id=test_user.id, config=config_input2
         )
 
         assert result.model == "gpt-4-turbo"
@@ -142,9 +142,7 @@ class TestAIProviderConfigService:
 
     @pytest.mark.asyncio
     async def test_get_provider_config_with_decryption(
-        self,
-        ai_provider_config_service,
-        test_user
+        self, ai_provider_config_service, test_user
     ):
         """Test getting provider config with decrypted API key."""
         api_key = "sk-test-secret-key"
@@ -153,17 +151,15 @@ class TestAIProviderConfigService:
         config_input = AIProviderConfigInput(
             provider=AIProviderType.ANTHROPIC,
             api_key=api_key,
-            model="claude-3-5-sonnet-20241022"
+            model="claude-3-5-sonnet-20241022",
         )
         await ai_provider_config_service.set_provider_config(
-            user_id=test_user.id,
-            config=config_input
+            user_id=test_user.id, config=config_input
         )
 
         # Get config
         result = await ai_provider_config_service.get_provider_config(
-            user_id=test_user.id,
-            provider=AIProviderType.ANTHROPIC
+            user_id=test_user.id, provider=AIProviderType.ANTHROPIC
         )
 
         assert result is not None
@@ -173,44 +169,35 @@ class TestAIProviderConfigService:
 
     @pytest.mark.asyncio
     async def test_get_provider_config_returns_none_if_not_found(
-        self,
-        ai_provider_config_service,
-        test_user
+        self, ai_provider_config_service, test_user
     ):
         """Test getting non-existent provider config returns None."""
         result = await ai_provider_config_service.get_provider_config(
-            user_id=test_user.id,
-            provider=AIProviderType.OPENAI
+            user_id=test_user.id, provider=AIProviderType.OPENAI
         )
 
         assert result is None
 
     @pytest.mark.asyncio
     async def test_get_active_provider_config(
-        self,
-        ai_provider_config_service,
-        test_user
+        self, ai_provider_config_service, test_user
     ):
         """Test getting active provider configuration."""
         # Create two providers
         config1 = AIProviderConfigInput(
-            provider=AIProviderType.OPENAI,
-            api_key="sk-openai-key",
-            model="gpt-4-turbo"
+            provider=AIProviderType.OPENAI, api_key="sk-openai-key", model="gpt-4-turbo"
         )
         await ai_provider_config_service.set_provider_config(
-            user_id=test_user.id,
-            config=config1
+            user_id=test_user.id, config=config1
         )
 
         config2 = AIProviderConfigInput(
             provider=AIProviderType.ANTHROPIC,
             api_key="sk-anthropic-key",
-            model="claude-3-5-sonnet-20241022"
+            model="claude-3-5-sonnet-20241022",
         )
         await ai_provider_config_service.set_provider_config(
-            user_id=test_user.id,
-            config=config2
+            user_id=test_user.id, config=config2
         )
 
         # First provider should be active
@@ -223,37 +210,28 @@ class TestAIProviderConfigService:
         assert active_config.is_active is True
 
     @pytest.mark.asyncio
-    async def test_set_active_provider(
-        self,
-        ai_provider_config_service,
-        test_user
-    ):
+    async def test_set_active_provider(self, ai_provider_config_service, test_user):
         """Test setting active provider."""
         # Create two providers
         config1 = AIProviderConfigInput(
-            provider=AIProviderType.OPENAI,
-            api_key="sk-openai-key",
-            model="gpt-4-turbo"
+            provider=AIProviderType.OPENAI, api_key="sk-openai-key", model="gpt-4-turbo"
         )
         await ai_provider_config_service.set_provider_config(
-            user_id=test_user.id,
-            config=config1
+            user_id=test_user.id, config=config1
         )
 
         config2 = AIProviderConfigInput(
             provider=AIProviderType.ANTHROPIC,
             api_key="sk-anthropic-key",
-            model="claude-3-5-sonnet-20241022"
+            model="claude-3-5-sonnet-20241022",
         )
         await ai_provider_config_service.set_provider_config(
-            user_id=test_user.id,
-            config=config2
+            user_id=test_user.id, config=config2
         )
 
         # Set Anthropic as active
         result = await ai_provider_config_service.set_active_provider(
-            user_id=test_user.id,
-            provider=AIProviderType.ANTHROPIC
+            user_id=test_user.id, provider=AIProviderType.ANTHROPIC
         )
 
         assert result.is_active is True
@@ -266,10 +244,7 @@ class TestAIProviderConfigService:
         assert active_config.provider == "anthropic"
 
     def test_get_active_provider_type(
-        self,
-        ai_provider_config_service,
-        test_user,
-        db_session
+        self, ai_provider_config_service, test_user, db_session
     ):
         """Test getting active provider type."""
         # Create provider
@@ -278,7 +253,7 @@ class TestAIProviderConfigService:
             provider="openai",
             encrypted_api_key='{"algorithm":"aes-256-gcm","ciphertext":"test","iv":"test","authTag":"test","version":1}',
             model="gpt-4-turbo",
-            is_active=True
+            is_active=True,
         )
         db_session.add(config)
         db_session.commit()
@@ -291,17 +266,16 @@ class TestAIProviderConfigService:
         assert active_provider == AIProviderType.OPENAI
 
     def test_is_provider_configured(
-        self,
-        ai_provider_config_service,
-        test_user,
-        db_session
+        self, ai_provider_config_service, test_user, db_session
     ):
         """Test checking if provider is configured."""
         # Initially not configured
-        assert ai_provider_config_service.is_provider_configured(
-            user_id=test_user.id,
-            provider=AIProviderType.OPENAI
-        ) is False
+        assert (
+            ai_provider_config_service.is_provider_configured(
+                user_id=test_user.id, provider=AIProviderType.OPENAI
+            )
+            is False
+        )
 
         # Create provider
         config = AIProviderConfig(
@@ -309,22 +283,21 @@ class TestAIProviderConfigService:
             provider="openai",
             encrypted_api_key='{"algorithm":"aes-256-gcm","ciphertext":"test","iv":"test","authTag":"test","version":1}',
             model="gpt-4-turbo",
-            is_active=True
+            is_active=True,
         )
         db_session.add(config)
         db_session.commit()
 
         # Now configured
-        assert ai_provider_config_service.is_provider_configured(
-            user_id=test_user.id,
-            provider=AIProviderType.OPENAI
-        ) is True
+        assert (
+            ai_provider_config_service.is_provider_configured(
+                user_id=test_user.id, provider=AIProviderType.OPENAI
+            )
+            is True
+        )
 
     def test_get_configured_providers(
-        self,
-        ai_provider_config_service,
-        test_user,
-        db_session
+        self, ai_provider_config_service, test_user, db_session
     ):
         """Test getting list of configured providers."""
         # Create multiple providers
@@ -334,14 +307,14 @@ class TestAIProviderConfigService:
                 provider="openai",
                 encrypted_api_key='{"algorithm":"aes-256-gcm","ciphertext":"test","iv":"test","authTag":"test","version":1}',
                 model="gpt-4-turbo",
-                is_active=True
+                is_active=True,
             ),
             AIProviderConfig(
                 user_id=test_user.id,
                 provider="anthropic",
                 encrypted_api_key='{"algorithm":"aes-256-gcm","ciphertext":"test","iv":"test","authTag":"test","version":1}',
                 model="claude-3-5-sonnet-20241022",
-                is_active=False
+                is_active=False,
             ),
         ]
         for config in configs:
@@ -358,10 +331,7 @@ class TestAIProviderConfigService:
         assert AIProviderType.ANTHROPIC in providers
 
     def test_list_provider_configs(
-        self,
-        ai_provider_config_service,
-        test_user,
-        db_session
+        self, ai_provider_config_service, test_user, db_session
     ):
         """Test listing all provider configurations."""
         # Create multiple providers
@@ -372,7 +342,7 @@ class TestAIProviderConfigService:
                 encrypted_api_key='{"algorithm":"aes-256-gcm","ciphertext":"test","iv":"test","authTag":"test","version":1}',
                 model="gpt-4-turbo",
                 temperature=0.7,
-                is_active=True
+                is_active=True,
             ),
             AIProviderConfig(
                 user_id=test_user.id,
@@ -380,7 +350,7 @@ class TestAIProviderConfigService:
                 encrypted_api_key='{"algorithm":"aes-256-gcm","ciphertext":"test","iv":"test","authTag":"test","version":1}',
                 model="claude-3-5-sonnet-20241022",
                 temperature=0.5,
-                is_active=False
+                is_active=False,
             ),
         ]
         for config in configs:
@@ -388,9 +358,7 @@ class TestAIProviderConfigService:
         db_session.commit()
 
         # List configs
-        result = ai_provider_config_service.list_provider_configs(
-            user_id=test_user.id
-        )
+        result = ai_provider_config_service.list_provider_configs(user_id=test_user.id)
 
         assert len(result) == 2
         # Active provider should be first
@@ -400,67 +368,57 @@ class TestAIProviderConfigService:
         assert result[1].is_active is False
 
     @pytest.mark.asyncio
-    async def test_remove_provider_config(
-        self,
-        ai_provider_config_service,
-        test_user
-    ):
+    async def test_remove_provider_config(self, ai_provider_config_service, test_user):
         """Test removing provider configuration."""
         # Create provider
         config_input = AIProviderConfigInput(
-            provider=AIProviderType.OPENAI,
-            api_key="sk-test-key",
-            model="gpt-4-turbo"
+            provider=AIProviderType.OPENAI, api_key="sk-test-key", model="gpt-4-turbo"
         )
         await ai_provider_config_service.set_provider_config(
-            user_id=test_user.id,
-            config=config_input
+            user_id=test_user.id, config=config_input
         )
 
         # Verify it exists
-        assert ai_provider_config_service.is_provider_configured(
-            user_id=test_user.id,
-            provider=AIProviderType.OPENAI
-        ) is True
+        assert (
+            ai_provider_config_service.is_provider_configured(
+                user_id=test_user.id, provider=AIProviderType.OPENAI
+            )
+            is True
+        )
 
         # Remove it
         await ai_provider_config_service.remove_provider_config(
-            user_id=test_user.id,
-            provider=AIProviderType.OPENAI
+            user_id=test_user.id, provider=AIProviderType.OPENAI
         )
 
         # Verify it's gone
-        assert ai_provider_config_service.is_provider_configured(
-            user_id=test_user.id,
-            provider=AIProviderType.OPENAI
-        ) is False
+        assert (
+            ai_provider_config_service.is_provider_configured(
+                user_id=test_user.id, provider=AIProviderType.OPENAI
+            )
+            is False
+        )
 
     @pytest.mark.asyncio
     async def test_remove_active_provider_activates_another(
-        self,
-        ai_provider_config_service,
-        test_user
+        self, ai_provider_config_service, test_user
     ):
         """Test removing active provider activates another one."""
         # Create two providers
         config1 = AIProviderConfigInput(
-            provider=AIProviderType.OPENAI,
-            api_key="sk-openai-key",
-            model="gpt-4-turbo"
+            provider=AIProviderType.OPENAI, api_key="sk-openai-key", model="gpt-4-turbo"
         )
         await ai_provider_config_service.set_provider_config(
-            user_id=test_user.id,
-            config=config1
+            user_id=test_user.id, config=config1
         )
 
         config2 = AIProviderConfigInput(
             provider=AIProviderType.ANTHROPIC,
             api_key="sk-anthropic-key",
-            model="claude-3-5-sonnet-20241022"
+            model="claude-3-5-sonnet-20241022",
         )
         await ai_provider_config_service.set_provider_config(
-            user_id=test_user.id,
-            config=config2
+            user_id=test_user.id, config=config2
         )
 
         # OpenAI is active (first one)
@@ -469,8 +427,7 @@ class TestAIProviderConfigService:
 
         # Remove OpenAI
         await ai_provider_config_service.remove_provider_config(
-            user_id=test_user.id,
-            provider=AIProviderType.OPENAI
+            user_id=test_user.id, provider=AIProviderType.OPENAI
         )
 
         # Anthropic should now be active
@@ -508,7 +465,7 @@ class TestAIProviderConfigService:
             model="gpt-4-turbo",
             temperature=0.7,
             max_tokens=4000,
-            top_p=0.9
+            top_p=0.9,
         )
 
         result = ai_provider_config_service.validate_config(config)
@@ -518,60 +475,52 @@ class TestAIProviderConfigService:
 
     def test_validate_config_invalid_temperature(self, ai_provider_config_service):
         """Test configuration validation with invalid temperature."""
-        config = AIProviderConfigInput(
-            provider=AIProviderType.OPENAI,
-            api_key="sk-test-key",
-            model="gpt-4-turbo",
-            temperature=3.0  # Invalid: > 2
-        )
+        from pydantic import ValidationError
 
-        result = ai_provider_config_service.validate_config(config)
-
-        assert result.valid is False
-        assert "Temperature must be between 0 and 2" in result.errors
+        with pytest.raises(ValidationError):
+            AIProviderConfigInput(
+                provider=AIProviderType.OPENAI,
+                api_key="sk-test-key",
+                model="gpt-4-turbo",
+                temperature=3.0,  # Invalid: > 2
+            )
 
     def test_validate_config_invalid_max_tokens(self, ai_provider_config_service):
         """Test configuration validation with invalid max_tokens."""
-        config = AIProviderConfigInput(
-            provider=AIProviderType.OPENAI,
-            api_key="sk-test-key",
-            model="gpt-4-turbo",
-            max_tokens=200000  # Invalid: > 100000
-        )
+        from pydantic import ValidationError
 
-        result = ai_provider_config_service.validate_config(config)
-
-        assert result.valid is False
-        assert "Max tokens must be between 1 and 100,000" in result.errors
+        with pytest.raises(ValidationError):
+            AIProviderConfigInput(
+                provider=AIProviderType.OPENAI,
+                api_key="sk-test-key",
+                model="gpt-4-turbo",
+                max_tokens=200000,  # Invalid: > 100000
+            )
 
     def test_validate_config_invalid_top_p(self, ai_provider_config_service):
         """Test configuration validation with invalid top_p."""
-        config = AIProviderConfigInput(
-            provider=AIProviderType.OPENAI,
-            api_key="sk-test-key",
-            model="gpt-4-turbo",
-            top_p=1.5  # Invalid: > 1
-        )
+        from pydantic import ValidationError
 
-        result = ai_provider_config_service.validate_config(config)
-
-        assert result.valid is False
-        assert "Top P must be between 0 and 1" in result.errors
+        with pytest.raises(ValidationError):
+            AIProviderConfigInput(
+                provider=AIProviderType.OPENAI,
+                api_key="sk-test-key",
+                model="gpt-4-turbo",
+                top_p=1.5,  # Invalid: > 1
+            )
 
     @pytest.mark.asyncio
     async def test_test_provider_not_configured(
-        self,
-        ai_provider_config_service,
-        test_user
+        self, ai_provider_config_service, test_user
     ):
         """Test provider connection test when provider not configured."""
         result = await ai_provider_config_service.test_provider(
-            user_id=test_user.id,
-            provider=AIProviderType.OPENAI
+            user_id=test_user.id, provider=AIProviderType.OPENAI
         )
 
         assert result.success is False
         assert result.error == "Provider not configured"
+
 
 if __name__ == "__main__":
     # Run tests with pytest

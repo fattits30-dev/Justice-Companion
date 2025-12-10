@@ -1,4 +1,5 @@
-import { describe, it, expect, beforeEach, afterAll, beforeAll } from "vitest";
+/// <reference types="vitest/globals" />
+
 import { AuditLogger } from "./AuditLogger";
 import { EncryptionService, type EncryptedData } from "./EncryptionService";
 import Database from "better-sqlite3";

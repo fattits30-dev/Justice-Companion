@@ -1,5 +1,6 @@
+/// <reference types="vitest/globals" />
 // src/services/export/ExportService.test.ts
-import { beforeEach, describe, expect, it, vi, type Mock } from "vitest";
+
 import type { User } from "../../domains/auth/entities/User";
 import type { Case } from "../../domains/cases/entities/Case";
 import type { Evidence } from "../../domains/evidence/entities/Evidence";

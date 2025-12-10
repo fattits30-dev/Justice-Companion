@@ -1,4 +1,5 @@
-import { describe, it, expect, vi } from "vitest";
+/// <reference types="vitest/globals" />
+
 import { render, screen } from "../../../test-utils/test-utils";
 import userEvent from "@testing-library/user-event";
 import { TimelineItem } from "./TimelineItem";

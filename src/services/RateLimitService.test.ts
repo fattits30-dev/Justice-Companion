@@ -1,4 +1,5 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+/// <reference types="vitest/globals" />
+
 import { RateLimitService } from "./RateLimitService";
 
 describe("RateLimitService", () => {

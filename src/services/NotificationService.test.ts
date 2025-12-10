@@ -1,4 +1,5 @@
-import { describe, it, expect, beforeEach, vi } from "vitest";
+/// <reference types="vitest/globals" />
+
 import { NotificationService } from "./NotificationService";
 import { NotificationRepository } from "../repositories/NotificationRepository";
 import { NotificationPreferencesRepository } from "../repositories/NotificationPreferencesRepository";

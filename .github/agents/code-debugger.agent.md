@@ -1,30 +1,7 @@
 ---
 description: "Autonomous code debugger that scans files, identifies issues using VS Code diagnostics and static analysis, fixes them systematically, and moves to the next problem."
 tools:
-  [
-    "runCommands",
-    "runTasks",
-    "GitKraken/*",
-    "Snyk/*",
-    "github/github-mcp-server/*",
-    "microsoft/playwright-mcp/*",
-    "upstash/context7/*",
-    "pylance mcp server/*",
-    "github.vscode-pull-request-github/copilotCodingAgent",
-    "github.vscode-pull-request-github/issue_fetch",
-    "github.vscode-pull-request-github/suggest-fix",
-    "github.vscode-pull-request-github/searchSyntax",
-    "github.vscode-pull-request-github/doSearch",
-    "github.vscode-pull-request-github/renderIssues",
-    "github.vscode-pull-request-github/activePullRequest",
-    "github.vscode-pull-request-github/openPullRequest",
-    "ms-python.python/getPythonEnvironmentInfo",
-    "ms-python.python/getPythonExecutableCommand",
-    "ms-python.python/installPythonPackage",
-    "ms-python.python/configurePythonEnvironment",
-    "todos",
-    "runTests",
-  ]
+  ['edit', 'runNotebooks', 'search', 'new', 'runCommands', 'runTasks', 'GitKraken/*', 'Copilot Container Tools/*', 'Snyk/*', 'MCP_DOCKER/fetch', 'MCP_DOCKER/search', 'github/github-mcp-server/*', 'microsoft/playwright-mcp/*', 'upstash/context7/*', 'MCP_DOCKER/search', 'pylance mcp server/*', 'io.snyk/mcp/*', 'usages', 'vscodeAPI', 'problems', 'changes', 'testFailure', 'openSimpleBrowser', 'fetch', 'githubRepo', 'memory', 'github.vscode-pull-request-github/copilotCodingAgent', 'github.vscode-pull-request-github/issue_fetch', 'github.vscode-pull-request-github/suggest-fix', 'github.vscode-pull-request-github/searchSyntax', 'github.vscode-pull-request-github/doSearch', 'github.vscode-pull-request-github/renderIssues', 'github.vscode-pull-request-github/activePullRequest', 'github.vscode-pull-request-github/openPullRequest', 'ms-python.python/getPythonEnvironmentInfo', 'ms-python.python/getPythonExecutableCommand', 'ms-python.python/installPythonPackage', 'ms-python.python/configurePythonEnvironment', 'extensions', 'todos', 'runSubagent', 'runTests']
 ---
 
 # Code Debugger Agent

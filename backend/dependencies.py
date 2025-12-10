@@ -15,6 +15,7 @@ Benefits:
 import base64
 import logging
 import os
+from datetime import datetime, timezone
 from typing import Optional
 
 from fastapi import Depends, HTTPException, Request, status
@@ -22,6 +23,7 @@ from sqlalchemy.orm import Session
 
 from backend.models.base import get_db
 from backend.services.audit_logger import AuditLogger
+from backend.services.auth.session_manager import SessionManager
 from backend.services.security.encryption import EncryptionService
 from backend.services.service_container import ServiceContainer
 
@@ -49,7 +51,9 @@ def get_container(request: Request) -> ServiceContainer:
     Raises:
         HTTPException: If container not initialized (app misconfigured)
     """
-    container: Optional[ServiceContainer] = getattr(request.app.state, "container", None)
+    container: Optional[ServiceContainer] = getattr(
+        request.app.state, "container", None
+    )
 
     if container is None or not container.is_initialized():
         logger.error("ServiceContainer not initialized - check main.py lifespan")
@@ -97,7 +101,9 @@ def get_encryption_service_optional(
     Returns:
         EncryptionService instance or None
     """
-    container: Optional[ServiceContainer] = getattr(request.app.state, "container", None)
+    container: Optional[ServiceContainer] = getattr(
+        request.app.state, "container", None
+    )
 
     if container is None or not container.is_initialized():
         return None
@@ -343,7 +349,22 @@ def get_session_manager(
         - Handles session creation, validation, and expiration
         - Supports 24-hour default or 30-day "remember me" sessions
     """
-    from backend.services.auth.session_manager import SessionManager
+    from backend.services.auth.session_manager import (
+        SessionManager,
+        _session_manager_instance,
+    )
+
+    # Recreate the singleton if an older instance is missing newer methods (e.g., get_session)
+    if _session_manager_instance is not None and not hasattr(
+        _session_manager_instance, "get_session"
+    ):
+        logger.warning(
+            "SessionManager singleton missing get_session; recreating fresh instance"
+        )
+        # Reset the cached instance so we construct a fresh one below
+        from backend.services.auth import session_manager as session_manager_module
+
+        session_manager_module._session_manager_instance = None
 
     return SessionManager(
         db=db,
@@ -354,7 +375,7 @@ def get_session_manager(
 
 async def get_current_user(
     request: Request,
-    session_manager = Depends(get_session_manager),
+    session_manager: SessionManager = Depends(get_session_manager),
 ) -> int:
     """
     FastAPI dependency to get current authenticated user ID.
@@ -401,16 +422,65 @@ async def get_current_user(
             detail="Not authenticated - no session ID provided",
         )
 
+    def _fallback_session_lookup(session: str) -> Optional[int]:
+        from backend.models.session import Session as SessionModel
+        from backend.models.user import User
+
+        db = getattr(session_manager, "db", None)
+        if db is None:
+            return None
+
+        db_session = db.query(SessionModel).filter(SessionModel.id == session).first()
+
+        if not db_session:
+            return None
+
+        now = datetime.now(timezone.utc)
+        if db_session.expires_at.replace(tzinfo=timezone.utc) < now:
+            try:
+                db.delete(db_session)
+                db.commit()
+            except Exception:
+                db.rollback()
+            return None
+
+        user = db.query(User).filter(User.id == db_session.user_id).first()
+        if not user or not user.is_active:
+            return None
+
+        return user.id
+
     # Validate session and get user_id
     try:
-        session_data = session_manager.get_session(session_id)
-        if not session_data or not session_data.get("user_id"):
+        session_result = await session_manager.validate_session(session_id)
+        user_id = session_result.user_id
+
+        if not session_result.valid or user_id is None:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Invalid or expired session",
             )
 
-        return session_data["user_id"]
+        if not isinstance(user_id, int):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid session user identifier",
+            )
+
+        return user_id
+    except AttributeError as attr_err:
+        if "get_session" in str(attr_err):
+            logger.warning(
+                "SessionManager missing get_session; applying fallback validation"
+            )
+            fallback_user_id = _fallback_session_lookup(session_id)
+            if fallback_user_id is not None:
+                return fallback_user_id
+        # If we reach here, treat it as an invalid session rather than surfacing internals
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or expired session",
+        )
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -468,7 +538,7 @@ async def get_current_user_id(
     Extract and validate current user ID from Authorization header.
 
     This dependency validates the session and returns the user_id for
-    the authenticated user.
+    the authenticated user. Uses SessionManager for consistency with other auth endpoints.
 
     Args:
         request: FastAPI request object
@@ -480,30 +550,52 @@ async def get_current_user_id(
     Raises:
         HTTPException: If not authenticated or session invalid
     """
-    from backend.services.auth.service import AuthenticationService
+    from backend.services.audit_logger import AuditLogger
+    from backend.services.auth.session_manager import SessionManager
 
     auth_header = request.headers.get("Authorization")
 
     if not auth_header or not auth_header.startswith("Bearer "):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Not authenticated",
+            detail="Session ID required",
             headers={"WWW-Authenticate": "Bearer"},
         )
 
     session_id = auth_header[7:]  # Remove "Bearer " prefix
 
-    auth_service = AuthenticationService(db)
-    session = await auth_service.validate_session(session_id)
+    # Use SessionManager for consistency with get_current_user dependency
+    audit_logger = AuditLogger(db)
+    session_manager = SessionManager(
+        db=db, audit_logger=audit_logger, enable_memory_cache=False
+    )
 
-    if not session:
+    try:
+        validation_result = await session_manager.validate_session(session_id)
+
+        if not validation_result or not validation_result.valid:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid or expired session",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+
+        if not validation_result.user_id:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="User not found",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+
+        return validation_result.user_id
+
+    except Exception as e:
+        # Treat any unexpected error as an invalid session to avoid leaking details
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid or expired session",
             headers={"WWW-Authenticate": "Bearer"},
         )
-
-    return session["user_id"]
 
 
 async def get_current_user_id_optional(

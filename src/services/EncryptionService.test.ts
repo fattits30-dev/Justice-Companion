@@ -1,4 +1,5 @@
-import { describe, it, expect, beforeEach } from "vitest";
+/// <reference types="vitest/globals" />
+
 import { EncryptionService, EncryptedData } from "./EncryptionService";
 
 describe("EncryptionService", () => {

@@ -51,9 +51,9 @@ from backend.services.security.encryption import EncryptionService
 class AIProviderType(str, Enum):
     """Supported AI provider types."""
 
+    HUGGINGFACE = "huggingface"
     OPENAI = "openai"
     ANTHROPIC = "anthropic"
-    HUGGINGFACE = "huggingface"
     QWEN = "qwen"
     GOOGLE = "google"
     COHERE = "cohere"
@@ -62,6 +62,8 @@ class AIProviderType(str, Enum):
     MISTRAL = "mistral"
     PERPLEXITY = "perplexity"
     EMBERTON = "emberton"
+    OLLAMA = "ollama"
+    GROQ = "groq"
 
 
 class AIProviderMetadata(BaseModel):
@@ -73,13 +75,14 @@ class AIProviderMetadata(BaseModel):
     default_model: str
     max_context_tokens: int
     available_models: List[str]
+    requires_api_key: bool = True
 
 
 class AIProviderConfigInput(BaseModel):
     """Input model for creating/updating AI provider configuration."""
 
     provider: AIProviderType
-    api_key: str = Field(..., min_length=1)
+    api_key: Optional[str] = Field(None, min_length=0)
     model: str = Field(..., min_length=1)
     endpoint: Optional[str] = None
     temperature: Optional[float] = Field(None, ge=0, le=2)
@@ -89,12 +92,12 @@ class AIProviderConfigInput(BaseModel):
 
     @field_validator("api_key")
     @classmethod
-    @classmethod
-    def validate_api_key(cls, v: str) -> str:
-        """Validate API key is not empty."""
-        if not v or not v.strip():
-            raise ValueError("API key cannot be empty")
-        return v.strip()
+    def normalize_api_key(cls, v: Optional[str]) -> Optional[str]:
+        """Normalize API key; allow empty when provider does not require one."""
+        if v is None:
+            return None
+        v = v.strip()
+        return v or None
 
     @field_validator("model")
     @classmethod
@@ -168,19 +171,10 @@ AI_PROVIDER_METADATA: Dict[AIProviderType, AIProviderMetadata] = {
         default_model="gpt-4-turbo",
         max_context_tokens=128000,
         available_models=[
-            "gpt-4o",
-            "gpt-4o-mini",
             "gpt-4-turbo",
-            "gpt-4-turbo-preview",
-            "gpt-4-0125-preview",
-            "gpt-4-1106-preview",
             "gpt-4",
-            "gpt-4-0613",
             "gpt-3.5-turbo",
-            "gpt-3.5-turbo-0125",
-            "gpt-3.5-turbo-1106",
-            "gpt-3.5-turbo-16k",
-            "gpt-3.5-turbo-instruct",
+            "gpt-4o",
         ],
     ),
     AIProviderType.ANTHROPIC: AIProviderMetadata(
@@ -191,96 +185,80 @@ AI_PROVIDER_METADATA: Dict[AIProviderType, AIProviderMetadata] = {
         max_context_tokens=200000,
         available_models=[
             "claude-3-5-sonnet-20241022",
-            "claude-3-5-haiku-20241022",
             "claude-3-opus-20240229",
             "claude-3-sonnet-20240229",
             "claude-3-haiku-20240307",
-            "claude-3-5-sonnet-latest",
-            "claude-3-5-haiku-latest",
-            "claude-2.1",
-            "claude-2.0",
-            "claude-instant-1.2",
         ],
     ),
     AIProviderType.HUGGINGFACE: AIProviderMetadata(
         name="Hugging Face",
         default_endpoint="https://api-inference.huggingface.co",
         supports_streaming=True,
-        default_model="meta-llama/Meta-Llama-3.1-70B-Instruct",
+        default_model="meta-llama/Llama-3.3-70B-Instruct",  # Updated: 11 inference providers!
         max_context_tokens=128000,
         available_models=[
-            "meta-llama/Meta-Llama-3.1-405B-Instruct",
-            "meta-llama/Meta-Llama-3.1-70B-Instruct",
-            "meta-llama/Meta-Llama-3.1-8B-Instruct",
-            "mistralai/Mistral-7B-Instruct-v0.3",
-            "Qwen/Qwen2.5-72B-Instruct",
-            "google/gemma-2-27b-it",
+            "meta-llama/Llama-3.3-70B-Instruct",  # 11 providers (fireworks, together, cerebras, etc.)
+            "meta-llama/Llama-3.1-8B-Instruct",  # 8 providers (fast, lightweight)
+            "Qwen/Qwen2.5-72B-Instruct",  # 4 providers (deep reasoning)
+            "mistralai/Mistral-7B-Instruct-v0.3",  # 2 providers (Apache 2.0, no gating)
+            "google/gemma-2-27b-it",  # Good balance (gated)
         ],
     ),
     AIProviderType.QWEN: AIProviderMetadata(
-        name="Qwen 2.5-72B",
-        default_endpoint="https://api-inference.huggingface.co/models/Qwen/Qwen2.5-72B-Instruct/v1",
+        name="Qwen",
+        default_endpoint="https://api-inference.huggingface.co",
         supports_streaming=True,
         default_model="Qwen/Qwen2.5-72B-Instruct",
-        max_context_tokens=32768,
+        max_context_tokens=32000,
         available_models=[
             "Qwen/Qwen2.5-72B-Instruct",
-            "Qwen/Qwen2.5-32B-Instruct",
-            "Qwen/Qwen2.5-14B-Instruct",
             "Qwen/Qwen2.5-7B-Instruct",
         ],
     ),
     AIProviderType.GOOGLE: AIProviderMetadata(
-        name="Google AI",
-        default_endpoint="https://generativelanguage.googleapis.com/v1",
+        name="Google Gemini",
+        default_endpoint="https://generativelanguage.googleapis.com/v1beta",
         supports_streaming=True,
-        default_model="gemini-2.0-flash-exp",
+        default_model="gemini-1.5-pro",
         max_context_tokens=1000000,
         available_models=[
-            "gemini-2.0-flash-exp",
-            "gemini-1.5-pro-latest",
-            "gemini-1.5-flash-latest",
             "gemini-1.5-pro",
             "gemini-1.5-flash",
         ],
     ),
     AIProviderType.COHERE: AIProviderMetadata(
         name="Cohere",
-        default_endpoint="https://api.cohere.com/v1",
+        default_endpoint="https://api.cohere.ai/v1",
         supports_streaming=True,
         default_model="command-r-plus",
         max_context_tokens=128000,
         available_models=[
             "command-r-plus",
             "command-r",
-            "command-r-plus-08-2024",
-            "command-r-08-2024",
             "command-light",
-            "command",
         ],
     ),
     AIProviderType.TOGETHER: AIProviderMetadata(
         name="Together AI",
         default_endpoint="https://api.together.xyz/v1",
         supports_streaming=True,
-        default_model="meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo",
-        max_context_tokens=32768,
+        default_model="meta-llama/Llama-3-70b-chat-hf",
+        max_context_tokens=8192,
         available_models=[
-            "meta-llama/Meta-Llama-3.1-405B-Instruct-Turbo",
-            "meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo",
+            "meta-llama/Llama-3-70b-chat-hf",
+            "meta-llama/Llama-3-8b-chat-hf",
             "mistralai/Mixtral-8x7B-Instruct-v0.1",
-            "Qwen/Qwen2.5-72B-Instruct",
         ],
     ),
     AIProviderType.ANYSCALE: AIProviderMetadata(
         name="Anyscale",
         default_endpoint="https://api.endpoints.anyscale.com/v1",
         supports_streaming=True,
-        default_model="meta-llama/Meta-Llama-3.1-70B-Instruct",
-        max_context_tokens=32768,
+        default_model="meta-llama/Meta-Llama-3-70B-Instruct",
+        max_context_tokens=8192,
         available_models=[
-            "meta-llama/Meta-Llama-3.1-70B-Instruct",
-            "meta-llama/Meta-Llama-3.1-8B-Instruct",
+            "meta-llama/Meta-Llama-3-70B-Instruct",
+            "meta-llama/Meta-Llama-3-8B-Instruct",
             "mistralai/Mixtral-8x7B-Instruct-v0.1",
         ],
     ),
@@ -289,24 +267,23 @@ AI_PROVIDER_METADATA: Dict[AIProviderType, AIProviderMetadata] = {
         default_endpoint="https://api.mistral.ai/v1",
         supports_streaming=True,
         default_model="mistral-large-latest",
-        max_context_tokens=128000,
+        max_context_tokens=32000,
         available_models=[
             "mistral-large-latest",
-            "mistral-medium-latest",
             "mistral-small-latest",
-            "mistral-tiny",
+            "open-mixtral-8x22b",
         ],
     ),
     AIProviderType.PERPLEXITY: AIProviderMetadata(
         name="Perplexity",
         default_endpoint="https://api.perplexity.ai",
         supports_streaming=True,
-        default_model="llama-3.1-sonar-large-128k-online",
-        max_context_tokens=128000,
+        default_model="llama-3-sonar-large-32k-online",
+        max_context_tokens=32768,
         available_models=[
-            "llama-3.1-sonar-large-128k-online",
-            "llama-3.1-sonar-small-128k-online",
-            "llama-3.1-sonar-huge-128k-online",
+            "llama-3-sonar-large-32k-online",
+            "llama-3-sonar-small-32k-online",
+            "llama-3-70b-instruct",
         ],
     ),
     AIProviderType.EMBERTON: AIProviderMetadata(
@@ -314,11 +291,39 @@ AI_PROVIDER_METADATA: Dict[AIProviderType, AIProviderMetadata] = {
         default_endpoint="https://api.emberton.ai/v1",
         supports_streaming=True,
         default_model="emberton-legal-1.0",
-        max_context_tokens=256000,
+        max_context_tokens=128000,
         available_models=[
             "emberton-legal-1.0",
             "emberton-legal-pro",
             "emberton-case-analysis",
+        ],
+    ),
+    AIProviderType.OLLAMA: AIProviderMetadata(
+        name="Ollama (Local)",
+        default_endpoint="http://localhost:11434/v1",
+        supports_streaming=True,
+        default_model="llama3",
+        max_context_tokens=8192,
+        available_models=[
+            "llama3",
+            "mistral",
+            "gemma",
+            "qwen2",
+            "phi3",
+        ],
+        requires_api_key=False,
+    ),
+    AIProviderType.GROQ: AIProviderMetadata(
+        name="Groq",
+        default_endpoint="https://api.groq.com/openai/v1",
+        supports_streaming=True,
+        default_model="llama-3.3-70b-versatile",
+        max_context_tokens=128000,
+        available_models=[
+            "llama-3.3-70b-versatile",  # Fastest 70B model
+            "llama-3.1-8b-instant",  # Ultra-fast lightweight
+            "mixtral-8x7b-32768",  # Excellent reasoning
+            "gemma2-9b-it",  # Google's Gemma 2
         ],
     ),
 }
@@ -396,8 +401,34 @@ class AIProviderConfigService:
                     detail=f"Invalid configuration: {', '.join(validation.errors)}",
                 )
 
-            # Encrypt API key
-            encrypted_key = self.encryption_service.encrypt(config.api_key)
+            # Normalize provider and API key requirements
+            try:
+                provider_enum = (
+                    config.provider
+                    if isinstance(config.provider, AIProviderType)
+                    else AIProviderType(config.provider)
+                )
+            except Exception as exc:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"Invalid provider: {config.provider}",
+                ) from exc
+
+            metadata = AI_PROVIDER_METADATA.get(provider_enum)
+            requires_key = metadata.requires_api_key if metadata else True
+            api_key_value = (config.api_key or "").strip()
+
+            if requires_key and not api_key_value:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"API key is required for {provider_enum.value if hasattr(provider_enum, 'value') else provider_enum}",
+                )
+
+            if not api_key_value:
+                api_key_value = "ollama-local"
+
+            # Encrypt API key (or placeholder for keyless providers)
+            encrypted_key = self.encryption_service.encrypt(api_key_value)
             if not encrypted_key:
                 raise HTTPException(
                     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -408,12 +439,17 @@ class AIProviderConfigService:
             encrypted_key_json = json.dumps(encrypted_key.to_dict())
 
             # Check if configuration already exists for this provider
+            provider_val = (
+                provider_enum.value
+                if hasattr(provider_enum, "value")
+                else provider_enum
+            )
             existing_config = (
                 self.db.query(AIProviderConfig)
                 .filter(
                     and_(
                         AIProviderConfig.user_id == user_id,
-                        AIProviderConfig.provider == config.provider.value,
+                        AIProviderConfig.provider == provider_val,
                     )
                 )
                 .first()
@@ -443,7 +479,7 @@ class AIProviderConfigService:
                 # Create new configuration
                 db_config = AIProviderConfig(
                     user_id=user_id,
-                    provider=config.provider.value,
+                    provider=provider_val,
                     encrypted_api_key=encrypted_key_json,
                     model=config.model,
                     endpoint=config.endpoint,
@@ -464,7 +500,7 @@ class AIProviderConfigService:
                 action=action,
                 user_id=user_id,
                 details={
-                    "provider": config.provider.value,
+                    "provider": provider_val,
                     "model": config.model,
                     "config_id": db_config.id,
                 },
@@ -498,12 +534,13 @@ class AIProviderConfigService:
             HTTPException: If decryption fails or database error occurs
         """
         try:
+            provider_val = provider.value if hasattr(provider, "value") else provider
             db_config = (
                 self.db.query(AIProviderConfig)
                 .filter(
                     and_(
                         AIProviderConfig.user_id == user_id,
-                        AIProviderConfig.provider == provider.value,
+                        AIProviderConfig.provider == provider_val,
                     )
                 )
                 .first()
@@ -637,12 +674,13 @@ class AIProviderConfigService:
         """
         try:
             # Verify provider is configured
+            provider_val = provider.value if hasattr(provider, "value") else provider
             target_config = (
                 self.db.query(AIProviderConfig)
                 .filter(
                     and_(
                         AIProviderConfig.user_id == user_id,
-                        AIProviderConfig.provider == provider.value,
+                        AIProviderConfig.provider == provider_val,
                     )
                 )
                 .first()
@@ -651,7 +689,7 @@ class AIProviderConfigService:
             if not target_config:
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND,
-                    detail=f"Provider {provider.value} is not configured",
+                    detail=f"Provider {provider_val} is not configured",
                 )
 
             # Deactivate all providers for this user
@@ -670,7 +708,7 @@ class AIProviderConfigService:
             self._log_audit(
                 action="ai_config.set_active",
                 user_id=user_id,
-                details={"provider": provider.value, "config_id": target_config.id},
+                details={"provider": provider_val, "config_id": target_config.id},
             )
 
             return AIProviderConfigSummary.from_orm(target_config)
@@ -725,12 +763,13 @@ class AIProviderConfigService:
             True if provider is configured, False otherwise
         """
         try:
+            provider_val = provider.value if hasattr(provider, "value") else provider
             count = (
                 self.db.query(AIProviderConfig)
                 .filter(
                     and_(
                         AIProviderConfig.user_id == user_id,
-                        AIProviderConfig.provider == provider.value,
+                        AIProviderConfig.provider == provider_val,
                     )
                 )
                 .count()
@@ -807,12 +846,13 @@ class AIProviderConfigService:
             HTTPException: If provider not found or database error occurs
         """
         try:
+            provider_val = provider.value if hasattr(provider, "value") else provider
             db_config = (
                 self.db.query(AIProviderConfig)
                 .filter(
                     and_(
                         AIProviderConfig.user_id == user_id,
-                        AIProviderConfig.provider == provider.value,
+                        AIProviderConfig.provider == provider_val,
                     )
                 )
                 .first()
@@ -821,7 +861,7 @@ class AIProviderConfigService:
             if not db_config:
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND,
-                    detail=f"Provider {provider.value} is not configured",
+                    detail=f"Provider {provider_val} is not configured",
                 )
 
             was_active = db_config.is_active
@@ -847,7 +887,7 @@ class AIProviderConfigService:
             self._log_audit(
                 action="ai_config.delete",
                 user_id=user_id,
-                details={"provider": provider.value, "was_active": was_active},
+                details={"provider": provider_val, "was_active": was_active},
             )
 
         except HTTPException:
@@ -872,11 +912,19 @@ class AIProviderConfigService:
         Raises:
             HTTPException: If provider type is invalid
         """
+        # Try to convert string to Enum if needed
+        if not isinstance(provider, Enum):
+            try:
+                provider = AIProviderType(provider)
+            except ValueError:
+                pass  # Let lookup fail naturally
+
         metadata = AI_PROVIDER_METADATA.get(provider)
         if not metadata:
+            provider_val = provider.value if hasattr(provider, "value") else provider
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Unknown provider: {provider.value}",
+                detail=f"Unknown provider: {provider_val}",
             )
         return metadata
 
@@ -888,7 +936,9 @@ class AIProviderConfigService:
             Dictionary of provider metadata dictionaries keyed by provider type
         """
         return {
-            provider.value: metadata.dict()
+            (
+                provider.value if hasattr(provider, "value") else provider
+            ): metadata.dict()
             for provider, metadata in AI_PROVIDER_METADATA.items()
         }
 
@@ -904,8 +954,20 @@ class AIProviderConfigService:
         """
         errors: List[str] = []
 
-        # API key validation
-        if not config.api_key or not config.api_key.strip():
+        # API key validation (optional for providers like Ollama)
+        requires_key = True
+        try:
+            provider_key = (
+                config.provider
+                if isinstance(config.provider, AIProviderType)
+                else AIProviderType(config.provider)
+            )
+            metadata = AI_PROVIDER_METADATA.get(provider_key)
+            requires_key = metadata.requires_api_key if metadata else True
+        except Exception:
+            requires_key = True
+
+        if requires_key and (not config.api_key or not str(config.api_key).strip()):
             errors.append("API key is required")
 
         # Model validation
@@ -955,9 +1017,12 @@ class AIProviderConfigService:
             )
 
             # Create SDK client with decrypted API key
-            decrypted_key = self.encryption_service.decrypt(config.api_key)
+            decrypted_key = config.api_key or ""
+
+            provider_val = provider.value if hasattr(provider, "value") else provider
+
             sdk_config = AIClientConfig(
-                provider=provider.value,
+                provider=provider_val,
                 api_key=decrypted_key,
                 model=config.model,
                 max_tokens=50,  # Minimal tokens for test

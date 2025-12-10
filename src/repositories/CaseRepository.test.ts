@@ -1,12 +1,4 @@
-import {
-  describe,
-  it,
-  expect,
-  beforeEach,
-  afterEach,
-  beforeAll,
-  afterAll,
-} from "vitest";
+/// <reference types="vitest/globals" />
 import { createTestDatabase } from "../test-utils/database-test-helper";
 import { databaseManager } from "../db/database";
 import { CaseRepository } from "./CaseRepository";

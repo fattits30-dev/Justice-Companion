@@ -17,7 +17,7 @@ export function createExportApi(client: ApiClient) {
       const response = await fetch(
         `${client.getBaseURL()}/export/case/${caseId}?format=${format}`,
         {
-          headers: sessionId ? { "X-Session-Id": sessionId } : undefined,
+          headers: sessionId ? { "X-Session-ID": sessionId } : undefined,
         }
       );
 
@@ -45,7 +45,7 @@ export function createExportApi(client: ApiClient) {
       const response = await fetch(
         `${client.getBaseURL()}/export/evidence/${evidenceId}?format=${format}`,
         {
-          headers: sessionId ? { "X-Session-Id": sessionId } : undefined,
+          headers: sessionId ? { "X-Session-ID": sessionId } : undefined,
         }
       );
 
@@ -73,7 +73,7 @@ export function createExportApi(client: ApiClient) {
       const response = await fetch(
         `${client.getBaseURL()}/export/search-results?query=${encodeURIComponent(query)}&format=${format}`,
         {
-          headers: sessionId ? { "X-Session-Id": sessionId } : undefined,
+          headers: sessionId ? { "X-Session-ID": sessionId } : undefined,
         }
       );
 

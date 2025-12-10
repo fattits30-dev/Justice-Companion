@@ -106,8 +106,41 @@
   "git.confirmSync": false,
   "git.enableSmartCommit": true,
   "git.showPushSuccessNotification": false,
-  "gitlens.currentLine.enabled": false, // Performance cost
-  "gitlens.codeLens.enabled": false,
+
+  // GitLens - minimal output (balanced performance)
+  "gitlens.currentLine.enabled": true, // Show git blame on current line
+  "gitlens.currentLine.format": "${author}, ${agoOrDate} • ${message}",
+  "gitlens.currentLine.scrollable": false,
+  "gitlens.codeLens.enabled": false, // Keep disabled for performance
+  "gitlens.hovers.enabled": true, // Hover for full commit details
+
+  // GitHub Copilot
+  "github.copilot.enable": {
+    "*": true,
+    "typescript": true,
+    "typescriptreact": true,
+    "python": true
+  },
+
+  // GitHub Actions - Enable workflow output
+  "github-actions.workflows.pinned.workflows": [".github/workflows/ci.yml"],
+  "github-actions.workflows.pinned.refresh.enabled": true,
+  "github-actions.workflows.pinned.refresh.interval": 60,
+
+  // GitHub Pull Requests - Enable PR output
+  "githubPullRequests.pullRequestDescription": "template",
+  "githubPullRequests.defaultMergeMethod": "squash",
+  "githubPullRequests.showInSCM": true,
+  "githubPullRequests.queries": [
+    {
+      "label": "My Pull Requests",
+      "query": "is:open author:${user}"
+    },
+    {
+      "label": "Assigned To Me",
+      "query": "is:open assignee:${user}"
+    }
+  ],
 
   // Terminal - performance optimized
   "terminal.integrated.defaultProfile.windows": "Git Bash",
@@ -185,13 +218,11 @@
     "editor.tabSize": 4,
     "editor.insertSpaces": true
   },
-
-  // Minimal SonarLint - disable analysis on save for performance
-  "sonarlint.disableTelemetry": true,
-  "sonarlint.output.showVerboseLogs": false,
   "chat.mcp.serverSampling": {
     "Justice Companion/.vscode/mcp.json: MCP_DOCKER": {
       "allowedModels": ["copilot/auto"]
     }
-  }
+  },
+  "snyk.advanced.organization": "ff736ceb-1d26-4940-9c72-9838d2847a15",
+  "snyk.advanced.autoSelectOrganization": true
 }

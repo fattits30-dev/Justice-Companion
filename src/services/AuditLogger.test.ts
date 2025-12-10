@@ -1,4 +1,5 @@
-import { describe, it, expect, beforeEach, afterAll, beforeAll } from "vitest";
+/// <reference types="vitest/globals" />
+
 import { AuditLogger } from "./AuditLogger";
 import {
   createTestDatabase,

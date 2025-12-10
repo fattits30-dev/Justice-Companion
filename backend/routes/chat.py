@@ -194,35 +194,58 @@ async def get_ai_service(
     - "sdk": Use AISDKService with user's configured AI provider (OpenAI, Anthropic, etc.)
     - "service": Use separate ai-service microservice (Hugging Face powered)
     - "stub": Use StubAIService for deterministic mock responses
+    - "auto" (default): Prefer SDK if an active provider is configured; otherwise stub
 
-    Default: "stub" for backward compatibility
+    Default: "auto" (SDK when configured, otherwise stub)
 
     Returns:
         AI service instance with UnifiedAIService-compatible interface.
     """
-    ai_mode = os.getenv("AI_MODE", "stub").lower()
+    ai_mode_raw = os.getenv("AI_MODE")
+    ai_mode = ai_mode_raw.lower() if ai_mode_raw else "auto"
     print(f"[DEBUG] AI_MODE from env: '{ai_mode}'")
 
-    if ai_mode == "sdk":
-        # Use AISDKService with user's configured provider
+    if ai_mode in {"sdk", "auto"}:
         from backend.services.ai.providers import AIProviderConfigService
-        from backend.services.ai.sdk import AISDKService
-        from backend.services.ai.service import AIProviderConfig as SDKConfig
+        from backend.services.ai.sdk import (
+            AISDKService,
+            AIProviderConfig as SDKConfig,
+            AIProviderType as SDKProviderType,
+        )
 
-        # Get user's active AI configuration
-        print(f"[DEBUG] Getting AI config for user_id: {user_id}")
         config_service = AIProviderConfigService(db, encryption_service, audit_logger)
         user_config = await config_service.get_active_provider_config(user_id)
 
         if not user_config:
-            logger.warning(f"[AI_MODE=sdk] No active AI provider configured for user {user_id}, falling back to stub")
+            if ai_mode == "sdk":
+                logger.warning(
+                    "[AI_MODE=sdk] No active AI provider configured for user %s, falling back to stub",
+                    user_id,
+                )
+            else:
+                logger.info(
+                    "[AI_MODE=auto] No active AI provider configured for user %s, using stub",
+                    user_id,
+                )
             return StubAIService(audit_logger)  # type: ignore[return-value]
 
-        print(f"[DEBUG] Retrieved config - ID: {user_config.id}, Provider: {user_config.provider}, Model: {user_config.model}, User: {user_config.user_id}")
+        print(
+            f"[DEBUG] Retrieved config - ID: {user_config.id}, Provider: {user_config.provider}, Model: {user_config.model}, User: {user_config.user_id}"
+        )
 
-        # Create SDK config from user's configuration
+        try:
+            provider_enum = SDKProviderType(user_config.provider)
+        except ValueError as exc:
+            logger.error(
+                "Invalid provider '%s' for user %s", user_config.provider, user_config.user_id
+            )
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Invalid provider configured: {user_config.provider}",
+            ) from exc
+
         sdk_config = SDKConfig(
-            provider=user_config.provider,
+            provider=provider_enum,
             api_key=user_config.api_key,
             model=user_config.model,
             endpoint=user_config.endpoint,
@@ -231,7 +254,12 @@ async def get_ai_service(
             top_p=user_config.top_p or 0.9,
         )
 
-        logger.info(f"[AI_MODE=sdk] Using {user_config.provider} with model {user_config.model}")
+        logger.info(
+            "[AI_MODE=%s] Using %s with model %s",
+            ai_mode,
+            user_config.provider,
+            user_config.model,
+        )
         return AISDKService(sdk_config, audit_logger)  # type: ignore[return-value]
 
     elif ai_mode == "service":
