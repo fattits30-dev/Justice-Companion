@@ -21,14 +21,16 @@ Security:
 - Input validation with Pydantic
 """
 
-import json
 import logging
-import re
-from datetime import datetime
 from typing import Any, AsyncIterator, Callable, Dict, List, Optional
 
 from fastapi import HTTPException
 
+from backend.services.ai.analysis import (
+    run_case_analysis,
+    run_document_draft,
+    run_evidence_analysis,
+)
 from backend.services.ai.ingestion import (
     extract_case_data_from_document as run_document_extraction,
 )
@@ -599,70 +601,14 @@ class UnifiedAIService:
         return completion.choices[0].message.content or ""
 
     async def analyze_case(self, request: CaseAnalysisRequest) -> CaseAnalysisResponse:
-        """
-        Analyze a case and provide structured legal analysis.
-
-        Args:
-            request: Case analysis request
-
-        Returns:
-            Structured case analysis
-
-        Raises:
-            HTTPException: If analysis fails
-        """
+        """Analyze a case and provide structured legal analysis."""
         if not self.client:
             raise HTTPException(
                 status_code=500, detail=f"{self.config.provider} client not configured"
             )
 
         try:
-            # Build prompt (simplified - should use prompts from analysis-prompts module)
-            prompt = f"""Analyze this legal case and provide structured analysis in JSON format.
-
-CRITICAL: You provide INFORMATION only, NOT ADVICE.
-
-Rules:
-1. Never say "you should" - say "options to consider include"
-2. Never say "the best approach" - present multiple approaches
-3. Always cite sources (gov.uk, legislation.gov.uk, Citizens Advice)
-4. Always remind users to verify with a solicitor
-5. Present multiple options, not single recommendations
-
-Case Type: {request.case_type.value if hasattr(request.case_type, "value") else request.case_type}
-Jurisdiction: {request.jurisdiction.value if hasattr(request.jurisdiction, "value") else request.jurisdiction}
-Description: {request.description}
-
-Evidence: {json.dumps([e.dict() for e in request.evidence], indent=2)}
-Timeline: {json.dumps([t.dict() for t in request.timeline], indent=2)}
-
-    Provide analysis in this JSON structure:
-    {{
-      "legal_issues": [...],
-      "applicable_law": [...],
-      "recommended_actions": [...],
-      "evidence_gaps": [...],
-      "estimated_complexity": {{"score": 1-10, "factors": [...], "explanation": "..."}},
-      "reasoning": "...",
-      "disclaimer": "This is information, not legal advice.",
-      "sources": [...]
-    }}
-    """
-
-            messages = [ChatMessage(role="user", content=prompt)]
-            response = await self.chat(messages)
-
-            # Extract JSON from response
-            json_match = re.search(r"```json\n?(.*?)\n?```", response, re.DOTALL)
-            if json_match:
-                json_str = json_match.group(1)
-            else:
-                json_match = re.search(r"\{.*\}", response, re.DOTALL)
-                json_str = json_match.group(0) if json_match else response
-
-            analysis_data = json.loads(json_str)
-            return CaseAnalysisResponse(**analysis_data)
-
+            return await run_case_analysis(chat_fn=self.chat, request=request)
         except Exception as exc:
             if self.audit_logger:
                 self.audit_logger.log(
@@ -681,57 +627,14 @@ Timeline: {json.dumps([t.dict() for t in request.timeline], indent=2)}
     async def analyze_evidence(
         self, request: EvidenceAnalysisRequest
     ) -> EvidenceAnalysisResponse:
-        """
-        Analyze evidence and identify gaps.
-
-        Args:
-            request: Evidence analysis request
-
-        Returns:
-            Evidence analysis with gap identification
-
-        Raises:
-            HTTPException: If analysis fails
-        """
+        """Analyze evidence and identify gaps."""
         if not self.client:
             raise HTTPException(
                 status_code=500, detail=f"{self.config.provider} client not configured"
             )
 
         try:
-            prompt = f"""Analyze evidence for this legal case and identify gaps.
-
-CRITICAL: You provide INFORMATION only, NOT ADVICE.
-
-Rules:
-1. Never say "you should" - say "options to consider include"
-2. Never say "the best approach" - present multiple approaches
-3. Always cite sources (gov.uk, legislation.gov.uk, Citizens Advice)
-4. Always remind users to verify with a solicitor
-5. Present multiple options, not single recommendations
-
-Case Type: {request.case_type.value if hasattr(request.case_type, "value") else request.case_type}
-Existing Evidence: {json.dumps(request.existing_evidence)}
-Claims: {json.dumps(request.claims)}
-
-    Provide analysis in JSON format with:
-    - gaps: list of objects with keys: description, importance, suggested_sources
-    - suggestions: additional documentation needed
-    - strength: overall evidence strength (strong/moderate/weak)
-    - explanation: detailed reasoning
-    - disclaimer: legal disclaimer
-    """
-
-            messages = [ChatMessage(role="user", content=prompt)]
-            response = await self.chat(messages)
-
-            # Extract JSON
-            json_match = re.search(r"```json\n?(.*?)\n?```", response, re.DOTALL)
-            json_str = json_match.group(1) if json_match else response
-
-            analysis_data = json.loads(json_str)
-            return EvidenceAnalysisResponse(**analysis_data)
-
+            return await run_evidence_analysis(chat_fn=self.chat, request=request)
         except Exception as exc:
             if self.audit_logger:
                 self.audit_logger.log(
@@ -750,74 +653,24 @@ Claims: {json.dumps(request.claims)}
     async def draft_document(
         self, request: DocumentDraftRequest
     ) -> DocumentDraftResponse:
-        """
-        Draft a legal document.
-
-        Args:
-            request: Document draft request
-
-        Returns:
-            Drafted document with metadata
-
-        Raises:
-            HTTPException: If drafting fails
-        """
+        """Draft a legal document."""
         if not self.client:
             raise HTTPException(
                 status_code=500, detail=f"{self.config.provider} client not configured"
             )
 
+        doc_type = (
+            request.document_type.value
+            if hasattr(request.document_type, "value")
+            else request.document_type
+        )
+
         try:
-            doc_type = (
-                request.document_type.value
-                if hasattr(request.document_type, "value")
-                else request.document_type
+            return await run_document_draft(
+                chat_fn=self.chat,
+                request=request,
+                model_name=self.config.model,
             )
-            case_type = (
-                request.context.case_type.value
-                if hasattr(request.context.case_type, "value")
-                else request.context.case_type
-            )
-
-            prompt = f"""Draft a {doc_type} for this legal case.
-
-CRITICAL: You provide INFORMATION only, NOT ADVICE.
-
-Rules:
-1. Never say "you should" - say "options to consider include"
-2. Never say "the best approach" - present multiple approaches
-3. Always cite sources (gov.uk, legislation.gov.uk, Citizens Advice)
-4. Always remind users to verify with a solicitor
-5. Present multiple options, not single recommendations
-
-Case Type: {case_type}
-Facts: {request.context.facts}
-Objectives: {request.context.objectives}
-
-Provide response in JSON format:
-{{
-  "content": "Full document text",
-  "metadata": {{
-    "type": "{doc_type}",
-    "created_at": "{datetime.utcnow().isoformat()}",
-    "word_count": 0,
-    "model_used": "{self.config.model}",
-    "case_id": "{request.context.case_id}"
-  }},
-  "disclaimer": "This is a draft template, not legal advice."
-}}
-"""
-
-            messages = [ChatMessage(role="user", content=prompt)]
-            response = await self.chat(messages)
-
-            # Extract JSON
-            json_match = re.search(r"```json\n?(.*?)\n?```", response, re.DOTALL)
-            json_str = json_match.group(1) if json_match else response
-
-            draft_data = json.loads(json_str)
-            return DocumentDraftResponse(**draft_data)
-
         except Exception as exc:
             if self.audit_logger:
                 self.audit_logger.log(
