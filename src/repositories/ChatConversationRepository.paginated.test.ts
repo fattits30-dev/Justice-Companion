@@ -7,7 +7,7 @@ import { databaseManager } from "../db/database";
 import type {
   CreateConversationInput,
   CreateMessageInput,
-} from "../models/ChatConversation";
+} from "../lib/types/api.ts";
 
 // Create test database instance at module level
 const testDb = createTestDatabase();

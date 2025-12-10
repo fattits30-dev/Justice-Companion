@@ -5,7 +5,7 @@
  */
 import Database from "better-sqlite3";
 import { TagService } from "./TagService";
-import type { CreateTagInput } from "../models/Tag";
+import type { CreateTagInput } from "../lib/types/api.ts";
 
 // Mock dependencies
 let db: Database.Database;

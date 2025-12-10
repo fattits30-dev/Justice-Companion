@@ -4,7 +4,7 @@ import type {
   ConversationWithMessages,
   CreateConversationInput,
   CreateMessageInput,
-} from "../models/ChatConversation.ts";
+} from "../lib/types/api.ts";
 import { getRepositories } from "../repositories.ts";
 import { errorLogger } from "../utils/error-logger.ts";
 

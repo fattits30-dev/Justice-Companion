@@ -7,7 +7,7 @@ import type {
   NotificationStats,
   NotificationType,
   NotificationSeverity,
-} from "../models/Notification.ts";
+} from "../lib/types/api.ts";
 
 type NotificationRow = {
   id: number;

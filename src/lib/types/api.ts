@@ -483,6 +483,39 @@ export interface NotificationListResponse {
   unreadCount: number;
 }
 
+export interface CreateNotificationInput {
+  userId: number;
+  type: NotificationType;
+  severity: NotificationSeverity;
+  title: string;
+  message: string;
+  actionUrl?: string;
+  actionLabel?: string;
+  metadata?: NotificationMetadata;
+  expiresAt?: Date;
+}
+
+export interface UpdateNotificationInput {
+  title?: string;
+  message?: string;
+  actionUrl?: string;
+  actionLabel?: string;
+  metadata?: NotificationMetadata;
+  isRead?: boolean;
+  isDismissed?: boolean;
+  expiresAt?: Date;
+}
+
+export interface NotificationFilters {
+  unreadOnly?: boolean;
+  includeDismissed?: boolean;
+  includeExpired?: boolean;
+  type?: NotificationType;
+  severity?: NotificationSeverity;
+  limit?: number;
+  offset?: number;
+}
+
 // ===== TAG TYPES =====
 
 export interface TagResponse {
@@ -1150,4 +1183,177 @@ export interface PortStatusResponse {
   inUse: boolean;
   pid?: number;
   processName?: string;
+}
+
+// ===== CHAT CONVERSATION TYPES =====
+
+export interface ChatConversation {
+  id: number;
+  caseId: number | null;
+  userId: number;
+  title: string;
+  createdAt: string;
+  updatedAt: string;
+  messageCount: number;
+}
+
+export interface ChatMessage {
+  id: number;
+  conversationId: number;
+  role: "user" | "assistant" | "system";
+  content: string;
+  thinkingContent: string | null;
+  timestamp: string;
+  tokenCount: number | null;
+}
+
+export interface ConversationWithMessages extends ChatConversation {
+  messages: ChatMessage[];
+}
+
+export interface CreateConversationInput {
+  caseId?: number | null;
+  userId: number;
+  title: string;
+}
+
+export interface CreateMessageInput {
+  conversationId: number;
+  role: "user" | "assistant" | "system";
+  content: string;
+  thinkingContent?: string | null;
+  tokenCount?: number | null;
+}
+
+// ===== USER FACT TYPES =====
+
+export type FactImportance = "low" | "medium" | "high" | "critical";
+
+export interface UserFact {
+  id: number;
+  caseId: number;
+  factContent: string;
+  factCategory: FactCategory;
+  importance: FactImportance;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateUserFactInput {
+  caseId: number;
+  factContent: string;
+  factCategory?: FactCategory;
+  importance?: FactImportance;
+}
+
+export interface UpdateUserFactInput {
+  factContent?: string;
+  factCategory?: FactCategory;
+  importance?: FactImportance;
+}
+
+// ===== AUDIT LOG TYPES =====
+
+export interface AuditLogEntry {
+  id: string;
+  timestamp: string;
+  eventType: string;
+  userId: number | null;
+  resourceType: string;
+  resourceId: string;
+  action: string;
+  details: Record<string, unknown> | null;
+  ipAddress: string | null;
+  userAgent: string | null;
+  success: boolean;
+  errorMessage: string | null;
+  previousLogHash: string | null;
+  integrityHash: string;
+  createdAt: string;
+}
+
+export interface AuditEvent {
+  eventType: string;
+  userId?: number;
+  resourceType: string;
+  resourceId: string;
+  action: string;
+  details?: Record<string, unknown>;
+  ipAddress?: string;
+  userAgent?: string;
+  success?: boolean;
+  errorMessage?: string;
+}
+
+export interface AuditQueryFilters {
+  startDate?: string;
+  endDate?: string;
+  resourceType?: string;
+  resourceId?: string;
+  eventType?: string;
+  userId?: number;
+  success?: boolean;
+  limit?: number;
+  offset?: number;
+}
+
+export interface IntegrityReport {
+  totalLogs: number;
+  scannedLogs: number;
+  corruptedLogs: number;
+  isValid: boolean;
+  errors: Array<{
+    logId: string;
+    expectedHash: string;
+    actualHash: string;
+    timestamp: string;
+  }>;
+}
+
+// Legacy compatibility - simpler audit log type
+export interface AuditLog {
+  id: number;
+  eventType: string;
+  resourceType: string;
+  resourceId: string;
+  userId?: number;
+  action: string;
+  details?: Record<string, unknown>;
+  success: boolean;
+  errorMessage?: string;
+  timestamp: string;
+}
+
+// ===== TYPE ALIASES FOR BACKWARD COMPATIBILITY =====
+
+// Tag type aliases
+export type Tag = TagResponse;
+export type CreateTagInput = CreateTagRequest;
+export type UpdateTagInput = UpdateTagRequest;
+
+// Notification type aliases
+export type UpdateNotificationPreferencesInput = UpdateNotificationPreferencesRequest;
+export type CreateNotificationPreferencesInput = NotificationPreferences;
+
+// Note types
+export interface Note {
+  id: number;
+  caseId: number;
+  userId: number;
+  title: string;
+  content: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateNoteInput {
+  caseId: number;
+  userId: number;
+  title: string;
+  content: string;
+}
+
+export interface UpdateNoteInput {
+  title?: string;
+  content?: string;
 }

@@ -9,11 +9,9 @@ import type {
   NotificationStats,
   NotificationType,
   NotificationSeverity,
-} from "../models/Notification.ts";
-import type {
   NotificationPreferences,
   UpdateNotificationPreferencesInput,
-} from "../models/NotificationPreferences.ts";
+} from "../lib/types/api.ts";
 
 /**
  * Notification error class

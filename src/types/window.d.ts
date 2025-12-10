@@ -21,7 +21,7 @@ import type {
   UpdateDeadlineInput,
 } from "../domains/timeline/entities/Deadline.ts";
 import type { ConsentType } from "../domains/settings/entities/Consent.ts";
-import type { Tag, CreateTagInput, UpdateTagInput } from "../models/Tag.ts";
+import type { Tag, CreateTagInput, UpdateTagInput } from "../lib/types/api.ts";
 
 /**
  * Response wrapper for all IPC operations
@@ -1353,7 +1353,7 @@ import type {
   TemplateStats,
   TemplateUsage,
   TemplateApplicationResult,
-} from "../models/CaseTemplate.ts";
+} from "../domains/cases/entities/CaseTemplate.ts";
 
 declare global {
   interface Window {

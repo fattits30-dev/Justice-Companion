@@ -12,7 +12,7 @@ import { setupTestEnvironment, clearWindowMock } from "../test-utils/ipc-mock";
 import type {
   CreateConversationInput,
   CreateMessageInput,
-} from "../models/ChatConversation";
+} from "../lib/types/api.ts";
 
 describe("ChatConversationService", () => {
   let auditLogger: AuditLogger;

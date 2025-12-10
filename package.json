@@ -21,6 +21,7 @@
     "test:ui": "vitest --ui",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
+    "lint:python:sizes": "python scripts/check_file_sizes.py --path backend --limit 600 --exclude backend/venv --baseline config/file_size_baseline.txt",
     "typecheck": "tsc --noEmit",
     "format": "prettier --write \"src/**/*.{ts,tsx,js,jsx,json,css,md}\"",
     "prepare": "husky",

@@ -7,7 +7,7 @@ import type {
   AuditLogEntry,
   AuditQueryFilters,
   IntegrityReport,
-} from "../models/AuditLog.ts";
+} from "../lib/types/api.ts";
 
 /**
  * AuditLogger - Blockchain-style immutable audit trail

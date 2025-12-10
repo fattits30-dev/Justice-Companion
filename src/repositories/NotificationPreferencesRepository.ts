@@ -3,7 +3,7 @@ import type {
   NotificationPreferences,
   CreateNotificationPreferencesInput,
   UpdateNotificationPreferencesInput,
-} from "../models/NotificationPreferences.ts";
+} from "../lib/types/api.ts";
 
 /**
  * NotificationPreferencesRepository

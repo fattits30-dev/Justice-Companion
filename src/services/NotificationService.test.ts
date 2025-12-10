@@ -7,8 +7,8 @@ import { AuditLogger } from "./AuditLogger";
 import type {
   CreateNotificationInput,
   NotificationFilters,
-} from "../models/Notification";
-import type { NotificationPreferences } from "../models/NotificationPreferences";
+  NotificationPreferences,
+} from "../lib/types/api.ts";
 
 // Mock repositories and services
 vi.mock("../repositories/NotificationRepository.ts");

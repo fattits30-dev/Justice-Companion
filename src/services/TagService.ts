@@ -5,7 +5,7 @@
 
 import { getDb } from "../db/database.ts";
 import { AuditLogger } from "./AuditLogger.ts";
-import type { Tag, CreateTagInput, UpdateTagInput } from "../models/Tag.ts";
+import type { Tag, CreateTagInput, UpdateTagInput } from "../lib/types/api.ts";
 import type Database from "better-sqlite3";
 
 export class TagService {

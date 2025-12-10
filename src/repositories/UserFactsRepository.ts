@@ -3,7 +3,7 @@ import type {
   UserFact,
   CreateUserFactInput,
   UpdateUserFactInput,
-} from "../models/UserFact.ts";
+} from "../lib/types/api.ts";
 import {
   EncryptionService,
   type EncryptedData,

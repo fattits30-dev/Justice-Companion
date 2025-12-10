@@ -1,5 +1,5 @@
 import { getDb } from "../db/database.ts";
-import type { Note, CreateNoteInput, UpdateNoteInput } from "../models/Note.ts";
+import type { Note, CreateNoteInput, UpdateNoteInput } from "../lib/types/api.ts";
 import {
   EncryptionService,
   type EncryptedData,
