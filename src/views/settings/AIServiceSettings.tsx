@@ -202,7 +202,7 @@ export function AIServiceSettingsTab() {
         success: res.success,
         message: res.success
           ? "Connection successful!"
-          : res.error || "Connection failed",
+          : (typeof res.error === "string" ? res.error : res.error?.message) || "Connection failed",
       });
     } catch (err) {
       console.error("Test failed:", err);
@@ -313,7 +313,7 @@ export function AIServiceSettingsTab() {
                   ) : (
                     <Button
                       size="sm"
-                      variant="outline"
+                      variant="secondary"
                       onClick={handleActivate}
                       disabled={isActivating}
                       className="border-purple-500/50 text-purple-400 hover:bg-purple-500/10"
@@ -408,7 +408,7 @@ export function AIServiceSettingsTab() {
                     <Button
                       onClick={handleTest}
                       disabled={isTesting}
-                      variant="outline"
+                      variant="secondary"
                       className="border-white/20 text-white hover:bg-white/10"
                     >
                       {isTesting ? (

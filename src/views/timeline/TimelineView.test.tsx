@@ -54,8 +54,8 @@ const createMockCase = (overrides = {}) => ({
   updatedAt: "2025-01-01T00:00:00Z",
   ...overrides,
 });
-const createDeadlinesResponse = (deadlines = []) => ({
-  success: true,
+const createDeadlinesResponse = (deadlines: any[] = []) => ({
+  success: true as const,
   data: {
     items: deadlines.map((deadline) => ({
       id: deadline.id,
@@ -82,8 +82,8 @@ const createDeadlinesResponse = (deadlines = []) => ({
     offset: 0,
   },
 });
-const createCasesResponse = (cases = []) => ({
-  success: true,
+const createCasesResponse = (cases: any[] = []) => ({
+  success: true as const,
   data: {
     items: cases,
     total: cases.length,
@@ -92,7 +92,7 @@ const createCasesResponse = (cases = []) => ({
     offset: 0,
   },
 });
-const toApiDeadline = (deadline) => ({
+const toApiDeadline = (deadline: any) => ({
   id: deadline.id,
   caseId: deadline.caseId,
   userId: deadline.userId,
@@ -109,15 +109,15 @@ const toApiDeadline = (deadline) => ({
   updatedAt: deadline.updatedAt,
 });
 const createMutationResponse = (deadline = createMockDeadline()) => ({
-  success: true,
+  success: true as const,
   data: toApiDeadline(deadline),
 });
-const setDeadlinesResponse = (deadlines) => {
+const setDeadlinesResponse = (deadlines: any[]) => {
   vi.mocked(apiClient.deadlines.list).mockResolvedValue(
     createDeadlinesResponse(deadlines)
   );
 };
-const setDeadlinesError = (message) => {
+const setDeadlinesError = (message: string) => {
   vi.mocked(apiClient.deadlines.list).mockResolvedValue({
     success: false,
     error: {
@@ -126,7 +126,7 @@ const setDeadlinesError = (message) => {
     },
   });
 };
-const setCasesResponse = (cases) => {
+const setCasesResponse = (cases: any[]) => {
   vi.mocked(apiClient.cases.list).mockResolvedValue(createCasesResponse(cases));
 };
 
@@ -136,7 +136,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   localStorage.setItem("sessionId", mockSessionId);
   vi.mocked(apiClient.auth.getSession).mockResolvedValue({
-    success: true,
+    success: true as const,
     data: {
       user: {
         id: 1,
@@ -161,7 +161,7 @@ beforeEach(() => {
     createMutationResponse()
   );
   vi.mocked(apiClient.deadlines.delete).mockResolvedValue({
-    success: true,
+    success: true as const,
     data: undefined,
   });
 });
@@ -543,7 +543,7 @@ describe("TimelineView", () => {
       setDeadlinesResponse([deadline]);
       setCasesResponse([]);
       vi.mocked(apiClient.deadlines.delete).mockResolvedValue({
-        success: true,
+        success: true as const,
         data: undefined,
       });
       const user = userEvent.setup();

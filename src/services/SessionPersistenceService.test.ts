@@ -87,8 +87,8 @@ describe("SessionPersistenceService (non-browser environments)", () => {
         getStorage(): Storage | null;
       };
     const getStorageSpy = vi
-      .spyOn(ServiceWithAccess, "getStorage")
-      .mockReturnValue(storageMock);
+      .spyOn(ServiceWithAccess, "getStorage") as any;
+    getStorageSpy.mockReturnValue(storageMock);
 
     await service.clearSession();
 

@@ -148,7 +148,7 @@ export class AuthenticationService {
 
     this.auditLogger?.log({
       eventType: "user.register",
-      userId: user.id.toString(),
+      userId: user.id,
       resourceType: "user",
       resourceId: user.id.toString(),
       action: "create",
@@ -166,7 +166,7 @@ export class AuthenticationService {
 
     this.auditLogger?.log({
       eventType: "user.login",
-      userId: user.id.toString(),
+      userId: user.id,
       resourceType: "session",
       resourceId: session.id,
       action: "create",
@@ -243,7 +243,7 @@ export class AuthenticationService {
 
       this.auditLogger?.log({
         eventType: "user.login",
-        userId: user.id.toString(),
+        userId: user.id,
         resourceType: "user",
         resourceId: user.id.toString(),
         action: "read",
@@ -267,7 +267,7 @@ export class AuthenticationService {
 
       this.auditLogger?.log({
         eventType: "user.login",
-        userId: user.id.toString(),
+        userId: user.id,
         resourceType: "user",
         resourceId: user.id.toString(),
         action: "read",
@@ -335,7 +335,7 @@ export class AuthenticationService {
 
     this.auditLogger?.log({
       eventType: "user.login",
-      userId: user.id.toString(),
+      userId: user.id,
       resourceType: "user",
       resourceId: user.id.toString(),
       action: "read",
@@ -402,7 +402,7 @@ export class AuthenticationService {
 
       this.auditLogger?.log({
         eventType: "user.logout",
-        userId: session.userId.toString(),
+        userId: session.userId,
         resourceType: "session",
         resourceId: sessionId,
         action: "delete",
@@ -464,7 +464,7 @@ export class AuthenticationService {
     if (!isValid) {
       this.auditLogger?.log({
         eventType: "user.password_change",
-        userId: userId.toString(),
+        userId: userId,
         resourceType: "user",
         resourceId: userId.toString(),
         action: "update",
@@ -516,7 +516,7 @@ export class AuthenticationService {
 
     this.auditLogger?.log({
       eventType: "user.password_change",
-      userId: userId.toString(),
+      userId: userId,
       resourceType: "user",
       resourceId: userId.toString(),
       action: "update",
@@ -582,7 +582,7 @@ export class AuthenticationService {
       // Session is valid - log the successful restoration
       this.auditLogger?.log({
         eventType: "user.login",
-        userId: user.id.toString(),
+        userId: user.id,
         resourceType: "session",
         resourceId: sessionId,
         action: "read",

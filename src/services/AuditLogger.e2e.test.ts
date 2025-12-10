@@ -1043,7 +1043,7 @@ describe("AuditLogger E2E", () => {
           resourceType: i % 2 === 0 ? "case" : "evidence",
           resourceId: i.toString(),
           action: "create",
-          userId: i % 10 === 0 ? "user123" : undefined,
+          userId: i % 10 === 0 ? 123 : undefined,
         });
       }
 

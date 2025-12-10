@@ -124,7 +124,7 @@ export class AuthorizationMiddleware {
     if (requestingUser.role !== "admin") {
       this.auditLogger?.log({
         eventType: "authorization.denied",
-        userId: requestingUser.id.toString(),
+        userId: requestingUser.id,
         resourceType: "user",
         resourceId: targetUserId.toString(),
         action: "update",

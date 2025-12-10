@@ -48,7 +48,7 @@ export class ConsentService {
 
     this.auditLogger?.log({
       eventType: "consent.granted",
-      userId: userId.toString(),
+      userId: userId,
       resourceType: "consent",
       resourceId: consent.id.toString(),
       action: "create",
@@ -76,7 +76,7 @@ export class ConsentService {
 
       this.auditLogger?.log({
         eventType: "consent.revoked",
-        userId: userId.toString(),
+        userId: userId,
         resourceType: "consent",
         resourceId: consent.id.toString(),
         action: "update",
@@ -164,7 +164,7 @@ export class ConsentService {
     // Always log revoke all event (even if no consents exist)
     this.auditLogger?.log({
       eventType: "consent.revoked",
-      userId: userId.toString(),
+      userId: userId,
       resourceType: "consent",
       resourceId: "all",
       action: "update",

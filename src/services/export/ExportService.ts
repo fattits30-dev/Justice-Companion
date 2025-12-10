@@ -492,9 +492,13 @@ export class ExportService implements IExportService {
           ...d,
           fileName: await this.encryption.decrypt(d.fileName),
           filePath: await this.encryption.decrypt(d.filePath),
+          mimeType: d.fileType, // Map fileType to mimeType
           description: d.description
             ? await this.encryption.decrypt(d.description)
             : undefined,
+          uploadedBy: 0, // Placeholder, evidence doesn't track who uploaded
+          createdAt: new Date(d.uploadedAt), // Map uploadedAt to createdAt
+          updatedAt: new Date(d.uploadedAt), // Use same date for updatedAt
         })),
       );
     }

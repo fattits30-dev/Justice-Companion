@@ -77,19 +77,17 @@ describe("UserFactsRepository", () => {
 
     it("should create user facts with different types", () => {
       const factCategorys: Array<
-        | "personal"
-        | "employment"
-        | "financial"
-        | "contact"
-        | "medical"
-        | "other"
+        | "timeline"
+        | "evidence"
+        | "witness"
+        | "location"
+        | "communication"
       > = [
-        "personal",
-        "employment",
-        "financial",
-        "contact",
-        "medical",
-        "other",
+        "timeline",
+        "evidence",
+        "witness",
+        "location",
+        "communication",
       ];
 
       factCategorys.forEach((factCategory, index) => {
@@ -273,13 +271,13 @@ describe("UserFactsRepository", () => {
         factCategory: "timeline",
       });
 
-      const personalFacts = repository.findByType(1, "personal");
-      const employmentFacts = repository.findByType(1, "employment");
+      const timelineFacts = repository.findByType(1, "timeline");
+      const evidenceFacts = repository.findByType(1, "evidence");
 
-      expect(personalFacts).toHaveLength(2);
-      expect(employmentFacts).toHaveLength(1);
-      expect(personalFacts.every((f) => f.factCategory === "personal")).toBe(true);
-      expect(employmentFacts.every((f) => f.factCategory === "employment")).toBe(
+      expect(timelineFacts).toHaveLength(2);
+      expect(evidenceFacts).toHaveLength(1);
+      expect(timelineFacts.every((f) => f.factCategory === "timeline")).toBe(true);
+      expect(evidenceFacts.every((f) => f.factCategory === "evidence")).toBe(
         true,
       );
     });

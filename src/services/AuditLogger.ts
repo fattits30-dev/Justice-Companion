@@ -139,7 +139,7 @@ export class AuditLogger {
       id: string;
       timestamp: string;
       event_type: string;
-      user_id: string | null;
+      user_id: number | null;
       resource_type: string;
       resource_id: string;
       action: string;
@@ -174,7 +174,7 @@ export class AuditLogger {
         id: string;
         timestamp: string;
         event_type: string;
-        user_id: string | null;
+        user_id: number | null;
         resource_type: string;
         resource_id: string;
         action: string;
@@ -192,6 +192,9 @@ export class AuditLogger {
         return {
           isValid: true,
           totalLogs: 0,
+          scannedLogs: 0,
+          corruptedLogs: 0,
+          errors: [],
         };
       }
 
@@ -208,10 +211,14 @@ export class AuditLogger {
           return {
             isValid: false,
             totalLogs: entries.length,
-            brokenAt: i,
-            brokenLog: entry,
-            error:
-              "Integrity hash mismatch - log entry may have been tampered with",
+            scannedLogs: i + 1,
+            corruptedLogs: 1,
+            errors: [{
+              logId: entry.id,
+              expectedHash: calculatedHash,
+              actualHash: entry.integrityHash,
+              timestamp: entry.timestamp,
+            }],
           };
         }
 
@@ -220,10 +227,14 @@ export class AuditLogger {
           return {
             isValid: false,
             totalLogs: entries.length,
-            brokenAt: i,
-            brokenLog: entry,
-            error:
-              "Chain broken - previousLogHash does not match previous entry",
+            scannedLogs: i + 1,
+            corruptedLogs: 1,
+            errors: [{
+              logId: entry.id,
+              expectedHash: previousHash ?? "",
+              actualHash: entry.previousLogHash ?? "",
+              timestamp: entry.timestamp,
+            }],
           };
         }
 
@@ -233,12 +244,17 @@ export class AuditLogger {
       return {
         isValid: true,
         totalLogs: entries.length,
+        scannedLogs: entries.length,
+        corruptedLogs: 0,
+        errors: [],
       };
     } catch (error) {
       return {
         isValid: false,
         totalLogs: 0,
-        error: error instanceof Error ? error.message : "Unknown error",
+        scannedLogs: 0,
+        corruptedLogs: 0,
+        errors: [],
       };
     }
   }
@@ -287,9 +303,9 @@ export class AuditLogger {
         log.id,
         log.timestamp,
         log.eventType,
-        log.userId ?? "",
+        log.userId?.toString() ?? "",
         log.resourceType,
-        log.resourceId,
+        log.resourceId.toString(),
         log.action,
         log.details ? JSON.stringify(log.details) : "",
         log.ipAddress ?? "",
@@ -400,7 +416,7 @@ export class AuditLogger {
     id: string;
     timestamp: string;
     event_type: string;
-    user_id: string | null;
+    user_id: number | null;
     resource_type: string;
     resource_id: string;
     action: string;

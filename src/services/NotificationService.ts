@@ -96,7 +96,7 @@ export class NotificationService {
       // Log the creation
       this.auditLogger.log({
         eventType: "notification.create",
-        userId: String(input.userId),
+        userId: input.userId,
         resourceType: "notification",
         resourceId: String(notification.id),
         action: "create",
@@ -174,7 +174,7 @@ export class NotificationService {
       resourceType: "notification",
       resourceId: String(userId),
       action: "update",
-      userId: String(userId),
+      userId: userId,
       details: { count },
     });
     return count;
@@ -234,7 +234,7 @@ export class NotificationService {
       resourceType: "notification_preferences",
       resourceId: String(userId),
       action: "update",
-      userId: String(userId),
+      userId: userId,
       details: { changes },
     });
 

@@ -4,6 +4,7 @@ import Database from "better-sqlite3-multiple-ciphers";
 import {
   buildDeterministicUser,
   deriveTestPassword,
+  // @ts-expect-error - testCredentials.js doesn't have types
 } from "../../tests/helpers/testCredentials.js";
 import { databaseManager } from "../db/database";
 import { SessionRepository } from "../repositories/SessionRepository";

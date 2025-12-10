@@ -137,7 +137,7 @@ describe.sequential("AuditLogger", () => {
     it("stores all provided fields correctly", () => {
       auditLogger.log({
         eventType: "case.update",
-        userId: "user123",
+        userId: 123,
         resourceType: "case",
         resourceId: "456",
         action: "update",
@@ -426,15 +426,15 @@ describe.sequential("AuditLogger", () => {
     it("filters by user ID", () => {
       auditLogger.log({
         eventType: "case.read",
-        userId: "user123",
+        userId: 123,
         resourceType: "case",
         resourceId: "2",
         action: "read",
       });
 
-      const logs = auditLogger.query({ userId: "user123" });
+      const logs = auditLogger.query({ userId: 123 });
       expect(logs).toHaveLength(1);
-      expect(logs[0].userId).toBe("user123");
+      expect(logs[0].userId).toBe(123);
     });
 
     it("limits results", () => {
@@ -583,7 +583,7 @@ describe.sequential("AuditLogger", () => {
     it("JSON export preserves all fields", () => {
       auditLogger.log({
         eventType: "case.update",
-        userId: "user456",
+        userId: 456,
         resourceType: "case",
         resourceId: "99",
         action: "update",
@@ -594,10 +594,10 @@ describe.sequential("AuditLogger", () => {
         errorMessage: "Permission denied",
       });
 
-      const json = auditLogger.exportLogs("json", { userId: "user456" });
+      const json = auditLogger.exportLogs("json", { userId: 456 });
       const parsed = JSON.parse(json);
 
-      expect(parsed[0].userId).toBe("user456");
+      expect(parsed[0].userId).toBe(456);
       expect(parsed[0].ipAddress).toBe("10.0.0.1");
       expect(parsed[0].userAgent).toBe("TestAgent/1.0");
       expect(parsed[0].success).toBe(false);

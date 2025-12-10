@@ -73,7 +73,7 @@ export class GdprService {
       // Audit log
       this.auditLogger.log({
         eventType: "gdpr.export",
-        userId: userId.toString(),
+        userId: userId,
         resourceType: "user_data",
         resourceId: userId.toString(),
         action: "export",
@@ -92,7 +92,7 @@ export class GdprService {
       // Audit log failure
       this.auditLogger.log({
         eventType: "gdpr.export",
-        userId: userId.toString(),
+        userId: userId,
         resourceType: "user_data",
         resourceId: userId.toString(),
         action: "export",
@@ -130,7 +130,7 @@ export class GdprService {
       // Audit log (created AFTER deletion so it's preserved)
       this.auditLogger.log({
         eventType: "gdpr.erasure",
-        userId: userId.toString(),
+        userId: userId,
         resourceType: "user_data",
         resourceId: userId.toString(),
         action: "delete",
@@ -151,7 +151,7 @@ export class GdprService {
       // Audit log failure
       this.auditLogger.log({
         eventType: "gdpr.deletion_request",
-        userId: userId.toString(),
+        userId: userId,
         resourceType: "user_data",
         resourceId: userId.toString(),
         action: "delete",

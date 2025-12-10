@@ -260,7 +260,7 @@ describe("GDPR Integration Tests", () => {
       // Create audit log (should be preserved) - use auditLogger
       auditLogger.log({
         eventType: "case.create",
-        userId: testUserId.toString(),
+        userId: testUserId,
         resourceType: "case",
         resourceId: caseId.toString(),
         action: "create",

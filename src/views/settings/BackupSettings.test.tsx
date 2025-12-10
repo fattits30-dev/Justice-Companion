@@ -11,7 +11,7 @@ import { BackupSettingsTab } from "./BackupSettings";
 // Mock the useAuth hook to provide user data
 vi.mock("../../contexts/AuthContext.tsx", () => ({
   useAuth: vi.fn(),
-  AuthProvider: ({ children }) => <>{children}</>,
+  AuthProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
 // Mock backup data
 const mockBackups = [

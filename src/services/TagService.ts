@@ -38,7 +38,7 @@ export class TagService {
       this.auditLogger.log({
         eventType: "tag.create",
         action: "create",
-        userId: userId.toString(),
+        userId: userId,
         resourceType: "tag",
         resourceId: tagId.toString(),
         details: { name: input.name, color: input.color },
@@ -150,7 +150,7 @@ export class TagService {
     this.auditLogger.log({
       eventType: "tag.update",
       action: "update",
-      userId: tag.userId.toString(),
+      userId: tag.userId,
       resourceType: "tag",
       resourceId: tagId.toString(),
       details: input as Record<string, unknown>,
@@ -187,7 +187,7 @@ export class TagService {
     this.auditLogger.log({
       eventType: "tag.delete",
       action: "delete",
-      userId: tag.userId.toString(),
+      userId: tag.userId,
       resourceType: "tag",
       resourceId: tagId.toString(),
       details: { name: tag.name, usageCount: tag.usageCount },
@@ -211,7 +211,7 @@ export class TagService {
       this.auditLogger.log({
         eventType: "tag.apply",
         action: "create",
-        userId: userId.toString(),
+        userId: userId,
         resourceType: "evidence",
         resourceId: evidenceId.toString(),
         details: { tagId },
@@ -236,7 +236,7 @@ export class TagService {
       this.auditLogger.log({
         eventType: "tag.remove",
         action: "delete",
-        userId: userId.toString(),
+        userId: userId,
         resourceType: "evidence",
         resourceId: evidenceId.toString(),
         details: { tagId },

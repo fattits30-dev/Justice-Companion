@@ -102,7 +102,7 @@ export class SearchService {
       resourceType: "search",
       resourceId: "global",
       action: "read",
-      userId: userId.toString(),
+      userId: userId,
       details: {
         query: query.query,
         filters: query.filters,
@@ -170,7 +170,7 @@ export class SearchService {
         resourceType: "search",
         resourceId: "global",
         action: "read",
-        userId: userId.toString(),
+        userId: userId,
         details: {
           query: query.query,
           filters: query.filters,
@@ -465,9 +465,7 @@ export class SearchService {
         caseId: note.caseId ?? undefined,
         caseTitle: caseItem?.title,
         createdAt: note.createdAt,
-        metadata: {
-          isPinned: note.isPinned,
-        },
+        metadata: {},
       });
     }
 
@@ -780,7 +778,7 @@ export class SearchService {
       resourceType: "search.saved",
       resourceId: String(result.lastInsertRowid),
       action: "create",
-      userId: userId.toString(),
+      userId: userId,
       details: {
         name,
         query,
@@ -822,7 +820,7 @@ export class SearchService {
         resourceType: "search.saved",
         resourceId: searchId.toString(),
         action: "delete",
-        userId: userId.toString(),
+        userId: userId,
         success: true,
       });
     }

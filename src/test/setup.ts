@@ -3,7 +3,6 @@ import * as matchers from "@testing-library/jest-dom/matchers";
 import { vi } from "vitest";
 
 // Extend the global expect with jest-dom matchers
-// @ts-expect-error - expect is global with globals: true
 expect.extend(matchers);
 
 // Note: React Testing Library 16+ automatically cleans up after each test
