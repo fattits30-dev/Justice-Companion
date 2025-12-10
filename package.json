@@ -31,7 +31,7 @@
     "e2e:report": "playwright show-report"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.27.3",
+    "@anthropic-ai/sdk": "^0.70.0",
     "@huggingface/inference": "^2.8.1",
     "@sentry/react": "10.27.0",
     "@tanstack/react-query": "^5.62.3",
