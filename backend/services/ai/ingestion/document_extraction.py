@@ -6,7 +6,7 @@ import json
 import logging
 import re
 import textwrap
-from typing import Awaitable, Callable, List, Optional
+from typing import Awaitable, Callable, List, Literal, Optional
 
 from backend.services.ai.models import (
     ChatMessage,
@@ -160,7 +160,9 @@ def _build_user_prompt(
     ).strip()
 
 
-def _detect_case_type(response_text: str) -> str:
+def _detect_case_type(
+    response_text: str,
+) -> Literal["employment", "housing", "consumer", "other"]:
     response_lower = response_text.lower()
     if any(
         word in response_lower

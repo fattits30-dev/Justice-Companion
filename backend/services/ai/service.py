@@ -22,7 +22,7 @@ Security:
 """
 
 import logging
-from typing import Any, AsyncIterator, Callable, Dict, List, Optional
+from typing import Any, AsyncIterator, Callable, Dict, List, Optional, cast
 
 from fastapi import HTTPException
 
@@ -292,7 +292,9 @@ class UnifiedAIService:
                 )
             if on_error:
                 on_error(exc)
-            raise HTTPException(status_code=500, detail=f"Streaming failed: {str(exc)}")
+            raise HTTPException(
+                status_code=500, detail=f"Streaming failed: {str(exc)}"
+            ) from exc
 
     async def _stream_anthropic_chat(
         self, messages: List[ChatMessage]
@@ -349,7 +351,9 @@ class UnifiedAIService:
         ]
 
         logger.info(
-            f"[DEBUG] Creating HuggingFace stream with model={self.config.model}, messages={len(formatted_messages)}"
+            "[DEBUG] Creating HuggingFace stream with model=%s, messages=%s",
+            self.config.model,
+            len(formatted_messages),
         )
 
         # HuggingFace InferenceClient uses OpenAI-compatible API
@@ -369,18 +373,20 @@ class UnifiedAIService:
         chunk_count = 0
         async for chunk in stream:
             chunk_count += 1
-            logger.info(f"[DEBUG] Chunk #{chunk_count}: {chunk}")
+            logger.info("[DEBUG] Chunk #%s: %s", chunk_count, chunk)
             if hasattr(chunk, "choices") and chunk.choices:
                 delta = chunk.choices[0].delta
                 if hasattr(delta, "content") and delta.content:
-                    logger.info(f"[DEBUG] Yielding content: {delta.content}")
+                    logger.info("[DEBUG] Yielding content: %s", delta.content)
                     yield delta.content
                 else:
-                    logger.info(f"[DEBUG] Delta has no content: {delta}")
+                    logger.info("[DEBUG] Delta has no content: %s", delta)
             else:
                 logger.info("[DEBUG] Chunk has no choices")
 
-        logger.info(f"[DEBUG] HuggingFace stream complete. Total chunks: {chunk_count}")
+        logger.info(
+            "[DEBUG] HuggingFace stream complete. Total chunks: %s", chunk_count
+        )
 
     async def _stream_openai_compatible_chat(
         self, messages: List[ChatMessage]
@@ -408,26 +414,28 @@ class UnifiedAIService:
         }
 
         logger.info(
-            f"[DEBUG] Creating stream with params: model={self.config.model}, messages={len(formatted_messages)}"
+            "[DEBUG] Creating stream with params: model=%s, messages=%s",
+            self.config.model,
+            len(formatted_messages),
         )
         stream = await self.client.chat.completions.create(**request_params)
-        logger.info(f"[DEBUG] Stream created, type: {type(stream)}")
+        logger.info("[DEBUG] Stream created, type: %s", type(stream))
 
         chunk_count = 0
         async for chunk in stream:
             chunk_count += 1
-            logger.info(f"[DEBUG] Received chunk #{chunk_count}: {chunk}")
+            logger.info("[DEBUG] Received chunk #%s: %s", chunk_count, chunk)
             if hasattr(chunk, "choices") and chunk.choices:
                 delta = chunk.choices[0].delta
                 if hasattr(delta, "content") and delta.content:
-                    logger.info(f"[DEBUG] Yielding content: {delta.content}")
+                    logger.info("[DEBUG] Yielding content: %s", delta.content)
                     yield delta.content
                 else:
-                    logger.info(f"[DEBUG] Delta has no content: {delta}")
+                    logger.info("[DEBUG] Delta has no content: %s", delta)
             else:
                 logger.info("[DEBUG] Chunk has no choices")
 
-        logger.info(f"[DEBUG] Stream complete. Total chunks: {chunk_count}")
+        logger.info("[DEBUG] Stream complete. Total chunks: %s", chunk_count)
 
     async def chat(self, messages: List[ChatMessage]) -> str:
         """
@@ -460,8 +468,10 @@ class UnifiedAIService:
             )
             if cached_response:
                 logger.info(
-                    f"Cache HIT for {self.config.provider}/{self.config.model} "
-                    f"({len(messages)} messages)"
+                    "Cache HIT for %s/%s (%s messages)",
+                    self.config.provider,
+                    self.config.model,
+                    len(messages),
                 )
                 return cached_response
 
@@ -469,7 +479,9 @@ class UnifiedAIService:
             # Get timeout for chat operation
             timeout = self._get_timeout("chat")
             logger.debug(
-                f"Chat operation with {self.config.provider} has {timeout}s timeout"
+                "Chat operation with %s has %ss timeout",
+                self.config.provider,
+                timeout,
             )
 
             # Route to provider-specific method with timeout
@@ -500,8 +512,10 @@ class UnifiedAIService:
                     response=response,
                 )
                 logger.debug(
-                    f"Cached response for {self.config.provider}/{self.config.model} "
-                    f"({len(messages)} messages)"
+                    "Cached response for %s/%s (%s messages)",
+                    self.config.provider,
+                    self.config.model,
+                    len(messages),
                 )
 
             return response
@@ -520,7 +534,9 @@ class UnifiedAIService:
                     success=False,
                     error_message=f"Chat failed for {self.config.provider}: {str(exc)}",
                 )
-            raise HTTPException(status_code=500, detail=f"Chat failed: {str(exc)}")
+            raise HTTPException(
+                status_code=500, detail=f"Chat failed: {str(exc)}"
+            ) from exc
 
     async def _chat_anthropic_non_streaming(self, messages: List[ChatMessage]) -> str:
         """Non-streaming chat for Anthropic."""
@@ -562,7 +578,7 @@ class UnifiedAIService:
             {"role": msg.role, "content": msg.content} for msg in messages
         ]
 
-        def sync_chat_completion():
+        def sync_chat_completion() -> str:
             """Synchronous chat completion call."""
             response = self.client.chat_completion(
                 model=self.config.model,
@@ -571,14 +587,17 @@ class UnifiedAIService:
                 max_tokens=self.config.max_tokens or 2048,
                 top_p=self.config.top_p or 0.9,
             )
-            return response.choices[0].message.content or ""
+            content = response.choices[0].message.content
+            if content is None:
+                return ""
+            return cast(str, content)
 
         # Run sync call in thread pool to avoid blocking event loop
         loop = asyncio.get_running_loop()
         executor = ThreadPoolExecutor(max_workers=1)
         try:
             result = await loop.run_in_executor(executor, sync_chat_completion)
-            return result
+            return cast(str, result)
         finally:
             executor.shutdown(wait=False)
 
@@ -598,7 +617,10 @@ class UnifiedAIService:
             top_p=self.config.top_p or 0.9,
         )
 
-        return completion.choices[0].message.content or ""
+        content = completion.choices[0].message.content
+        if content is None:
+            return ""
+        return cast(str, content)
 
     async def analyze_case(self, request: CaseAnalysisRequest) -> CaseAnalysisResponse:
         """Analyze a case and provide structured legal analysis."""
@@ -622,7 +644,7 @@ class UnifiedAIService:
                 )
             raise HTTPException(
                 status_code=500, detail=f"Case analysis failed: {str(exc)}"
-            )
+            ) from exc
 
     async def analyze_evidence(
         self, request: EvidenceAnalysisRequest
@@ -648,7 +670,7 @@ class UnifiedAIService:
                 )
             raise HTTPException(
                 status_code=500, detail=f"Evidence analysis failed: {str(exc)}"
-            )
+            ) from exc
 
     async def draft_document(
         self, request: DocumentDraftRequest
@@ -684,7 +706,7 @@ class UnifiedAIService:
                 )
             raise HTTPException(
                 status_code=500, detail=f"Document drafting failed: {str(exc)}"
-            )
+            ) from exc
 
     async def extract_case_data_from_document(
         self,
@@ -718,4 +740,4 @@ class UnifiedAIService:
                 )
             raise HTTPException(
                 status_code=500, detail=f"Document extraction failed: {str(exc)}"
-            )
+            ) from exc
