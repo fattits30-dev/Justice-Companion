@@ -54,7 +54,7 @@
     "jspdf": "^3.0.4",
     "lodash": "^4.17.21",
     "lru-cache": "^11.0.2",
-    "lucide-react": "^0.468.0",
+    "lucide-react": "^0.554.0",
     "mammoth": "^1.9.0",
     "openai": "^4.75.2",
     "pdfkit": "^0.15.1",
