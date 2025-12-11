@@ -339,3 +339,12 @@ e2e-tests/screenshots/
 /blob-report/
 /playwright/.cache/
 /playwright/.auth/
+
+# ============================================================================
+# Runtime Data & Test Artifacts
+# ============================================================================
+# Runtime database files
+data/
+
+# Test data and output files  
+test-data/
