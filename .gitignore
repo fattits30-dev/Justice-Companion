@@ -299,6 +299,7 @@ justice.db
 .localclaude/
 .justice-companion/
 .serena/
+serena_agent-*/
 
 # Python (shouldn't be in TypeScript project)
 .venv/
@@ -346,5 +347,9 @@ e2e-tests/screenshots/
 # Runtime database files
 data/
 
-# Test data and output files  
+# Test data and output files
 test-data/
+
+# Runtime uploads and logs
+uploads/
+logs/
