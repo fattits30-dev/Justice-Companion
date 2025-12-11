@@ -6,7 +6,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '../lib/apiClient';
-import { logger } from '../lib/logger';
+
 
 export interface DashboardStats {
   totalCases: number;

@@ -18,7 +18,7 @@ import {
   Settings,
   XCircle,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Badge } from "../../components/ui/Badge.tsx";
 import { Button } from "../../components/ui/Button.tsx";
 import { Card } from "../../components/ui/Card.tsx";
@@ -33,16 +33,6 @@ interface ProviderMetadata {
   requires_api_key?: boolean;
   supports_streaming: boolean;
   default_endpoint: string;
-}
-
-interface AIConfig {
-  provider: string;
-  api_key: string;
-  model: string;
-  endpoint?: string;
-  temperature?: number;
-  max_tokens?: number;
-  enabled: boolean;
 }
 
 export function AIServiceSettingsTab() {
@@ -73,16 +63,16 @@ export function AIServiceSettingsTab() {
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [loadData]);
 
   // When selected provider changes, update form fields
   useEffect(() => {
     if (selectedProvider && providers[selectedProvider]) {
       loadProviderConfig(selectedProvider);
     }
-  }, [selectedProvider, providers]);
+  }, [selectedProvider, providers, loadProviderConfig]);
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     try {
@@ -115,9 +105,9 @@ export function AIServiceSettingsTab() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [selectedProvider]);
 
-  const loadProviderConfig = async (provider: string) => {
+  const loadProviderConfig = useCallback(async (provider: string) => {
     try {
       const res = await apiClient.aiConfig.get(provider);
       if (res.success && res.data) {
@@ -141,7 +131,7 @@ export function AIServiceSettingsTab() {
       setModel(providers[provider]?.default_model || "");
       setEndpoint(providers[provider]?.default_endpoint || "");
     }
-  };
+  }, [providers]);
 
   const handleSave = async () => {
     if (!selectedProvider) {

@@ -147,7 +147,7 @@ export function ChatView() {
     const fetchAIConfig = async () => {
       try {
         const sessionId = localStorage.getItem("sessionId");
-        if (!sessionId) return;
+        if (!sessionId) { return; }
 
         apiClient.setSessionId(sessionId);
         const result = await apiClient.aiConfig.getActive();
@@ -179,7 +179,7 @@ export function ChatView() {
 
   const handleModelChange = useCallback(
     async (newModel: string) => {
-      if (!currentProvider || newModel === selectedModel) return;
+      if (!currentProvider || newModel === selectedModel) { return; }
 
       try {
         const sessionId = localStorage.getItem("sessionId");
@@ -221,7 +221,7 @@ export function ChatView() {
   );
 
   const handleSend = useCallback(async () => {
-    if (!input.trim() || isStreaming) return;
+    if (!input.trim() || isStreaming) { return; }
 
     const messageText = input.trim();
     setInput("");
@@ -298,7 +298,7 @@ export function ChatView() {
 
   const handleAICaseConfirm = useCallback(
     async (caseData: any) => {
-      if (!messageForCaseCreation) return;
+      if (!messageForCaseCreation) { return; }
 
       setIsCreatingCase(true);
 
@@ -372,13 +372,13 @@ export function ChatView() {
     fileInput.onchange = async (e) => {
       const target = e.target as HTMLInputElement;
       const file = target.files?.[0];
-      if (!file) return;
+      if (!file) { return; }
 
       setIsAnalyzingDocument(true);
 
       try {
         const sessionId = localStorage.getItem("sessionId");
-        if (!sessionId) throw new Error("No active session");
+        if (!sessionId) { throw new Error("No active session"); }
 
         apiClient.setSessionId(sessionId);
         const filename = file.name;
@@ -475,10 +475,10 @@ export function ChatView() {
 
     document.body.appendChild(fileInput);
     fileInput.click();
-  }, [activeCaseId, setMessages]);
+  }, [setMessages]);
 
   const handleClearChat = useCallback(() => {
-    if (messages.length === 0) return;
+    if (messages.length === 0) { return; }
 
     clearStreamingMessages();
     setCurrentConversationId(null);

@@ -248,7 +248,7 @@ export class AuditLogger {
         corruptedLogs: 0,
         errors: [],
       };
-    } catch (error) {
+    } catch (_error) {
       return {
         isValid: false,
         totalLogs: 0,

@@ -35,7 +35,7 @@ import { AuthProvider, useAuth } from "./contexts/AuthContext.tsx";
 import { queryClient } from "./lib/queryClient.ts";
 import { useDashboardStats } from "./hooks/useDashboardStats.ts";
 import { routerFutureFlags } from "./router/futureFlags.ts";
-import { logger } from "./lib/logger.ts";
+
 
 // Lazy load views for code splitting
 const Dashboard = lazy(() =>

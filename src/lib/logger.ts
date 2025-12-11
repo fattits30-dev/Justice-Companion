@@ -148,7 +148,7 @@ export class BrowserLogger {
    * Log info message (dev only by default).
    */
   info(message: string, context?: any): void {
-    if (!this.isDevelopment) return;
+    if (!this.isDevelopment) { return; }
 
     const timestamp = formatTimestamp();
     const ctx = this.processContext(context);
@@ -159,7 +159,7 @@ export class BrowserLogger {
    * Log debug message (dev only).
    */
   debug(message: string, context?: any): void {
-    if (!this.isDevelopment) return;
+    if (!this.isDevelopment) { return; }
 
     const timestamp = formatTimestamp();
     const ctx = this.processContext(context);
@@ -170,7 +170,7 @@ export class BrowserLogger {
    * Generic log method with custom level.
    */
   log(level: string, message: string, context?: any): void {
-    if (!this.isDevelopment && level === LogLevel.DEBUG) return;
+    if (!this.isDevelopment && level === LogLevel.DEBUG) { return; }
 
     const timestamp = formatTimestamp();
     const ctx = this.processContext(context);
