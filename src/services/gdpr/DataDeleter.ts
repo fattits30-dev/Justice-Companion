@@ -60,7 +60,7 @@ export class DataDeleter {
     // Count preserved records BEFORE deletion (CASCADE will delete consents)
     const preservedAuditLogs = this.db
       .prepare("SELECT COUNT(*) as count FROM audit_logs WHERE user_id = ?")
-      .get(userId.toString()) as { count: number };
+      .get(userId) as { count: number };
 
     const preservedConsents = this.db
       .prepare("SELECT COUNT(*) as count FROM consents WHERE user_id = ?")

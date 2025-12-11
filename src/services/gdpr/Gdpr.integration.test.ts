@@ -190,7 +190,7 @@ describe("GDPR Integration Tests", () => {
         .all() as any[];
 
       expect(logs).toHaveLength(1);
-      expect(logs[0].user_id).toBe(testUserId.toString());
+      expect(Number(logs[0].user_id)).toBe(testUserId);
       expect(logs[0].success).toBe(1);
     });
   });
@@ -285,7 +285,7 @@ describe("GDPR Integration Tests", () => {
       // Verify audit logs preserved
       const auditLogs = db
         .prepare(`SELECT * FROM audit_logs WHERE user_id = ?`)
-        .all(testUserId.toString()) as any[];
+        .all(testUserId) as any[];
       expect(auditLogs.length).toBeGreaterThan(0);
       expect(result.preservedAuditLogs).toBe(auditLogs.length);
 
@@ -338,8 +338,9 @@ describe("GDPR Integration Tests", () => {
         .all() as any[];
 
       expect(logs.length).toBeGreaterThan(0);
+
       const deletionLog = logs.find(
-        (log) => log.user_id === testUserId.toString(),
+        (log) => Number(log.user_id) === testUserId,
       );
       expect(deletionLog).toBeDefined();
       expect(deletionLog.success).toBe(1);
