@@ -61,17 +61,7 @@ export function AIServiceSettingsTab() {
     message: string;
   } | null>(null);
 
-  useEffect(() => {
-    loadData();
-  }, [loadData]);
-
-  // When selected provider changes, update form fields
-  useEffect(() => {
-    if (selectedProvider && providers[selectedProvider]) {
-      loadProviderConfig(selectedProvider);
-    }
-  }, [selectedProvider, providers, loadProviderConfig]);
-
+  // Load data callback
   const loadData = useCallback(async () => {
     setIsLoading(true);
     setError(null);
@@ -107,6 +97,7 @@ export function AIServiceSettingsTab() {
     }
   }, [selectedProvider]);
 
+  // Load provider config callback
   const loadProviderConfig = useCallback(async (provider: string) => {
     try {
       const res = await apiClient.aiConfig.get(provider);
@@ -132,6 +123,17 @@ export function AIServiceSettingsTab() {
       setEndpoint(providers[provider]?.default_endpoint || "");
     }
   }, [providers]);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
+
+  // When selected provider changes, update form fields
+  useEffect(() => {
+    if (selectedProvider && providers[selectedProvider]) {
+      loadProviderConfig(selectedProvider);
+    }
+  }, [selectedProvider, providers, loadProviderConfig]);
 
   const handleSave = async () => {
     if (!selectedProvider) {
