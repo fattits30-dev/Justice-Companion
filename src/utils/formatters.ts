@@ -81,7 +81,8 @@ export function formatDate(
 ): string {
   const date =
     typeof dateString === "string" ? new Date(dateString) : dateString;
-  return date.toLocaleDateString(undefined, options);
+  // Use UK locale for consistent formatting across all environments
+  return date.toLocaleDateString("en-GB", options);
 }
 
 /**
@@ -96,7 +97,8 @@ export function formatTime(
 ): string {
   const date =
     typeof dateString === "string" ? new Date(dateString) : dateString;
-  return date.toLocaleTimeString(undefined, options);
+  // Use UK locale for consistent formatting across all environments
+  return date.toLocaleTimeString("en-GB", options);
 }
 
 /**
@@ -119,7 +121,8 @@ export function formatDateTime(
     minute: "2-digit",
     ...options,
   };
-  return date.toLocaleString(undefined, defaultOptions);
+  // Use UK locale for consistent formatting across all environments
+  return date.toLocaleString("en-GB", defaultOptions);
 }
 
 /**

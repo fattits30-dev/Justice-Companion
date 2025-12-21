@@ -291,7 +291,8 @@ describe.sequential("AuditLogger", () => {
       const report = auditLogger.verifyIntegrity();
       expect(report.isValid).toBe(true);
       expect(report.totalLogs).toBe(10);
-      expect(report.errors.length).toBeUndefined();
+      // No errors when chain is valid
+      expect(report.errors.length).toBe(0);
     });
 
     it("detects tampered integrity hash", () => {
@@ -319,7 +320,8 @@ describe.sequential("AuditLogger", () => {
 
       const report = auditLogger.verifyIntegrity();
       expect(report.isValid).toBe(false);
-      expect(report.errors.length).toBe(0);
+      // Should have at least one error describing the tampered hash
+      expect(report.errors.length).toBeGreaterThan(0);
     });
 
     it("detects broken chain link", () => {
@@ -357,7 +359,8 @@ describe.sequential("AuditLogger", () => {
 
       const report = auditLogger.verifyIntegrity();
       expect(report.isValid).toBe(false);
-      expect(report.errors.length).toBe(0);
+      // Should have at least one error describing the tampered data
+      expect(report.errors.length).toBeGreaterThan(0);
     });
 
     it("returns valid:true for empty audit log", () => {

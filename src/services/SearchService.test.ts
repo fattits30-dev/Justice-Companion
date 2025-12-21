@@ -164,8 +164,11 @@ describe("SearchService", () => {
       expect(mockAuditLogger.log).toHaveBeenCalledWith(
         expect.objectContaining({
           eventType: "query.paginated",
+          resourceType: "search",
+          resourceId: "global",
           action: "read",
-          userId: "1",
+          userId: 1,
+          success: true,
           details: expect.objectContaining({
             query: "error test",
           }),
@@ -207,9 +210,11 @@ describe("SearchService", () => {
       expect(mockAuditLogger.log).toHaveBeenCalledWith(
         expect.objectContaining({
           eventType: "query.paginated",
+          resourceType: "search.saved",
           action: "create",
           resourceId: "1",
-          userId: "1",
+          userId: 1,
+          success: true,
           details: expect.objectContaining({
             name: "My Search",
           }),
@@ -266,9 +271,11 @@ describe("SearchService", () => {
       expect(mockAuditLogger.log).toHaveBeenCalledWith(
         expect.objectContaining({
           eventType: "query.paginated",
+          resourceType: "search.saved",
           action: "delete",
           resourceId: "5",
-          userId: "1",
+          userId: 1,
+          success: true,
         }),
       );
     });

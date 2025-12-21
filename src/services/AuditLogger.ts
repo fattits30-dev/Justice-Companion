@@ -444,7 +444,8 @@ export class AuditLogger {
       id: row.id,
       timestamp: row.timestamp,
       eventType: row.event_type as AuditLogEntry["eventType"],
-      userId: row.user_id,
+      // Ensure userId is returned as an integer (SQLite may return as float)
+      userId: row.user_id != null ? Math.floor(row.user_id) : null,
       resourceType: row.resource_type,
       resourceId: row.resource_id,
       action: row.action as AuditLogEntry["action"],

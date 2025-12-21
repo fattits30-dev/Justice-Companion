@@ -93,13 +93,15 @@ describe("formatters", () => {
 
   describe("formatDate", () => {
     it("should format date string correctly", () => {
-      const expected = new Date("2023-12-15").toLocaleDateString();
+      // formatDate uses UK locale (en-GB) for consistent formatting
+      const expected = new Date("2023-12-15").toLocaleDateString("en-GB");
       expect(formatDate("2023-12-15")).toBe(expected);
     });
 
     it("should format Date object correctly", () => {
       const date = new Date("2023-12-15");
-      expect(formatDate(date)).toBe(date.toLocaleDateString());
+      // formatDate uses UK locale (en-GB) for consistent formatting
+      expect(formatDate(date)).toBe(date.toLocaleDateString("en-GB"));
     });
 
     it("should accept format options", () => {

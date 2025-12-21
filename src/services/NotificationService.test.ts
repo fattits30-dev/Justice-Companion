@@ -88,7 +88,7 @@ describe("NotificationService", () => {
       expect(logSpy).toHaveBeenCalledWith(
         expect.objectContaining({
           eventType: "notification.create",
-          userId: "1",
+          userId: 1,
           resourceType: "notification",
           resourceId: "1",
           action: "create",
@@ -187,7 +187,7 @@ describe("NotificationService", () => {
       expect(logSpy).toHaveBeenCalledWith(
         expect.objectContaining({
           eventType: "notification.read_all",
-          userId: "1",
+          userId: 1,
           resourceId: "1",
           action: "update",
           details: { count: 5 },

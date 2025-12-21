@@ -119,7 +119,7 @@ describe("AuthorizationMiddleware", () => {
 
       expect(mockAuditLogger.log).toHaveBeenCalledWith({
         eventType: "authorization.denied",
-        userId: "456",
+        userId: 456,
         resourceType: "case",
         resourceId: "123",
         action: "read",
@@ -155,7 +155,7 @@ describe("AuthorizationMiddleware", () => {
 
       expect(mockAuditLogger.log).toHaveBeenCalledWith({
         eventType: "authorization.denied",
-        userId: "456",
+        userId: 456,
         resourceType: "case",
         resourceId: "123",
         action: "read",
@@ -217,7 +217,7 @@ describe("AuthorizationMiddleware", () => {
 
       expect(mockAuditLogger.log).toHaveBeenCalledWith({
         eventType: "authorization.denied",
-        userId: "1",
+        userId: 1,
         resourceType: "admin",
         resourceId: "system",
         action: "read",
@@ -279,7 +279,7 @@ describe("AuthorizationMiddleware", () => {
 
       expect(mockAuditLogger.log).toHaveBeenCalledWith({
         eventType: "authorization.denied",
-        userId: "1",
+        userId: 1,
         resourceType: "user",
         resourceId: "1",
         action: "read",
@@ -358,7 +358,7 @@ describe("AuthorizationMiddleware", () => {
 
       expect(mockAuditLogger.log).toHaveBeenCalledWith({
         eventType: "authorization.denied",
-        userId: "1",
+        userId: 1,
         resourceType: "user",
         resourceId: "999",
         action: "update",
@@ -455,7 +455,7 @@ describe("AuthorizationMiddleware", () => {
 
       expect(mockAuditLogger.log).toHaveBeenCalledWith(
         expect.objectContaining({
-          userId: "99999",
+          userId: 99999,
           resourceId: "12345",
         }),
       );

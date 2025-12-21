@@ -104,23 +104,23 @@ describe("Facts Repositories Integration Tests", () => {
 
   describe("Creating both fact types for a case", () => {
     it("should create user facts and case facts for the same case", () => {
-      // Create user facts (personal information)
+      // Create user facts (personal information) - use valid fact_type values
       userFactsRepo.create({
         caseId: 1,
         factContent: "Name: Jane Smith",
-        factCategory: "timeline",
+        factCategory: "personal",
       });
 
       userFactsRepo.create({
         caseId: 1,
         factContent: "Email: jane.smith@example.com",
-        factCategory: "witness",
+        factCategory: "contact",
       });
 
       userFactsRepo.create({
         caseId: 1,
         factContent: "Salary: $75,000/year",
-        factCategory: "evidence",
+        factCategory: "financial",
       });
 
       // Create case facts (case-specific information)
@@ -166,7 +166,7 @@ describe("Facts Repositories Integration Tests", () => {
       const userFact = userFactsRepo.create({
         caseId: 1,
         factContent: "SSN: 123-45-6789",
-        factCategory: "timeline",
+        factCategory: "personal",  // Valid user_facts fact_type
       });
 
       const caseFact = caseFactsRepo.create({
@@ -204,23 +204,23 @@ describe("Facts Repositories Integration Tests", () => {
 
   describe("Filtering and categorization", () => {
     beforeEach(() => {
-      // Create diverse set of facts
+      // Create diverse set of facts - use valid user_facts fact_type values
       userFactsRepo.create({
         caseId: 1,
         factContent: "Personal info 1",
-        factCategory: "timeline",
+        factCategory: "personal",
       });
 
       userFactsRepo.create({
         caseId: 1,
         factContent: "Personal info 2",
-        factCategory: "timeline",
+        factCategory: "personal",
       });
 
       userFactsRepo.create({
         caseId: 1,
         factContent: "Employment info",
-        factCategory: "location",
+        factCategory: "employment",
       });
 
       caseFactsRepo.create({
@@ -274,17 +274,17 @@ describe("Facts Repositories Integration Tests", () => {
 
   describe("Cascade delete behavior", () => {
     it("should delete both user facts and case facts when case is deleted", () => {
-      // Create facts
+      // Create facts - use valid user_facts fact_type values
       userFactsRepo.create({
         caseId: 1,
         factContent: "User fact 1",
-        factCategory: "timeline",
+        factCategory: "personal",
       });
 
       userFactsRepo.create({
         caseId: 1,
         factContent: "User fact 2",
-        factCategory: "location",
+        factCategory: "financial",
       });
 
       caseFactsRepo.create({
@@ -317,7 +317,7 @@ describe("Facts Repositories Integration Tests", () => {
       userFactsRepo.create({
         caseId: 1,
         factContent: "User fact",
-        factCategory: "timeline",
+        factCategory: "personal",
       });
 
       caseFactsRepo.create({
@@ -341,7 +341,7 @@ describe("Facts Repositories Integration Tests", () => {
       const userFact = userFactsRepo.create({
         caseId: 1,
         factContent: "User fact",
-        factCategory: "timeline",
+        factCategory: "personal",
       });
 
       const caseFact = caseFactsRepo.create({
@@ -373,7 +373,7 @@ describe("Facts Repositories Integration Tests", () => {
       const userFact = userFactsRepo.create({
         caseId: 1,
         factContent: "User fact",
-        factCategory: "timeline",
+        factCategory: "personal",
       });
 
       const caseFact = caseFactsRepo.create({
@@ -410,41 +410,41 @@ describe("Facts Repositories Integration Tests", () => {
 
   describe("Real-world case scenario", () => {
     it("should handle a complete employment discrimination case with mixed facts", () => {
-      // User personal facts (P0 encryption - direct PII)
+      // User personal facts (P0 encryption - direct PII) - valid fact_type values
       userFactsRepo.create({
         caseId: 1,
         factContent: "Full Name: Jane Elizabeth Smith",
-        factCategory: "timeline",
+        factCategory: "personal",
       });
 
       userFactsRepo.create({
         caseId: 1,
         factContent: "DOB: 1985-03-15",
-        factCategory: "timeline",
+        factCategory: "personal",
       });
 
       userFactsRepo.create({
         caseId: 1,
         factContent: "Phone: (555) 123-4567",
-        factCategory: "witness",
+        factCategory: "contact",
       });
 
       userFactsRepo.create({
         caseId: 1,
         factContent: "Email: jane.smith@email.com",
-        factCategory: "witness",
+        factCategory: "contact",
       });
 
       userFactsRepo.create({
         caseId: 1,
         factContent: "Job Title: Senior Software Engineer",
-        factCategory: "location",
+        factCategory: "employment",
       });
 
       userFactsRepo.create({
         caseId: 1,
         factContent: "Annual Salary: $95,000",
-        factCategory: "evidence",
+        factCategory: "financial",
       });
 
       // Case facts (P1 encryption - may contain PII)
@@ -567,7 +567,7 @@ describe("Facts Repositories Integration Tests", () => {
         userFactsRepo.create({
           caseId: 999, // Non-existent case
           factContent: "Test fact",
-          factCategory: "timeline",
+          factCategory: "personal",  // Valid fact_type value
         });
       }).toThrow(); // Should throw foreign key constraint error
     });
