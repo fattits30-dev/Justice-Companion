@@ -10,15 +10,145 @@ env:
   NODE_VERSION: "20.18.0"
 
 jobs:
-  # Basic quality checks and tests
+  lint:
+    name: Lint & Type Check
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+
+      - name: Cache node_modules
+        uses: actions/cache@v4
+        id: cache-node-modules
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Install dependencies
+        if: steps.cache-node-modules.outputs.cache-hit != 'true'
+        run: npm ci
+
+      - name: Lint check
+        run: npm run lint
+
+      - name: TypeScript type check
+        run: npm run typecheck
+
   test:
-    name: Test & Build
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+
+      - name: Cache node_modules
+        uses: actions/cache@v4
+        id: cache-node-modules
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Install dependencies
+        if: steps.cache-node-modules.outputs.cache-hit != 'true'
+        run: npm ci
+
+      - name: Run unit tests
+        run: npm run test:run
+        env:
+          CI: true
+          NODE_ENV: test
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results
+          path: |
+            coverage/
+          retention-days: 7
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: [lint]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+
+      - name: Cache node_modules
+        uses: actions/cache@v4
+        id: cache-node-modules
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Install dependencies
+        if: steps.cache-node-modules.outputs.cache-hit != 'true'
+        run: npm ci
+
+      - name: Build PWA
+        run: npm run build
+        env:
+          CI: true
+
+      - name: Verify build artifacts
+        run: |
+          if [ ! -d "dist" ]; then
+            echo "Build artifacts not found"
+            exit 1
+          fi
+          echo "Build artifacts verified"
+          ls -la dist/
+          du -sh dist/
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+          retention-days: 14
+
+  # Cross-platform build verification
+  build-matrix:
+    name: Build (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     timeout-minutes: 20
+    needs: [lint]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
 
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest]
+        os: [ubuntu-latest, windows-latest, macos-latest]
       fail-fast: false
 
     steps:
@@ -34,44 +164,25 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      # Code Quality Checks (now blocking - prevents broken code from shipping)
-      - name: Lint check
-        run: npm run lint
-
-      - name: TypeScript type check
-        run: npm run typecheck
-
-      # Run unit tests (non-blocking for now - tests need fixing)
-      - name: Run unit tests
-        run: npm run test:run
-        continue-on-error: true
-        env:
-          CI: true
-          NODE_ENV: test
-
-      # Build verification
       - name: Build PWA
         run: npm run build
         env:
           CI: true
 
-      - name: Verify build artifacts
+      - name: Verify build
         run: |
           if [ ! -d "dist" ]; then
-            echo "❌ Build artifacts not found"
+            echo "Build failed"
             exit 1
           fi
-          echo "✅ Build artifacts verified"
         shell: bash
 
-  # Success summary
   ci-success:
-    name: CI Pipeline Success
+    name: CI Success
     runs-on: ubuntu-latest
-    needs: [test]
+    needs: [lint, test, build]
     if: success()
 
     steps:
       - name: CI Success
-        run: |
-          echo "✅ All CI checks passed successfully!"
+        run: echo "All CI checks passed!"

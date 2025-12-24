@@ -206,7 +206,7 @@ async def get_ai_service(
     print(f"[DEBUG] AI_MODE from env: '{ai_mode}'")
 
     if ai_mode in {"sdk", "auto"}:
-        from backend.services.ai.providers import AIProviderConfigService
+        from backend.services.ai.provider_config import AIProviderConfigService
         from backend.services.ai.sdk import (
             AISDKService,
             AIProviderConfig as SDKConfig,

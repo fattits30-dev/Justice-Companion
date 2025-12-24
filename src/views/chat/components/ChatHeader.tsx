@@ -20,18 +20,18 @@ export function ChatHeader({
   hasMessages,
 }: ChatHeaderProps) {
   return (
-    <div className="sticky top-0 z-30 bg-gray-900/80 backdrop-blur-md border-b border-white/10">
-      <div className="p-6">
+    <div className="hidden md:block sticky top-0 z-30 bg-primary-900/80 backdrop-blur-md border-b border-white/10">
+      <div className="px-4 py-3 sm:p-4">
         <div className="flex items-center justify-between">
-          <h1 className="text-3xl font-bold">AI Legal Assistant</h1>
-          <div className="flex items-center gap-3">
+          <h1 className="text-lg sm:text-xl font-semibold text-white">Legal Assistant</h1>
+          <div className="flex items-center gap-2">
             {/* Model Selector */}
             {availableModels.length > 0 && (
               <div className="relative">
                 <select
                   value={selectedModel}
                   onChange={(e) => onModelChange(e.target.value)}
-                  className="appearance-none bg-white/5 border border-white/10 rounded-lg px-3 py-2 pr-8 text-sm text-white/90 hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-primary-500 cursor-pointer"
+                  className="appearance-none bg-white/5 border border-white/10 rounded-lg px-2 py-1.5 pr-7 text-xs text-white/90 hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-gold-400/50 cursor-pointer"
                   title="Select AI model"
                 >
                   {availableModels.map((model) => (
@@ -44,17 +44,16 @@ export function ChatHeader({
                     </option>
                   ))}
                 </select>
-                <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-white/50 pointer-events-none" />
+                <ChevronDown className="absolute right-1.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/50 pointer-events-none" />
               </div>
             )}
             {hasMessages && (
               <button
                 onClick={onClearChat}
-                className="flex items-center gap-2 px-3 py-2 text-sm text-red-300 hover:text-white bg-red-500/20 hover:bg-red-500/30 rounded-lg transition-colors border border-red-500/30 hover:border-red-500/50"
-                title="Clear all chat messages"
+                className="p-1.5 text-red-300 hover:text-white bg-red-500/20 hover:bg-red-500/30 rounded-lg transition-colors"
+                title="Clear chat"
               >
                 <Trash2 className="w-4 h-4" />
-                Clear Chat
               </button>
             )}
           </div>

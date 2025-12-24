@@ -353,3 +353,4 @@ test-data/
 # Runtime uploads and logs
 uploads/
 logs/
+.dbkey

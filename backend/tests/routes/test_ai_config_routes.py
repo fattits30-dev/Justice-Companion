@@ -30,7 +30,7 @@ from backend.routes.ai_config import (
     get_config_service
 )
 from backend.dependencies import get_auth_service
-from backend.services.ai.providers import (
+from backend.services.ai.provider_config import (
     AIProviderConfigService,
     AIProviderType,
     AIProviderConfigOutput,

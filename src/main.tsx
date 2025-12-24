@@ -2,13 +2,23 @@ import "reflect-metadata";
 import React from "react";
 import ReactDOM from "react-dom/client";
 import { registerSW } from "virtual:pwa-register";
-import App from "./App.tsx";
 import "./index.css";
 import { ErrorBoundary, initSentry } from "./lib/sentry.ts";
 import { initializeContainer } from "./di/container.ts";
 
-// Initialize DI container before app starts
-initializeContainer();
+// Local-first mode: Use LocalApp instead of App
+// Set VITE_LOCAL_MODE=true in .env to enable local-first mode
+const isLocalMode = import.meta.env.VITE_LOCAL_MODE === "true";
+
+// Dynamic import based on mode
+const AppComponent = isLocalMode
+  ? React.lazy(() => import("./LocalApp.tsx"))
+  : React.lazy(() => import("./App.tsx"));
+
+// Initialize DI container before app starts (only needed for backend mode)
+if (!isLocalMode) {
+  initializeContainer();
+}
 
 // Initialize Sentry error monitoring before rendering
 initSentry();
@@ -45,6 +55,18 @@ if (typeof window !== "undefined") {
   }
 }
 
+// Loading fallback for lazy-loaded App
+function AppLoader() {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-primary-900">
+      <div className="text-center">
+        <div className="w-12 h-12 border-4 border-cyan-500/30 border-t-cyan-500 rounded-full animate-spin mx-auto mb-4" />
+        <p className="text-white/60">Loading Justice Companion...</p>
+      </div>
+    </div>
+  );
+}
+
 const rootElement = document.getElementById("root");
 if (rootElement) {
   ReactDOM.createRoot(rootElement).render(
@@ -69,7 +91,9 @@ if (rootElement) {
           </div>
         }
       >
-        <App />
+        <React.Suspense fallback={<AppLoader />}>
+          <AppComponent />
+        </React.Suspense>
       </ErrorBoundary>
     </React.StrictMode>,
   );

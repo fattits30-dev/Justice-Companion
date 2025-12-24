@@ -59,6 +59,8 @@ export default defineConfig({
       },
     }),
     VitePWA({
+      // Disable for Capacitor builds - set to true for PWA-only builds
+      disabled: process.env.CAPACITOR_BUILD === 'true',
       registerType: "autoUpdate",
       includeAssets: [
         "favicon.svg",
@@ -157,6 +159,10 @@ export default defineConfig({
     pool: "forks",
     maxWorkers: 1,
     isolate: false,
+    // CRITICAL: Force backend mode for tests (overrides .env.local)
+    env: {
+      VITE_LOCAL_MODE: "false",
+    },
     exclude: [
       "**/node_modules/**",
       "**/dist/**",

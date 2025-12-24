@@ -490,7 +490,7 @@ export function ChatView() {
   // ==================== RENDER ====================
 
   return (
-    <div className="flex flex-col h-full bg-gradient-to-br from-gray-900 via-primary-900 to-gray-900 text-white">
+    <div className="flex flex-col h-full bg-primary-950 text-white">
       <ChatHeader
         availableModels={availableModels}
         selectedModel={selectedModel}

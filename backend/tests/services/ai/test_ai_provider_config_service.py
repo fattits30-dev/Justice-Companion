@@ -18,7 +18,7 @@ from sqlalchemy.orm import sessionmaker
 from backend.models.ai_provider_config import AIProviderConfig
 from backend.models.base import Base
 from backend.models.user import User
-from backend.services.ai.providers import (
+from backend.services.ai.provider_config import (
     AIProviderConfigInput,
     AIProviderConfigService,
     AIProviderType,

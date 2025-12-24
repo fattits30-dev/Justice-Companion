@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session
 
 from backend.dependencies import get_current_user_id
 from backend.models.base import get_db
-from backend.services.ai.providers import (
+from backend.services.ai.provider_config import (
     AIProviderConfigInput,
     AIProviderConfigService,
     AIProviderType,

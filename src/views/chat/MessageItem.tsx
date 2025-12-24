@@ -108,33 +108,16 @@ function MessageItemComponent({
   return (
     <div style={style}>
       <div
-        className={`flex ${message.role === "user" ? "justify-end" : "justify-start"} px-6`}
+        className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
       >
         <div
-          className={`max-w-3xl ${
+          className={`max-w-[85%] sm:max-w-[75%] ${
             message.role === "user"
-              ? "bg-primary-600 text-white rounded-2xl rounded-tr-sm"
-              : "bg-primary-800 border border-gray-700 rounded-2xl rounded-tl-sm"
-          } p-4`}
+              ? "bg-gold-400/20 text-white rounded-2xl rounded-br-md"
+              : "bg-primary-800/80 rounded-2xl rounded-bl-md"
+          } px-3 py-2.5 sm:p-4`}
         >
-          {message.role === "assistant" && (
-            <div className="flex items-center gap-2 mb-2 text-sm text-white/90">
-              <svg
-                className="w-4 h-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-                />
-              </svg>
-              <span>AI Assistant</span>
-            </div>
-          )}
+          {/* No header for assistant on mobile - cleaner like ChatGPT */}
 
           {/* Document Analysis Badge */}
           {message.documentAnalysis && (
@@ -165,64 +148,59 @@ function MessageItemComponent({
             </div>
           )}
 
-          <div className="prose prose-invert max-w-none">
+          <div className="prose prose-sm prose-invert max-w-none text-white/90">
             <ReactMarkdown>{displayContent}</ReactMarkdown>
           </div>
 
-          {/* Action Buttons (for assistant messages only) */}
+          {/* Action Buttons (for assistant messages only) - compact on mobile */}
           {message.role === "assistant" && (
-            <div className="mt-3 flex flex-wrap gap-2">
-              <button
-                onClick={() => hasCaseSelected && onSaveToCase(message)}
-                disabled={!hasCaseSelected}
-                className={`flex items-center gap-2 px-3 py-2 text-sm rounded-lg transition-colors border ${
-                  hasCaseSelected
-                    ? "text-white/70 hover:text-white hover:bg-white/10 border-white/10 hover:border-white/20 cursor-pointer"
-                    : "text-white/30 border-white/5 cursor-not-allowed opacity-50"
-                }`}
-                title={
-                  hasCaseSelected
-                    ? "Save this response to the active case"
-                    : "Select a case first to save this response"
-                }
-                type="button"
-              >
-                <Save className="w-4 h-4" />
-                Save to Case
-              </button>
-
+            <div className="mt-2 flex items-center gap-1 sm:gap-2">
               <button
                 onClick={handleCopy}
-                className="flex items-center gap-2 px-3 py-2 text-sm text-white/70 hover:text-white hover:bg-white/10 rounded-lg transition-colors border border-white/10 hover:border-white/20"
+                className="p-1.5 text-white/40 hover:text-white/70 rounded transition-colors"
                 type="button"
+                title="Copy"
               >
-                {copied ? (
-                  <Check className="w-4 h-4" />
-                ) : (
-                  <Copy className="w-4 h-4" />
-                )}
-                {copied ? "Copied!" : "Copy"}
+                {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
               </button>
 
-              {/* Create Case Button (shown when AI suggests case creation AND no case is selected) */}
+              {hasCaseSelected && (
+                <button
+                  onClick={() => onSaveToCase(message)}
+                  className="p-1.5 text-white/40 hover:text-white/70 rounded transition-colors"
+                  title="Save to case"
+                  type="button"
+                >
+                  <Save className="w-4 h-4" />
+                </button>
+              )}
+
+              {/* Create Case Button */}
               {message.documentAnalysis?.suggestedCaseData &&
                 onCreateCase &&
                 !hasCaseSelected && (
                   <button
                     onClick={() => onCreateCase(message)}
-                    className="flex items-center gap-2 px-3 py-2 text-sm text-green-300 hover:text-white bg-green-500/20 hover:bg-green-500/30 rounded-lg transition-colors border border-green-500/30 hover:border-green-500/50"
+                    className="flex items-center gap-1 px-2 py-1 text-xs text-green-400 hover:bg-green-500/20 rounded transition-colors"
                     type="button"
                   >
-                    <Plus className="w-4 h-4" />
-                    Create Case from Analysis
+                    <Plus className="w-3 h-3" />
+                    <span className="hidden sm:inline">Create Case</span>
                   </button>
                 )}
+
+              <span className="ml-auto text-xs text-white/30">
+                {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+              </span>
             </div>
           )}
 
-          <div className="mt-2 text-xs text-white/80">
-            {message.timestamp.toLocaleTimeString()}
-          </div>
+          {/* User message timestamp */}
+          {message.role === "user" && (
+            <div className="mt-1 text-xs text-white/40 text-right">
+              {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+            </div>
+          )}
 
           {/* AI Thinking Dropdown (at the bottom of the message) */}
           {thinkingContent && showThinking && message.role === "assistant" && (

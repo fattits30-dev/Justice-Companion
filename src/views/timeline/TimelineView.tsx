@@ -5,14 +5,13 @@ import { Calendar, FileSearch, Plus } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Button } from "../../components/ui/Button.tsx";
 import { VirtualizedList } from "../../components/virtualization/VirtualizedList.tsx";
-import { useAuth } from "../../contexts/AuthContext.tsx";
+import { useAppContext } from "../../hooks/useAppContext.ts";
 import type {
   CreateDeadlineInput,
   DeadlineWithCase,
   UpdateDeadlineInput,
 } from "../../domains/timeline/entities/Deadline.ts";
 import { useWindowSize } from "../../hooks/useWindowSize.ts";
-import { apiClient } from "../../lib/apiClient.ts";
 import { AddDeadlineDialog } from "./components/AddDeadlineDialog.tsx";
 import { ExtractDatesDialog } from "./components/ExtractDatesDialog.tsx";
 import { TimelineEmpty } from "./components/TimelineEmpty.tsx";
@@ -25,7 +24,8 @@ interface Case {
 }
 
 export function TimelineView() {
-  const { sessionId, isLoading: authLoading } = useAuth();
+  const { auth, api } = useAppContext();
+  const { sessionId, isLoading: authLoading } = auth;
   const { height: windowHeight } = useWindowSize();
   const [deadlines, setDeadlines] = useState<DeadlineWithCase[]>([]);
   const [cases, setCases] = useState<Case[]>([]);
@@ -54,7 +54,7 @@ export function TimelineView() {
 
     try {
       // Load deadlines using HTTP API client
-      const deadlinesResult = await apiClient.deadlines.list();
+      const deadlinesResult = await api.deadlines.list();
       if (!deadlinesResult.success) {
         const errorMsg =
           typeof deadlinesResult.error === "string"
@@ -64,7 +64,7 @@ export function TimelineView() {
       }
 
       // Load cases using HTTP API client
-      const casesResult = await apiClient.cases.list();
+      const casesResult = await api.cases.list();
       if (!casesResult.success) {
         const errorMsg =
           typeof casesResult.error === "string"
@@ -104,7 +104,7 @@ export function TimelineView() {
     } finally {
       setIsLoading(false);
     }
-  }, [sessionId]);
+  }, [sessionId, api]);
 
   useEffect(() => {
     if (!authLoading) {
@@ -150,7 +150,7 @@ export function TimelineView() {
 
       try {
         // Use HTTP API client instead of Electron IPC
-        const result = await apiClient.deadlines.create(input);
+        const result = await api.deadlines.create(input);
 
         if (result.success) {
           await loadData(); // Reload to get updated data
@@ -170,7 +170,7 @@ export function TimelineView() {
         };
       }
     },
-    [sessionId, loadData]
+    [sessionId, loadData, api.deadlines]
   );
 
   // Handler for adding deadlines from extracted dates
@@ -181,7 +181,7 @@ export function TimelineView() {
       }
 
       try {
-        const result = await apiClient.deadlines.create({
+        const result = await api.deadlines.create({
           caseId: selectedCaseId,
           title,
           description,
@@ -198,7 +198,7 @@ export function TimelineView() {
         });
       }
     },
-    [sessionId, selectedCaseId, loadData]
+    [sessionId, selectedCaseId, loadData, api.deadlines]
   );
 
   const handleEditDeadline = useCallback((deadline: DeadlineWithCase) => {
@@ -222,7 +222,7 @@ export function TimelineView() {
           ...input,
           description: input.description || undefined,
         };
-        const result = await apiClient.deadlines.update(
+        const result = await api.deadlines.update(
           editingDeadline.id,
           apiInput
         );
@@ -246,7 +246,7 @@ export function TimelineView() {
         };
       }
     },
-    [editingDeadline, sessionId, loadData]
+    [editingDeadline, sessionId, loadData, api.deadlines]
   );
 
   const handleCompleteDeadline = useCallback(
@@ -261,7 +261,7 @@ export function TimelineView() {
 
       try {
         // Use HTTP API client instead of Electron IPC
-        const result = await apiClient.deadlines.update(deadline.id, {
+        const result = await api.deadlines.update(deadline.id, {
           status: newStatus,
         });
 
@@ -274,7 +274,7 @@ export function TimelineView() {
         });
       }
     },
-    [sessionId, loadData]
+    [sessionId, loadData, api.deadlines]
   );
 
   const handleDeleteDeadline = useCallback((deadline: DeadlineWithCase) => {
@@ -293,7 +293,7 @@ export function TimelineView() {
 
     try {
       // Use HTTP API client instead of Electron IPC
-      const result = await apiClient.deadlines.delete(deletingDeadline.id);
+      const result = await api.deadlines.delete(deletingDeadline.id);
 
       if (result.success) {
         await loadData();
@@ -303,7 +303,7 @@ export function TimelineView() {
     } finally {
       setDeletingDeadline(null);
     }
-  }, [deletingDeadline, sessionId, loadData]);
+  }, [deletingDeadline, sessionId, loadData, api.deadlines]);
 
   const handleCaseClick = useCallback((caseId: number) => {
     // Navigate to case detail view using existing routing

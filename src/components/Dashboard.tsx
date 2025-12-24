@@ -103,11 +103,11 @@ export function Dashboard({
   if (isLoading) {
     return (
       <div className="h-full flex flex-col overflow-hidden bg-gradient-to-br from-gray-900 via-primary-900 to-gray-900 text-white">
-        <div className="shrink-0 p-8 pb-4">
-          <h1 className="text-3xl font-bold mb-2">Welcome back, {username}</h1>
-          <p className="text-white/90">Loading your dashboard...</p>
+        <div className="shrink-0 p-4 sm:p-8 pb-4">
+          <h1 className="text-2xl sm:text-3xl font-bold mb-2">Welcome back, {username}</h1>
+          <p className="text-sm sm:text-base text-white/90">Loading your dashboard...</p>
         </div>
-        <div className="flex-1 overflow-y-auto px-8 pb-8">
+        <div className="flex-1 overflow-y-auto px-4 sm:px-8 pb-8">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             {Array.from({ length: 4 }).map((_, i) => (
               <SkeletonCard key={i} lines={1} />
@@ -146,7 +146,7 @@ export function Dashboard({
       data-testid="dashboard"
     >
       {/* Fixed Header Section */}
-      <div className="shrink-0 p-8 pb-0">
+      <div className="shrink-0 p-4 sm:p-8 pb-0">
         {/* Legal Disclaimer Banner */}
         <Card
           variant="glass"
@@ -169,11 +169,11 @@ export function Dashboard({
         </Card>
 
         {/* Welcome Section */}
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold mb-2">
+        <div className="mb-4 sm:mb-6">
+          <h1 className="text-xl sm:text-3xl font-bold mb-2">
             Welcome to Justice Companion
           </h1>
-          <p className="text-white/90">
+          <p className="text-sm sm:text-base text-white/90">
             Welcome back, {username}. You're building your case. Here's where
             you stand.
           </p>
@@ -181,78 +181,78 @@ export function Dashboard({
       </div>
 
       {/* Scrollable Content Area */}
-      <div className="flex-1 overflow-y-auto px-8 pb-8">
+      <div className="flex-1 overflow-y-auto px-4 sm:px-8 pb-8">
         {/* Stats Grid - People-friendly language */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-6 sm:mb-8">
           {/* Total Cases */}
-          <Card variant="glass" hoverable shine>
+          <Card variant="glass" hoverable shine className="p-3 sm:p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-white/90 text-sm mb-1">Your Cases</p>
-                <p className="text-3xl font-bold">{stats.totalCases}</p>
-                <p className="text-xs text-white/80 mt-1">
+                <p className="text-white/90 text-xs sm:text-sm mb-1">Your Cases</p>
+                <p className="text-xl sm:text-3xl font-bold">{stats.totalCases}</p>
+                <p className="text-xs text-white/80 mt-1 hidden sm:block">
                   {stats.totalCases === 0
                     ? "Ready to start"
                     : "Cases you're tracking"}
                 </p>
               </div>
-              <Briefcase className="w-12 h-12 text-cyan-400" />
+              <Briefcase className="w-8 h-8 sm:w-12 sm:h-12 text-cyan-400" />
             </div>
           </Card>
 
           {/* Active Cases */}
-          <Card variant="glass" hoverable shine>
+          <Card variant="glass" hoverable shine className="p-3 sm:p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-white/90 text-sm mb-1">Currently Active</p>
-                <p className="text-3xl font-bold">{stats.activeCases}</p>
-                <p className="text-xs text-white/80 mt-1">
+                <p className="text-white/90 text-xs sm:text-sm mb-1">Active</p>
+                <p className="text-xl sm:text-3xl font-bold">{stats.activeCases}</p>
+                <p className="text-xs text-white/80 mt-1 hidden sm:block">
                   {stats.activeCases === 0
                     ? "All caught up"
                     : "Ongoing matters"}
                 </p>
               </div>
-              <TrendingUp className="w-12 h-12 text-green-400" />
+              <TrendingUp className="w-8 h-8 sm:w-12 sm:h-12 text-green-400" />
             </div>
           </Card>
 
           {/* Total Evidence */}
-          <Card variant="glass" hoverable shine>
+          <Card variant="glass" hoverable shine className="p-3 sm:p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-white/90 text-sm mb-1">Evidence Collected</p>
-                <p className="text-3xl font-bold">{stats.totalEvidence}</p>
-                <p className="text-xs text-white/80 mt-1">
+                <p className="text-white/90 text-xs sm:text-sm mb-1">Evidence</p>
+                <p className="text-xl sm:text-3xl font-bold">{stats.totalEvidence}</p>
+                <p className="text-xs text-white/80 mt-1 hidden sm:block">
                   {stats.totalEvidence === 0
                     ? "Start gathering proof"
                     : "Documents & records"}
                 </p>
               </div>
-              <FileText className="w-12 h-12 text-pink-400" />
+              <FileText className="w-8 h-8 sm:w-12 sm:h-12 text-pink-400" />
             </div>
           </Card>
 
           {/* Recent Activity */}
-          <Card variant="glass" hoverable shine>
+          <Card variant="glass" hoverable shine className="p-3 sm:p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-white/90 text-sm mb-1">Recent Activity</p>
-                <p className="text-3xl font-bold">{stats.recentActivity}</p>
-                <p className="text-xs text-white/80 mt-1">
+                <p className="text-white/90 text-xs sm:text-sm mb-1">Activity</p>
+                <p className="text-xl sm:text-3xl font-bold">{stats.recentActivity}</p>
+                <p className="text-xs text-white/80 mt-1 hidden sm:block">
                   {stats.recentActivity === 0
                     ? "No recent changes"
                     : "Updates this week"}
                 </p>
               </div>
-              <Activity className="w-12 h-12 text-yellow-400" />
+              <Activity className="w-8 h-8 sm:w-12 sm:h-12 text-yellow-400" />
             </div>
           </Card>
         </div>
 
         {/* Quick Actions */}
-        <div className="mb-8">
-          <h2 className="text-xl font-semibold mb-4">Quick Actions</h2>
-          <div className="flex flex-wrap gap-4">
+        <div className="mb-6 sm:mb-8">
+          <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4">Quick Actions</h2>
+          <div className="flex flex-wrap gap-2 sm:gap-4">
             <Button
               onClick={onNewCase}
               variant="secondary"
@@ -287,8 +287,8 @@ export function Dashboard({
         </div>
 
         {/* Recent Cases */}
-        <div className="mb-8">
-          <h2 className="text-xl font-semibold mb-4">Your Recent Cases</h2>
+        <div className="mb-6 sm:mb-8">
+          <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4">Your Recent Cases</h2>
 
           {recentCases.length === 0 ? (
             <Card variant="glass">

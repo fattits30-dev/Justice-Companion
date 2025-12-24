@@ -4,7 +4,7 @@ import type {
   EvidenceType,
 } from "../../domains/evidence/entities/Evidence.ts";
 import type { Case } from "../../domains/cases/entities/Case.ts";
-import { useAuth } from "../../contexts/AuthContext.tsx";
+import { useAppContext } from "../../hooks/useAppContext.ts";
 import { DocumentsToolbar } from "./components/DocumentsToolbar.tsx";
 import {
   DocumentsEmptyEvidenceState,
@@ -19,7 +19,6 @@ import {
   type UploadEvidenceInput,
 } from "./components/UploadEvidenceDialog.tsx";
 import { showSuccess, showError } from "../../components/ui/Toast.tsx";
-import { apiClient } from "../../lib/apiClient.ts";
 
 type LoadState = "idle" | "loading" | "error" | "ready";
 
@@ -29,7 +28,8 @@ interface LightweightCase {
 }
 
 export function DocumentsView() {
-  const { sessionId, isLoading: authLoading } = useAuth();
+  const { auth, api, isLocalMode } = useAppContext();
+  const { sessionId, isLoading: authLoading } = auth;
   const [cases, setCases] = useState<LightweightCase[]>([]);
   const [selectedCaseId, setSelectedCaseId] = useState<number | null>(null);
   const [casesState, setCasesState] = useState<LoadState>("loading");
@@ -53,8 +53,8 @@ export function DocumentsView() {
       setCasesState("loading");
       setCasesError(null);
 
-      // Use HTTP API client instead of Electron IPC
-      const response = await apiClient.cases.list();
+      // Use mode-aware API client
+      const response = await api.cases.list();
 
       if (!response.success) {
         throw new Error(response.error?.message || "Failed to load cases");
@@ -89,7 +89,7 @@ export function DocumentsView() {
       setCasesError(err instanceof Error ? err.message : "Unknown error");
       setCasesState("error");
     }
-  }, [sessionId]);
+  }, [sessionId, api]);
 
   const loadEvidence = useCallback(
     async (caseId: number) => {
@@ -103,25 +103,30 @@ export function DocumentsView() {
         setEvidenceState("loading");
         setEvidenceError(null);
 
-        // Use HTTP API client instead of Electron IPC
-        const response = await apiClient.evidence.listByCase(caseId);
+        // Use mode-aware API client
+        const response = await api.evidence.list(caseId);
 
         if (!response.success) {
           throw new Error(response.error?.message || "Failed to load evidence");
         }
 
         if (!response.data) {
-          throw new Error("No data returned from evidence.listByCase");
+          throw new Error("No data returned from evidence.list");
         }
 
-        setEvidence(response.data);
+        // Handle both paginated and direct array responses
+        const evidenceData = "items" in response.data
+          ? response.data.items
+          : response.data;
+
+        setEvidence(evidenceData as Evidence[]);
         setEvidenceState("ready");
       } catch (err) {
         setEvidenceError(err instanceof Error ? err.message : "Unknown error");
         setEvidenceState("error");
       }
     },
-    [sessionId],
+    [sessionId, api],
   );
 
   useEffect(() => {
@@ -214,7 +219,7 @@ export function DocumentsView() {
 
       try {
         // Use HTTP API client instead of Electron IPC
-        const response = await apiClient.evidence.delete(evidenceId);
+        const response = await api.evidence.delete(evidenceId);
 
         if (!response.success) {
           throw new Error(
@@ -234,7 +239,7 @@ export function DocumentsView() {
         });
       }
     },
-    [sessionId],
+    [sessionId, api],
   );
 
   const filteredEvidence = useMemo(() => {

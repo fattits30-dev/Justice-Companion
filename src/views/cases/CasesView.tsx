@@ -6,7 +6,7 @@ import type {
   CaseType,
   CreateCaseInput,
 } from "../../domains/cases/entities/Case.ts";
-import { useAuth } from "../../contexts/AuthContext.tsx";
+import { useAppContext } from "../../hooks/useAppContext.ts";
 import { CaseToolbar } from "./components/CaseToolbar.tsx";
 import {
   CasesEmptyState,
@@ -18,12 +18,12 @@ import { CaseList } from "./components/CaseList.tsx";
 import { CreateCaseDialog } from "./components/CreateCaseDialog.tsx";
 import { CaseSummaryCards } from "./components/CaseSummaryCards.tsx";
 import { showSuccess, showError } from "../../components/ui/Toast.tsx";
-import { apiClient } from "../../lib/apiClient.ts";
 
 type LoadState = "idle" | "loading" | "error" | "ready";
 
 export function CasesView() {
-  const { sessionId, isLoading: authLoading } = useAuth();
+  const { auth, api } = useAppContext();
+  const { sessionId, isLoading: authLoading } = auth;
   const navigate = useNavigate();
   const [cases, setCases] = useState<Case[]>([]);
   const [loadState, setLoadState] = useState<LoadState>("idle");
@@ -44,8 +44,8 @@ export function CasesView() {
       setLoadState("loading");
       setError(null);
 
-      // Use HTTP API client instead of Electron IPC
-      const response = await apiClient.cases.list();
+      // Use mode-aware API client
+      const response = await api.cases.list();
 
       if (!response.success) {
         throw new Error(response.error?.message || "Failed to load cases");
@@ -64,7 +64,7 @@ export function CasesView() {
       setError(err instanceof Error ? err.message : "Unknown error");
       setLoadState("error");
     }
-  }, [sessionId]);
+  }, [sessionId, api]);
 
   useEffect(() => {
     let mounted = true;
@@ -78,7 +78,7 @@ export function CasesView() {
         setLoadState("loading");
         setError(null);
 
-        const response = await apiClient.cases.list();
+        const response = await api.cases.list();
 
         if (!mounted) {
           return;
@@ -109,7 +109,7 @@ export function CasesView() {
     return () => {
       mounted = false;
     };
-  }, [sessionId, authLoading]);
+  }, [sessionId, authLoading, api]);
 
   const handleCreateCase = useCallback(
     async (input: CreateCaseInput) => {
@@ -119,8 +119,8 @@ export function CasesView() {
       }
 
       try {
-        // Use HTTP API client instead of Electron IPC
-        const response = await apiClient.cases.create(input);
+        // Use mode-aware API client
+        const response = await api.cases.create(input);
 
         if (!response.success) {
           throw new Error(response.error?.message || "Failed to create case");
@@ -140,7 +140,7 @@ export function CasesView() {
         });
       }
     },
-    [sessionId],
+    [sessionId, api],
   );
 
   const handleDeleteCase = useCallback(
@@ -158,8 +158,8 @@ export function CasesView() {
       }
 
       try {
-        // Use HTTP API client instead of Electron IPC
-        const response = await apiClient.cases.delete(caseId);
+        // Use mode-aware API client
+        const response = await api.cases.delete(caseId);
         if (response.success) {
           setCases((previous) => previous.filter((item) => item.id !== caseId));
           showSuccess("The case has been permanently removed", {
@@ -175,7 +175,7 @@ export function CasesView() {
         });
       }
     },
-    [sessionId],
+    [sessionId, api],
   );
 
   const handleViewCase = useCallback(

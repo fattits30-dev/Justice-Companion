@@ -1227,13 +1227,22 @@ export interface CreateMessageInput {
 
 // ===== USER FACT TYPES =====
 
+// User fact types (for personal information about the user)
+export type UserFactType =
+  | "personal"
+  | "employment"
+  | "financial"
+  | "contact"
+  | "medical"
+  | "other";
+
 export type FactImportance = "low" | "medium" | "high" | "critical";
 
 export interface UserFact {
   id: number;
   caseId: number;
   factContent: string;
-  factCategory: FactCategory;
+  factCategory: UserFactType;
   importance: FactImportance;
   createdAt: string;
   updatedAt: string;
@@ -1242,13 +1251,13 @@ export interface UserFact {
 export interface CreateUserFactInput {
   caseId: number;
   factContent: string;
-  factCategory?: FactCategory;
+  factCategory?: UserFactType;
   importance?: FactImportance;
 }
 
 export interface UpdateUserFactInput {
   factContent?: string;
-  factCategory?: FactCategory;
+  factCategory?: UserFactType;
   importance?: FactImportance;
 }
 

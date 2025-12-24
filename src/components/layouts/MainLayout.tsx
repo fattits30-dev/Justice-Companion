@@ -1,5 +1,4 @@
 import { logger } from "../../lib/logger.ts";
-import { apiClient } from "../../lib/apiClient.ts";
 
 /**
  * MainLayout - Main app layout with Sidebar + content area + Command Palette
@@ -11,13 +10,20 @@ import { apiClient } from "../../lib/apiClient.ts";
  * - User info from AuthContext
  * - Logout functionality
  * - Responsive layout
+ * - Supports both backend and local-first modes
  */
 
 import { useState, useEffect } from "react";
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import { Sidebar } from "../Sidebar.tsx";
-import { useAuth } from "../../contexts/AuthContext.tsx";
 import { CommandPalette } from "../ui/CommandPalette.tsx";
+
+// Detect local mode at module level (stable across renders)
+const isLocalMode = import.meta.env.VITE_LOCAL_MODE === "true";
+
+// Import API clients
+import { getLocalApiClient } from "../../lib/api/local";
+import { apiClient } from "../../lib/apiClient.ts";
 import {
   LayoutDashboard,
   Briefcase,
@@ -27,10 +33,25 @@ import {
   LogOut,
 } from "lucide-react";
 
+// Import both auth contexts - only one will be used based on mode
+// The unused one will throw an error if called outside its provider,
+// but we only call the one that matches our mode
+import { useLocalAuth } from "../../contexts/LocalAuthContext.tsx";
+import { useAuth as useBackendAuth } from "../../contexts/AuthContext.tsx";
+
+// Select auth hook based on mode - this is safe because isLocalMode is a compile-time constant
+const useAppAuth = isLocalMode ? useLocalAuth : useBackendAuth;
+
 export function MainLayout() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, logout } = useAuth();
+
+  // Use the appropriate auth based on mode
+  const auth = useAppAuth();
+  const user = auth.user;
+  const logoutFn = isLocalMode
+    ? (auth as ReturnType<typeof useLocalAuth>).lock
+    : (auth as ReturnType<typeof useBackendAuth>).logout;
 
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
@@ -51,8 +72,10 @@ export function MainLayout() {
   };
 
   const handleLogout = async () => {
-    await logout();
-    navigate("/login");
+    if (logoutFn) {
+      await logoutFn();
+    }
+    navigate(isLocalMode ? "/pin" : "/login");
   };
 
   const handleToggleCollapse = () => {
@@ -70,16 +93,20 @@ export function MainLayout() {
     window.dispatchEvent(new Event("storage"));
   };
 
-  // Fetch cases from backend
+  // Fetch cases from backend or local storage
   useEffect(() => {
     const fetchCases = async () => {
       try {
-        const sessionId = localStorage.getItem("sessionId");
-        if (!sessionId) {
-          return;
+        // In local mode, use local API; in backend mode, require session
+        if (!isLocalMode) {
+          const sessionId = localStorage.getItem("sessionId");
+          if (!sessionId) {
+            return;
+          }
         }
 
-        const result = await apiClient.cases.list();
+        const client = isLocalMode ? getLocalApiClient() : apiClient;
+        const result = await client.cases.list();
         if (result.success && result.data) {
           const casesList = result.data.items || result.data;
           setCases(
@@ -109,21 +136,26 @@ export function MainLayout() {
   useEffect(() => {
     const fetchCounts = async () => {
       try {
-        const sessionId = localStorage.getItem("sessionId");
-        if (!sessionId) {
-          return;
+        // In local mode, use local API; in backend mode, require session
+        if (!isLocalMode) {
+          const sessionId = localStorage.getItem("sessionId");
+          if (!sessionId) {
+            return;
+          }
         }
 
-        const result = await apiClient.dashboard.getStats();
+        const client = isLocalMode ? getLocalApiClient() : apiClient;
+        const result = await client.dashboard.getStats();
         if (result.success && result.data) {
           // Support legacy API responses that wrapped stats in a nested object
-          const statsPayload = result.data as typeof result.data & {
-            stats?: typeof result.data;
+          // Also handle local vs backend response shape differences
+          const statsPayload = result.data as Record<string, unknown> & {
+            stats?: Record<string, unknown>;
           };
           const stats = statsPayload.stats ?? statsPayload;
           setItemCounts({
-            cases: stats.activeCases || 0,
-            documents: stats.totalEvidence || 0,
+            cases: (stats.activeCases as number) || 0,
+            documents: (stats.totalEvidence as number) || 0,
             chat: 0, // Will be implemented when we add chat conversation tracking
           });
         }
@@ -219,26 +251,61 @@ export function MainLayout() {
     },
   ];
 
+  // Mobile navigation items
+  const mobileNavItems = [
+    { href: "/dashboard", icon: LayoutDashboard, label: "Home" },
+    { href: "/cases", icon: Briefcase, label: "Cases" },
+    { href: "/chat", icon: MessageSquare, label: "Chat" },
+    { href: "/settings", icon: Settings, label: "Settings" },
+  ];
+
   return (
     <div className="flex h-screen bg-primary-900 overflow-hidden">
-      {/* Sidebar */}
-      <Sidebar
-        currentRoute={location.pathname}
-        user={user ? { username: user.username, email: user.email } : null}
-        onLogout={handleLogout}
-        onNavigate={handleNavigate}
-        isCollapsed={isSidebarCollapsed}
-        onToggleCollapse={handleToggleCollapse}
-        notifications={itemCounts}
-        cases={cases}
-        selectedCaseId={selectedCaseId}
-        onCaseSelect={handleCaseSelect}
-      />
+      {/* Sidebar - hidden on mobile */}
+      <div className="hidden md:block">
+        <Sidebar
+          currentRoute={location.pathname}
+          user={user ? { username: user.username, email: user.email || "" } : null}
+          onLogout={handleLogout}
+          onNavigate={handleNavigate}
+          isCollapsed={isSidebarCollapsed}
+          onToggleCollapse={handleToggleCollapse}
+          notifications={itemCounts}
+          cases={cases}
+          selectedCaseId={selectedCaseId}
+          onCaseSelect={handleCaseSelect}
+        />
+      </div>
 
-      {/* Main content area */}
-      <main className="flex-1 overflow-y-auto">
+      {/* Main content area - with bottom padding on mobile for nav */}
+      <main className="flex-1 overflow-y-auto pb-16 md:pb-0">
         <Outlet />
       </main>
+
+      {/* Mobile bottom navigation */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-gray-900 border-t border-white/10 px-2 py-1 z-50">
+        <div className="flex justify-around items-center">
+          {mobileNavItems.map((item) => {
+            const isActive = location.pathname === item.href ||
+              (item.href !== "/dashboard" && location.pathname.startsWith(item.href));
+            const Icon = item.icon;
+            return (
+              <button
+                key={item.href}
+                onClick={() => navigate(item.href)}
+                className={`flex flex-col items-center py-2 px-3 rounded-lg transition-colors ${
+                  isActive
+                    ? "text-cyan-400"
+                    : "text-gray-400 hover:text-white"
+                }`}
+              >
+                <Icon className="w-6 h-6" />
+                <span className="text-xs mt-1">{item.label}</span>
+              </button>
+            );
+          })}
+        </div>
+      </nav>
 
       {/* Command Palette (Cmd/Ctrl+K) */}
       <CommandPalette

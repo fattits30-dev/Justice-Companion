@@ -20,12 +20,15 @@ from __future__ import annotations
 import os
 from typing import AsyncIterator, List, Optional
 
-from backend.services.ai.service import (AIProviderConfig, ChatMessage,
-                                                 DocumentExtractionResponse,
-                                                 FieldConfidence,
-                                                 ParsedDocument,
-                                                 SuggestedCaseData,
-                                                 UserProfile)
+from backend.services.ai.models import (
+    AIProviderConfig,
+    ChatMessage,
+    DocumentExtractionResponse,
+    FieldConfidence,
+    ParsedDocument,
+    SuggestedCaseData,
+    UserProfile,
+)
 
 class StubAIService:
     """Deterministic, in-memory AI stub.

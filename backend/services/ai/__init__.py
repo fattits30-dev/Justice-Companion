@@ -18,7 +18,7 @@ Only AIProviderConfigService is loaded eagerly since it's needed for config.
 from typing import TYPE_CHECKING
 
 # Eagerly load lightweight provider config service
-from .providers import AIProviderConfigService
+from .provider_config import AIProviderConfigService
 
 # Type hints for lazy-loaded services (for IDE support)
 if TYPE_CHECKING:
