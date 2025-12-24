@@ -7,7 +7,7 @@
 
 import type { IDBPDatabase, StoreNames } from "idb";
 import type { JusticeCompanionDB } from "../db";
-import { /* openDatabase */ } from "../db";
+import { openDatabase } from "../db";
 import {
   encrypt,
   decrypt,

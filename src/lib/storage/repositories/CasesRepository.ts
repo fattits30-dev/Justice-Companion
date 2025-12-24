@@ -4,7 +4,7 @@
  * Handles CRUD operations for legal cases stored locally.
  */
 
-import { /* openDatabase */ } from "../db";
+import { openDatabase } from "../db";
 import { BaseRepository, type BaseEntity } from "./BaseRepository";
 
 /**

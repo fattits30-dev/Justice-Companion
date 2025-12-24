@@ -4,7 +4,7 @@
  * Handles CRUD operations for AI chat conversations and messages.
  */
 
-import { /* openDatabase */ } from "../db";
+import { openDatabase } from "../db";
 import { BaseRepository, type BaseEntity } from "./BaseRepository";
 
 /**

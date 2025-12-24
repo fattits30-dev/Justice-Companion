@@ -5,7 +5,7 @@
  * This is a key-value store, different from other entity repositories.
  */
 
-import { /* openDatabase */ } from "../db";
+import { openDatabase } from "../db";
 
 /**
  * Settings keys
