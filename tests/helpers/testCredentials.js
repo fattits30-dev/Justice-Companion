@@ -31,7 +31,7 @@ function deriveTestPassword(seed) {
  * Builds a deterministic test user object from options.
  *
  * @param {Object} options - User options
- * @param {string} options.username - The username to use
+ * @param {string} [options.username] - The username to use (defaults to "testuser")
  * @param {string} [options.seed] - The seed string for password generation (defaults to username)
  * @param {string} [options.password] - Explicit password (overrides derived password)
  * @param {string} [options.email] - Optional email (derived from username if not provided)
@@ -39,12 +39,15 @@ function deriveTestPassword(seed) {
  * @param {string} [options.lastName] - Optional last name
  * @returns {Object} A user object with username, password, and email
  */
-function buildDeterministicUser(options) {
+function buildDeterministicUser(options = {}) {
   const { username, seed, password, email, firstName, lastName } = options;
+  const finalUsername = username || "testuser";
+  const passwordSeed = seed || finalUsername;
+
   return {
-    username,
-    password: password || deriveTestPassword(seed || username),
-    email: email || `${username}@test.example.com`,
+    username: finalUsername,
+    password: password || deriveTestPassword(passwordSeed),
+    email: email || `${finalUsername}@test.example.com`,
     firstName: firstName || "Test",
     lastName: lastName || "User",
   };
@@ -54,11 +57,11 @@ function buildDeterministicUser(options) {
  * Builds demo credentials from environment variables.
  *
  * @param {Object} options - Credential options
- * @param {string} options.username - Demo username
- * @param {string} options.password - Demo password
+ * @param {string} [options.username] - Demo username (defaults to "demo")
+ * @param {string} [options.password] - Demo password (defaults to "Demo123!")
  * @returns {Object} Credential object with username and password
  */
-function buildDemoCredentials(options) {
+function buildDemoCredentials(options = {}) {
   const { username, password } = options;
   return {
     username: username || "demo",
