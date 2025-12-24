@@ -5,7 +5,7 @@
  * Used in integration tests to create consistent test data.
  */
 
-const crypto = require("node:crypto");
+import crypto from "node:crypto";
 
 /**
  * Derives a deterministic test password from a seed string.
@@ -87,7 +87,7 @@ function buildEphemeralTestUser(prefix, options = {}) {
   };
 }
 
-module.exports = {
+export {
   deriveTestPassword,
   buildDeterministicUser,
   buildDemoCredentials,
