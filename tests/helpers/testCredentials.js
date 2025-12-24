@@ -32,20 +32,64 @@ function deriveTestPassword(seed) {
  *
  * @param {Object} options - User options
  * @param {string} options.username - The username to use
- * @param {string} options.seed - The seed string for password generation
+ * @param {string} [options.seed] - The seed string for password generation (defaults to username)
+ * @param {string} [options.password] - Explicit password (overrides derived password)
  * @param {string} [options.email] - Optional email (derived from username if not provided)
+ * @param {string} [options.firstName] - Optional first name
+ * @param {string} [options.lastName] - Optional last name
  * @returns {Object} A user object with username, password, and email
  */
 function buildDeterministicUser(options) {
-  const { username, seed, email } = options;
+  const { username, seed, password, email, firstName, lastName } = options;
   return {
     username,
-    password: deriveTestPassword(seed),
+    password: password || deriveTestPassword(seed || username),
     email: email || `${username}@test.example.com`,
+    firstName: firstName || "Test",
+    lastName: lastName || "User",
+  };
+}
+
+/**
+ * Builds demo credentials from environment variables.
+ *
+ * @param {Object} options - Credential options
+ * @param {string} options.username - Demo username
+ * @param {string} options.password - Demo password
+ * @returns {Object} Credential object with username and password
+ */
+function buildDemoCredentials(options) {
+  const { username, password } = options;
+  return {
+    username: username || "demo",
+    password: password || "Demo123!",
+  };
+}
+
+/**
+ * Builds an ephemeral test user with unique timestamp-based credentials.
+ *
+ * @param {string} prefix - Username prefix
+ * @param {Object} options - User options
+ * @param {number} [options.timestamp] - Timestamp for uniqueness (defaults to Date.now())
+ * @returns {Object} A user object with unique username, password, and email
+ */
+function buildEphemeralTestUser(prefix, options = {}) {
+  const { timestamp } = options;
+  const ts = timestamp || Date.now();
+  const username = `${prefix}-${ts}`;
+  return {
+    username,
+    password: deriveTestPassword(username),
+    email: `${username}@test.example.com`,
+    firstName: "Test",
+    lastName: "User",
   };
 }
 
 module.exports = {
   deriveTestPassword,
   buildDeterministicUser,
+  buildDemoCredentials,
+  buildEphemeralTestUser,
 };

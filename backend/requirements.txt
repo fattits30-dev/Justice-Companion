@@ -36,7 +36,7 @@ transformers>=4.53.0  # Latest with ReDoS fixes (some CVEs still pending upstrea
 sentence-transformers>=3.3.1  # Available secure version
 faiss-cpu==1.8.0.post1  # Library for efficient similarity search and clustering of dense vectors
 # faiss-gpu==1.7.2 # Optional: for GPU-accelerated FAISS, requires CUDA
-huggingface-hub==0.26.5  # HuggingFace Hub API for model/dataset access
+huggingface-hub>=0.34.0  # HuggingFace Hub API for model/dataset access (required by transformers>=4.53.0)
 openai==1.58.1  # OpenAI Python client library (for OpenAI-compatible APIs)
 
 # System keyring for secure credential storage
