@@ -15,11 +15,7 @@ import { createLocalCasesApi } from "./cases";
 import { createLocalChatApi } from "./chat";
 import { createLocalAuthApi } from "./auth";
 import { createLocalSettingsApi } from "./settings";
-import {
-  openDatabase,
-  isEncryptionInitialized,
-  type JusticeCompanionDB,
-} from "../../storage";
+import { openDatabase, isEncryptionInitialized } from "../../storage";
 
 /**
  * Local API Client that mimics the backend API structure
@@ -105,19 +101,31 @@ export class LocalApiClient {
     }),
     get: async () => ({
       success: false as const,
-      error: { code: "NOT_IMPLEMENTED", message: "Deadlines not yet implemented" },
+      error: {
+        code: "NOT_IMPLEMENTED",
+        message: "Deadlines not yet implemented",
+      },
     }),
     create: async () => ({
       success: false as const,
-      error: { code: "NOT_IMPLEMENTED", message: "Deadlines not yet implemented" },
+      error: {
+        code: "NOT_IMPLEMENTED",
+        message: "Deadlines not yet implemented",
+      },
     }),
     update: async () => ({
       success: false as const,
-      error: { code: "NOT_IMPLEMENTED", message: "Deadlines not yet implemented" },
+      error: {
+        code: "NOT_IMPLEMENTED",
+        message: "Deadlines not yet implemented",
+      },
     }),
     delete: async () => ({
       success: false as const,
-      error: { code: "NOT_IMPLEMENTED", message: "Deadlines not yet implemented" },
+      error: {
+        code: "NOT_IMPLEMENTED",
+        message: "Deadlines not yet implemented",
+      },
     }),
   };
 
@@ -139,15 +147,24 @@ export class LocalApiClient {
     }),
     get: async (_evidenceId: number) => ({
       success: false as const,
-      error: { code: "NOT_IMPLEMENTED", message: "Evidence not yet implemented" },
+      error: {
+        code: "NOT_IMPLEMENTED",
+        message: "Evidence not yet implemented",
+      },
     }),
     upload: async () => ({
       success: false as const,
-      error: { code: "NOT_IMPLEMENTED", message: "Evidence not yet implemented" },
+      error: {
+        code: "NOT_IMPLEMENTED",
+        message: "Evidence not yet implemented",
+      },
     }),
     delete: async (_evidenceId: number) => ({
       success: false as const,
-      error: { code: "NOT_IMPLEMENTED", message: "Evidence not yet implemented" },
+      error: {
+        code: "NOT_IMPLEMENTED",
+        message: "Evidence not yet implemented",
+      },
     }),
   };
 
@@ -185,7 +202,10 @@ export class LocalApiClient {
     }),
     getLegislation: async () => ({
       success: false as const,
-      error: { code: "NOT_AVAILABLE", message: "Legal research requires internet connection" },
+      error: {
+        code: "NOT_AVAILABLE",
+        message: "Legal research requires internet connection",
+      },
     }),
   };
 
@@ -260,7 +280,10 @@ export class LocalApiClient {
     }),
     get: async () => ({
       success: false as const,
-      error: { code: "NOT_IMPLEMENTED", message: "Templates not yet implemented" },
+      error: {
+        code: "NOT_IMPLEMENTED",
+        message: "Templates not yet implemented",
+      },
     }),
   };
 
@@ -269,8 +292,11 @@ export class LocalApiClient {
    */
   public readonly aiConfig = {
     getConfig: async () => this.settings.getAIConfig(),
-    updateConfig: async (config: { provider: string; apiKey: string; model: string }) =>
-      this.settings.setAIConfig(config),
+    updateConfig: async (config: {
+      provider: string;
+      apiKey: string;
+      model: string;
+    }) => this.settings.setAIConfig(config),
     testConnection: async () => ({
       success: true as const,
       data: { connected: true },

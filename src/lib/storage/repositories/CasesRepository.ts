@@ -4,7 +4,7 @@
  * Handles CRUD operations for legal cases stored locally.
  */
 
-import { openDatabase } from "../db";
+import {} from "../db";
 import { BaseRepository, type BaseEntity } from "./BaseRepository";
 
 /**
@@ -78,7 +78,9 @@ export class CasesRepository extends BaseRepository<"cases", LocalCase> {
       status: input.status ?? "active",
     };
 
-    return super.create(data as Omit<LocalCase, "id" | "createdAt" | "updatedAt">);
+    return super.create(
+      data as Omit<LocalCase, "id" | "createdAt" | "updatedAt">,
+    );
   }
 
   /**
@@ -90,7 +92,9 @@ export class CasesRepository extends BaseRepository<"cases", LocalCase> {
 
     const decrypted: LocalCase[] = [];
     for (const item of results) {
-      const dec = await this.decryptFields(item as unknown as Record<string, unknown>);
+      const dec = await this.decryptFields(
+        item as unknown as Record<string, unknown>,
+      );
       decrypted.push(dec as unknown as LocalCase);
     }
 
@@ -106,7 +110,9 @@ export class CasesRepository extends BaseRepository<"cases", LocalCase> {
 
     const decrypted: LocalCase[] = [];
     for (const item of results) {
-      const dec = await this.decryptFields(item as unknown as Record<string, unknown>);
+      const dec = await this.decryptFields(
+        item as unknown as Record<string, unknown>,
+      );
       decrypted.push(dec as unknown as LocalCase);
     }
 

@@ -5,13 +5,8 @@
  * This provides a simple backup/restore mechanism for local-first storage.
  */
 
-import { openDatabase, type JusticeCompanionDB } from "./db";
-import {
-  isEncryptionInitialized,
-  encrypt,
-  decrypt,
-  type EncryptedData,
-} from "./crypto";
+import { openDatabase } from "./db";
+import { isEncryptionInitialized, decrypt } from "./crypto";
 import { getSettingsRepository } from "./repositories/SettingsRepository";
 
 /**
@@ -106,7 +101,7 @@ async function getAllFromStore<T>(storeName: StoreNames): Promise<T[]> {
  * Export all data to a backup object
  */
 export async function exportData(
-  options: ExportOptions = {}
+  options: ExportOptions = {},
 ): Promise<BackupData> {
   const { preserveEncryption = true, decryptData = false } = options;
 
@@ -115,7 +110,7 @@ export async function exportData(
     throw new Error("Cannot decrypt data: encryption not initialized");
   }
 
-  const db = await openDatabase();
+  const _db = await openDatabase();
 
   // Collect all data
   const backup: BackupData = {
@@ -167,7 +162,7 @@ export async function exportData(
  * Decrypt encrypted fields in backup data
  */
 async function decryptBackupData(
-  data: BackupData["data"]
+  data: BackupData["data"],
 ): Promise<BackupData["data"]> {
   const decrypted = { ...data };
 
@@ -184,7 +179,7 @@ async function decryptBackupData(
         }
       }
       return note;
-    })
+    }),
   );
 
   // Decrypt messages content
@@ -200,7 +195,7 @@ async function decryptBackupData(
         }
       }
       return message;
-    })
+    }),
   );
 
   // Decrypt contact details
@@ -220,7 +215,7 @@ async function decryptBackupData(
         }
       }
       return contact;
-    })
+    }),
   );
 
   return decrypted;
@@ -230,7 +225,7 @@ async function decryptBackupData(
  * Export data as a downloadable JSON file
  */
 export async function downloadBackup(
-  options: ExportOptions = {}
+  options: ExportOptions = {},
 ): Promise<void> {
   const backup = await exportData(options);
   const json = JSON.stringify(backup, null, 2);
@@ -254,7 +249,7 @@ export async function downloadBackup(
  */
 export async function importData(
   backup: BackupData,
-  options: { merge?: boolean; overwrite?: boolean } = {}
+  options: { merge?: boolean; overwrite?: boolean } = {},
 ): Promise<ImportResult> {
   const { merge = false, overwrite = false } = options;
 
@@ -348,7 +343,7 @@ export async function importData(
         (result.imported as any)[name]++;
       } catch (error) {
         result.errors.push(
-          `Failed to import ${name} item: ${error instanceof Error ? error.message : "Unknown error"}`
+          `Failed to import ${name} item: ${error instanceof Error ? error.message : "Unknown error"}`,
         );
       }
     }
@@ -375,8 +370,8 @@ export async function importFromFile(file: File): Promise<ImportResult> {
       } catch (error) {
         reject(
           new Error(
-            `Failed to parse backup file: ${error instanceof Error ? error.message : "Unknown error"}`
-          )
+            `Failed to parse backup file: ${error instanceof Error ? error.message : "Unknown error"}`,
+          ),
         );
       }
     };

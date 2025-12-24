@@ -12,7 +12,6 @@ import {
   encrypt,
   decrypt,
   encryptObject,
-  decryptObject,
   isEncryptionInitialized,
   type EncryptedData,
 } from "../crypto";
@@ -71,7 +70,7 @@ export abstract class BaseRepository<
    * Encrypt specified fields in an object
    */
   protected async encryptFields<T extends Record<string, unknown>>(
-    data: T
+    data: T,
   ): Promise<T> {
     if (!this.options.encryptedFields || !isEncryptionInitialized()) {
       return data;
@@ -79,12 +78,18 @@ export abstract class BaseRepository<
 
     const result = { ...data };
     for (const field of this.options.encryptedFields) {
-      if (field in result && result[field] !== null && result[field] !== undefined) {
+      if (
+        field in result &&
+        result[field] !== null &&
+        result[field] !== undefined
+      ) {
         const value = result[field];
-        const encrypted = typeof value === "string"
-          ? await encrypt(value)
-          : await encryptObject(value);
-        (result as Record<string, unknown>)[`encrypted${capitalize(field)}`] = JSON.stringify(encrypted);
+        const encrypted =
+          typeof value === "string"
+            ? await encrypt(value)
+            : await encryptObject(value);
+        (result as Record<string, unknown>)[`encrypted${capitalize(field)}`] =
+          JSON.stringify(encrypted);
         delete (result as Record<string, unknown>)[field];
       }
     }
@@ -95,7 +100,7 @@ export abstract class BaseRepository<
    * Decrypt specified fields in an object
    */
   protected async decryptFields<T extends Record<string, unknown>>(
-    data: T
+    data: T,
   ): Promise<T> {
     if (!this.options.encryptedFields || !isEncryptionInitialized()) {
       return data;
@@ -106,7 +111,9 @@ export abstract class BaseRepository<
       const encryptedKey = `encrypted${capitalize(field)}`;
       if (encryptedKey in result && result[encryptedKey]) {
         try {
-          const encryptedData = JSON.parse(result[encryptedKey] as string) as EncryptedData;
+          const encryptedData = JSON.parse(
+            result[encryptedKey] as string,
+          ) as EncryptedData;
           const decrypted = await decrypt(encryptedData);
           // Try to parse as JSON, otherwise use as string
           try {
@@ -127,7 +134,9 @@ export abstract class BaseRepository<
   /**
    * Create a new entity
    */
-  async create(data: Omit<Entity, "id" | "createdAt" | "updatedAt">): Promise<Entity> {
+  async create(
+    data: Omit<Entity, "id" | "createdAt" | "updatedAt">,
+  ): Promise<Entity> {
     this.checkEncryption();
     const db = await this.getDb();
 
@@ -142,7 +151,7 @@ export abstract class BaseRepository<
 
     const id = await db.add(
       this.storeName,
-      encrypted as JusticeCompanionDB[StoreName]["value"]
+      encrypted as JusticeCompanionDB[StoreName]["value"],
     );
 
     return this.findById(id as number) as Promise<Entity>;
@@ -153,7 +162,10 @@ export abstract class BaseRepository<
    */
   async findById(id: number): Promise<Entity | null> {
     const db = await this.getDb();
-    const data = await db.get(this.storeName, id as JusticeCompanionDB[StoreName]["key"]);
+    const data = await db.get(
+      this.storeName,
+      id as JusticeCompanionDB[StoreName]["key"],
+    );
 
     if (!data) {
       return null;
@@ -172,7 +184,9 @@ export abstract class BaseRepository<
 
     const results: Entity[] = [];
     for (const item of data) {
-      const decrypted = await this.decryptFields(item as Record<string, unknown>);
+      const decrypted = await this.decryptFields(
+        item as Record<string, unknown>,
+      );
       results.push(decrypted as Entity);
     }
 
@@ -182,11 +196,17 @@ export abstract class BaseRepository<
   /**
    * Update an entity
    */
-  async update(id: number, data: Partial<Omit<Entity, "id" | "createdAt">>): Promise<Entity | null> {
+  async update(
+    id: number,
+    data: Partial<Omit<Entity, "id" | "createdAt">>,
+  ): Promise<Entity | null> {
     this.checkEncryption();
     const db = await this.getDb();
 
-    const existing = await db.get(this.storeName, id as JusticeCompanionDB[StoreName]["key"]);
+    const existing = await db.get(
+      this.storeName,
+      id as JusticeCompanionDB[StoreName]["key"],
+    );
     if (!existing) {
       return null;
     }
@@ -201,7 +221,7 @@ export abstract class BaseRepository<
 
     await db.put(
       this.storeName,
-      encrypted as JusticeCompanionDB[StoreName]["value"]
+      encrypted as JusticeCompanionDB[StoreName]["value"],
     );
 
     return this.findById(id);
@@ -213,7 +233,10 @@ export abstract class BaseRepository<
   async delete(id: number): Promise<boolean> {
     const db = await this.getDb();
 
-    const existing = await db.get(this.storeName, id as JusticeCompanionDB[StoreName]["key"]);
+    const existing = await db.get(
+      this.storeName,
+      id as JusticeCompanionDB[StoreName]["key"],
+    );
     if (!existing) {
       return false;
     }

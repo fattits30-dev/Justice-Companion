@@ -4,7 +4,7 @@
  * Handles CRUD operations for AI chat conversations and messages.
  */
 
-import { openDatabase } from "../db";
+import {} from "../db";
 import { BaseRepository, type BaseEntity } from "./BaseRepository";
 
 /**
@@ -54,7 +54,10 @@ export interface CreateMessageInput {
 /**
  * Conversations repository
  */
-export class ConversationsRepository extends BaseRepository<"conversations", LocalConversation> {
+export class ConversationsRepository extends BaseRepository<
+  "conversations",
+  LocalConversation
+> {
   constructor() {
     super("conversations", {});
   }
@@ -68,7 +71,9 @@ export class ConversationsRepository extends BaseRepository<"conversations", Loc
       title: input.title,
     };
 
-    return super.create(data as Omit<LocalConversation, "id" | "createdAt" | "updatedAt">);
+    return super.create(
+      data as Omit<LocalConversation, "id" | "createdAt" | "updatedAt">,
+    );
   }
 
   /**
@@ -76,7 +81,11 @@ export class ConversationsRepository extends BaseRepository<"conversations", Loc
    */
   async findByCaseId(caseId: number): Promise<LocalConversation[]> {
     const db = await this.getDb();
-    const results = await db.getAllFromIndex("conversations", "by-case", caseId);
+    const results = await db.getAllFromIndex(
+      "conversations",
+      "by-case",
+      caseId,
+    );
 
     // Sort by updatedAt descending
     results.sort((a, b) => {
@@ -115,8 +124,13 @@ export class ConversationsRepository extends BaseRepository<"conversations", Loc
   /**
    * Update conversation title
    */
-  async updateTitle(id: number, title: string): Promise<LocalConversation | null> {
-    return this.update(id, { title } as Partial<Omit<LocalConversation, "id" | "createdAt">>);
+  async updateTitle(
+    id: number,
+    title: string,
+  ): Promise<LocalConversation | null> {
+    return this.update(id, { title } as Partial<
+      Omit<LocalConversation, "id" | "createdAt">
+    >);
   }
 
   /**
@@ -132,7 +146,10 @@ export class ConversationsRepository extends BaseRepository<"conversations", Loc
 /**
  * Messages repository - handles chat messages with encryption
  */
-export class MessagesRepository extends BaseRepository<"messages", LocalMessage> {
+export class MessagesRepository extends BaseRepository<
+  "messages",
+  LocalMessage
+> {
   constructor() {
     super("messages", {
       // Message content is encrypted
@@ -155,7 +172,9 @@ export class MessagesRepository extends BaseRepository<"messages", LocalMessage>
     const conversationsRepo = getConversationsRepository();
     await conversationsRepo.update(input.conversationId, {});
 
-    return super.create(data as Omit<LocalMessage, "id" | "createdAt" | "updatedAt">);
+    return super.create(
+      data as Omit<LocalMessage, "id" | "createdAt" | "updatedAt">,
+    );
   }
 
   /**
@@ -163,11 +182,17 @@ export class MessagesRepository extends BaseRepository<"messages", LocalMessage>
    */
   async findByConversationId(conversationId: number): Promise<LocalMessage[]> {
     const db = await this.getDb();
-    const results = await db.getAllFromIndex("messages", "by-conversation", conversationId);
+    const results = await db.getAllFromIndex(
+      "messages",
+      "by-conversation",
+      conversationId,
+    );
 
     const decrypted: LocalMessage[] = [];
     for (const item of results) {
-      const dec = await this.decryptFields(item as unknown as Record<string, unknown>);
+      const dec = await this.decryptFields(
+        item as unknown as Record<string, unknown>,
+      );
       decrypted.push(dec as unknown as LocalMessage);
     }
 
@@ -208,7 +233,10 @@ export class MessagesRepository extends BaseRepository<"messages", LocalMessage>
   /**
    * Get last N messages for context (for AI)
    */
-  async getRecentContext(conversationId: number, limit: number = 10): Promise<LocalMessage[]> {
+  async getRecentContext(
+    conversationId: number,
+    limit: number = 10,
+  ): Promise<LocalMessage[]> {
     const messages = await this.findByConversationId(conversationId);
     return messages.slice(-limit);
   }

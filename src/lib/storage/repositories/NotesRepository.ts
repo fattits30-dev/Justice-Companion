@@ -4,7 +4,7 @@
  * Handles CRUD operations for case notes with encrypted content.
  */
 
-import { openDatabase } from "../db";
+import {} from "../db";
 import { BaseRepository, type BaseEntity } from "./BaseRepository";
 
 /**
@@ -58,7 +58,9 @@ export class NotesRepository extends BaseRepository<"notes", LocalNote> {
       content: input.content,
     };
 
-    return super.create(data as Omit<LocalNote, "id" | "createdAt" | "updatedAt">);
+    return super.create(
+      data as Omit<LocalNote, "id" | "createdAt" | "updatedAt">,
+    );
   }
 
   /**
@@ -70,7 +72,9 @@ export class NotesRepository extends BaseRepository<"notes", LocalNote> {
 
     const decrypted: LocalNote[] = [];
     for (const item of results) {
-      const dec = await this.decryptFields(item as unknown as Record<string, unknown>);
+      const dec = await this.decryptFields(
+        item as unknown as Record<string, unknown>,
+      );
       decrypted.push(dec as unknown as LocalNote);
     }
 
@@ -94,7 +98,7 @@ export class NotesRepository extends BaseRepository<"notes", LocalNote> {
     return all.filter(
       (note) =>
         note.title.toLowerCase().includes(lowerQuery) ||
-        note.content.toLowerCase().includes(lowerQuery)
+        note.content.toLowerCase().includes(lowerQuery),
     );
   }
 
@@ -108,7 +112,7 @@ export class NotesRepository extends BaseRepository<"notes", LocalNote> {
     return caseNotes.filter(
       (note) =>
         note.title.toLowerCase().includes(lowerQuery) ||
-        note.content.toLowerCase().includes(lowerQuery)
+        note.content.toLowerCase().includes(lowerQuery),
     );
   }
 

@@ -21,10 +21,7 @@ import {
 import { logger } from "../lib/logger";
 import { getLocalApiClient, initializeLocalApi } from "../lib/api/local";
 import { getSettingsRepository } from "../lib/storage/repositories/SettingsRepository";
-import {
-  isEncryptionInitialized,
-  clearEncryptionKey,
-} from "../lib/storage/crypto";
+import { isEncryptionInitialized } from "../lib/storage/crypto";
 
 /**
  * Local user type
@@ -71,7 +68,7 @@ interface LocalAuthContextValue {
   login: (
     identifier: string,
     password: string,
-    rememberMe: boolean
+    rememberMe: boolean,
   ) => Promise<void>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
@@ -84,7 +81,7 @@ interface LocalAuthProviderProps {
 
 // Create context
 const LocalAuthContext = createContext<LocalAuthContextValue | undefined>(
-  undefined
+  undefined,
 );
 
 /**
@@ -135,9 +132,7 @@ export function LocalAuthProvider({ children }: LocalAuthProviderProps) {
           error: err as Error,
           service: "LocalAuthContext",
         });
-        setError(
-          err instanceof Error ? err.message : "Failed to initialize"
-        );
+        setError(err instanceof Error ? err.message : "Failed to initialize");
         // Default to needs_setup on error
         setAuthState("needs_setup");
       } finally {
@@ -230,7 +225,7 @@ export function LocalAuthProvider({ children }: LocalAuthProviderProps) {
    */
   const changePin = async (
     currentPin: string,
-    newPin: string
+    newPin: string,
   ): Promise<void> => {
     setIsLoading(true);
     setError(null);
@@ -281,7 +276,7 @@ export function LocalAuthProvider({ children }: LocalAuthProviderProps) {
   const login = async (
     _identifier: string,
     password: string,
-    _rememberMe: boolean
+    _rememberMe: boolean,
   ): Promise<void> => {
     if (!isPinConfigured) {
       await setupPin(password);

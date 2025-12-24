@@ -216,13 +216,15 @@ let dbInstance: IDBPDatabase<JusticeCompanionDB> | null = null;
 /**
  * Initialize and open the IndexedDB database
  */
-export async function openDatabase(): Promise<IDBPDatabase<JusticeCompanionDB>> {
+export async function openDatabase(): Promise<
+  IDBPDatabase<JusticeCompanionDB>
+> {
   if (dbInstance) {
     return dbInstance;
   }
 
   dbInstance = await openDB<JusticeCompanionDB>(DB_NAME, DB_VERSION, {
-    upgrade(db, oldVersion, newVersion, transaction) {
+    upgrade(db, oldVersion, _newVersion, _transaction) {
       // Handle migrations based on version
       if (oldVersion < 1) {
         // Initial schema creation

@@ -27,52 +27,49 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { PinScreen } from "./components/auth/PinScreen";
 import { ErrorBoundary } from "./components/ErrorBoundary";
-import { /* MainLayout */ } from "./components/layouts/MainLayout";
+import {} from /* MainLayout */ "./components/layouts/MainLayout";
 import { ChatLayout } from "./components/layouts/ChatLayout";
 import { InstallPrompt } from "./components/pwa/InstallPrompt";
 import { ToastProvider } from "./components/ui/index";
 import { SkeletonCard } from "./components/ui/Skeleton";
-import {
-  LocalAuthProvider,
-  useLocalAuth,
-} from "./contexts/LocalAuthContext";
+import { LocalAuthProvider, useLocalAuth } from "./contexts/LocalAuthContext";
 import { queryClient } from "./lib/queryClient";
 import { routerFutureFlags } from "./router/futureFlags";
 
 // Lazy load views for code splitting
 const Dashboard = lazy(() =>
-  import("./components/Dashboard").then((m) => ({ default: m.Dashboard }))
+  import("./components/Dashboard").then((m) => ({ default: m.Dashboard })),
 );
 const CasesView = lazy(() =>
-  import("./views/CasesView").then((m) => ({ default: m.CasesView }))
+  import("./views/CasesView").then((m) => ({ default: m.CasesView })),
 );
 const DocumentsView = lazy(() =>
   import("./views/DocumentsView").then((m) => ({
     default: m.DocumentsView,
-  }))
+  })),
 );
 const ChatView = lazy(() =>
-  import("./views/ChatView").then((m) => ({ default: m.ChatView }))
+  import("./views/ChatView").then((m) => ({ default: m.ChatView })),
 );
 const LocalSettingsView = lazy(() =>
   import("./views/LocalSettingsView").then((m) => ({
     default: m.LocalSettingsView,
-  }))
+  })),
 );
 const TimelineView = lazy(() =>
   import("./views/timeline/TimelineView").then((m) => ({
     default: m.TimelineView,
-  }))
+  })),
 );
 const CaseFileTreeView = lazy(() =>
   import("./views/cases/CaseFileTreeView").then((m) => ({
     default: m.CaseFileTreeView,
-  }))
+  })),
 );
 const CaseFileView = lazy(() =>
   import("./views/cases/CaseFileView").then((m) => ({
     default: m.CaseFileView,
-  }))
+  })),
 );
 
 /**
@@ -173,7 +170,7 @@ function LocalDashboardWrapper() {
  * LocalAppRoutes - All application routes for local mode
  */
 function LocalAppRoutes() {
-  const { user, authState } = useLocalAuth();
+  const { user: _user, authState } = useLocalAuth();
 
   return (
     <Routes>
@@ -261,7 +258,7 @@ function LocalAppRoutes() {
           <Navigate
             to={
               authState === "unlocked"
-                ? "/chat"  // Chat-first experience
+                ? "/chat" // Chat-first experience
                 : authState === "needs_setup"
                   ? "/pin?mode=setup"
                   : "/pin"
@@ -275,10 +272,7 @@ function LocalAppRoutes() {
       <Route
         path="*"
         element={
-          <Navigate
-            to={authState === "unlocked" ? "/chat" : "/pin"}
-            replace
-          />
+          <Navigate to={authState === "unlocked" ? "/chat" : "/pin"} replace />
         }
       />
     </Routes>

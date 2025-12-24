@@ -12,7 +12,6 @@ import {
   type LocalConversation,
   type LocalMessage,
 } from "../../storage/repositories/ConversationsRepository";
-import { getSettingsRepository } from "../../storage/repositories/SettingsRepository";
 import { openDatabase } from "../../storage/db";
 
 /**
@@ -29,14 +28,18 @@ interface AIConfig {
 /**
  * Get AI configuration from IndexedDB
  */
-async function getAIConfig(): Promise<AIConfig | null> {
+async function _getAIConfig(): Promise<AIConfig | null> {
   const db = await openDatabase();
   const openaiConfig = await db.get("aiConfig", "openai");
   const anthropicConfig = await db.get("aiConfig", "anthropic");
 
   // Return the enabled one, preferring OpenAI
-  if (openaiConfig?.enabled) {return openaiConfig as AIConfig;}
-  if (anthropicConfig?.enabled) {return anthropicConfig as AIConfig;}
+  if (openaiConfig?.enabled) {
+    return openaiConfig as AIConfig;
+  }
+  if (anthropicConfig?.enabled) {
+    return anthropicConfig as AIConfig;
+  }
 
   return null;
 }
@@ -48,7 +51,7 @@ async function callOpenAI(
   apiKey: string,
   model: string,
   messages: Array<{ role: string; content: string }>,
-  onToken: (token: string) => void
+  onToken: (token: string) => void,
 ): Promise<string> {
   const response = await fetch("https://api.openai.com/v1/chat/completions", {
     method: "POST",
@@ -79,7 +82,9 @@ async function callOpenAI(
 
   while (true) {
     const { done, value } = await reader.read();
-    if (done) {break;}
+    if (done) {
+      break;
+    }
 
     buffer += decoder.decode(value, { stream: true });
     const lines = buffer.split("\n");
@@ -88,7 +93,9 @@ async function callOpenAI(
     for (const line of lines) {
       if (line.startsWith("data: ")) {
         const data = line.slice(6);
-        if (data === "[DONE]") {continue;}
+        if (data === "[DONE]") {
+          continue;
+        }
 
         try {
           const parsed = JSON.parse(data);
@@ -114,7 +121,7 @@ async function callAnthropic(
   apiKey: string,
   model: string,
   messages: Array<{ role: string; content: string }>,
-  onToken: (token: string) => void
+  onToken: (token: string) => void,
 ): Promise<string> {
   // Convert messages format for Anthropic
   const anthropicMessages = messages
@@ -137,7 +144,9 @@ async function callAnthropic(
     body: JSON.stringify({
       model: model || "claude-sonnet-4-20250514",
       max_tokens: 4096,
-      system: systemMessage?.content || "You are a helpful legal assistant for UK civil law matters.",
+      system:
+        systemMessage?.content ||
+        "You are a helpful legal assistant for UK civil law matters.",
       messages: anthropicMessages,
       stream: true,
     }),
@@ -159,7 +168,9 @@ async function callAnthropic(
 
   while (true) {
     const { done, value } = await reader.read();
-    if (done) {break;}
+    if (done) {
+      break;
+    }
 
     buffer += decoder.decode(value, { stream: true });
     const lines = buffer.split("\n");
@@ -212,7 +223,7 @@ export function createLocalChatApi() {
         conversationId?: number | null;
         caseId?: number | null;
         useRAG?: boolean;
-      } = {}
+      } = {},
     ): Promise<void> {
       const { conversationId, caseId } = options;
 
@@ -232,14 +243,17 @@ export function createLocalChatApi() {
           // For now, we'll store it unencrypted in the config
           // TODO: Decrypt API key from storage
           apiKey = openaiConfig.encryptedApiKey;
-        } else if (anthropicConfig?.enabled && anthropicConfig.encryptedApiKey) {
+        } else if (
+          anthropicConfig?.enabled &&
+          anthropicConfig.encryptedApiKey
+        ) {
           config = anthropicConfig as AIConfig;
           apiKey = anthropicConfig.encryptedApiKey;
         }
 
         if (!config || !apiKey) {
           callbacks.onError(
-            "No AI provider configured. Please set up your API key in Settings."
+            "No AI provider configured. Please set up your API key in Settings.",
           );
           return;
         }
@@ -266,7 +280,7 @@ export function createLocalChatApi() {
         // Get conversation history for context
         const history = await messagesRepo.getRecentContext(
           currentConversationId,
-          10
+          10,
         );
 
         // Build messages array for AI
@@ -307,14 +321,14 @@ Always:
             apiKey,
             config.model,
             aiMessages,
-            callbacks.onToken
+            callbacks.onToken,
           );
         } else {
           fullResponse = await callAnthropic(
             apiKey,
             config.model,
             aiMessages,
-            callbacks.onToken
+            callbacks.onToken,
           );
         }
 
@@ -328,7 +342,7 @@ Always:
         callbacks.onComplete(currentConversationId);
       } catch (error) {
         callbacks.onError(
-          error instanceof Error ? error.message : "Chat failed"
+          error instanceof Error ? error.message : "Chat failed",
         );
       }
     },
@@ -338,7 +352,7 @@ Always:
      */
     async getConversations(
       caseId?: number | null,
-      limit: number = 10
+      limit: number = 10,
     ): Promise<ApiResponse<LocalConversation[]>> {
       try {
         let conversations: LocalConversation[];
@@ -370,9 +384,7 @@ Always:
     /**
      * Get a specific conversation with messages
      */
-    async getConversation(
-      conversationId: number
-    ): Promise<
+    async getConversation(conversationId: number): Promise<
       ApiResponse<{
         conversation: LocalConversation;
         messages: LocalMessage[];
@@ -419,7 +431,7 @@ Always:
      * Delete a conversation
      */
     async deleteConversation(
-      conversationId: number
+      conversationId: number,
     ): Promise<ApiResponse<void>> {
       try {
         const deleted =
@@ -459,7 +471,7 @@ Always:
      */
     async uploadDocument(
       file: File,
-      _userQuestion?: string
+      _userQuestion?: string,
     ): Promise<ApiResponse<{ filePath: string }>> {
       try {
         // In local mode, we read the file content directly
@@ -488,7 +500,7 @@ Always:
      */
     async analyzeDocument(
       _filePath: string,
-      _userQuestion?: string
+      _userQuestion?: string,
     ): Promise<ApiResponse<{ analysis: string }>> {
       // TODO: Implement document analysis using AI provider
       return {

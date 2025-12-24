@@ -28,7 +28,7 @@ interface LightweightCase {
 }
 
 export function DocumentsView() {
-  const { auth, api, isLocalMode } = useAppContext();
+  const { auth, api, isLocalMode: _isLocalMode } = useAppContext();
   const { sessionId, isLoading: authLoading } = auth;
   const [cases, setCases] = useState<LightweightCase[]>([]);
   const [selectedCaseId, setSelectedCaseId] = useState<number | null>(null);
@@ -115,9 +115,8 @@ export function DocumentsView() {
         }
 
         // Handle both paginated and direct array responses
-        const evidenceData = "items" in response.data
-          ? response.data.items
-          : response.data;
+        const evidenceData =
+          "items" in response.data ? response.data.items : response.data;
 
         setEvidence(evidenceData as Evidence[]);
         setEvidenceState("ready");
