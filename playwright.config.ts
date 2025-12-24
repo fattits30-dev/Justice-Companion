@@ -78,9 +78,13 @@ export default defineConfig({
 
   /* Run your local dev server before starting the tests */
   webServer: {
-    command: "npm run dev:full",
+    // In CI, run local-first mode without backend
+    // In local dev, can use dev:full for full-stack testing
+    command: process.env.CI
+      ? "VITE_LOCAL_MODE=true npm run dev:frontend:e2e"
+      : "npm run dev:full",
     url: "http://localhost:5178",
     reuseExistingServer: !process.env.CI,
-    timeout: 120 * 1000, // 2 minutes for backend + frontend startup
+    timeout: process.env.CI ? 60 * 1000 : 120 * 1000,
   },
 });
