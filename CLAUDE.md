@@ -144,6 +144,39 @@ Justice-Companion/
 
 ## MCP TOOLS TO USE
 
+### Justice Tools (REQUIRED - Use for Codebase Exploration)
+
+**ALWAYS use these instead of raw Grep/Glob for exploration:**
+
+```python
+# Analyze entire codebase (USE FIRST when starting work)
+mcp__justice-tools__analyze_codebase(path=".")
+# Returns: structure, stats, large files, issues - ALL IN ONE CALL
+
+# Find files that need refactoring
+mcp__justice-tools__find_large_files(path=".", min_lines=300)
+# Returns: files over threshold with split suggestions
+
+# Understand a file before editing
+mcp__justice-tools__analyze_file(file_path="path/to/file.py")
+# Returns: functions, classes, imports, issues
+
+# Find where a symbol is defined/used
+mcp__justice-tools__find_symbol(name="SymbolName", path=".")
+# Returns: definition location, usage count, file list
+
+# Search with context (better than grep)
+mcp__justice-tools__smart_search(query="pattern", path=".")
+# Returns: matches with context, summarized
+```
+
+**Context savings:**
+| Old Way (Grep/Read) | Tokens | Justice Tools | Tokens |
+|---------------------|--------|---------------|--------|
+| Find large files | ~2000 | analyze_codebase | ~200 |
+| Search codebase | ~3000 | smart_search | ~300 |
+| Read 5 files | ~5000 | analyze_file x5 | ~500 |
+
 ### Sequential Thinking (REQUIRED - Ultrathink Mode)
 
 ```

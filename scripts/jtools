@@ -1,0 +1,61 @@
+#!/bin/bash
+# Justice Tools - Quick wrapper for codebase analysis
+# Usage: ./scripts/jtools <command> [args]
+#
+# Commands:
+#   analyze              - Analyze entire codebase
+#   large [min_lines]    - Find large files (default: 300 lines)
+#   file <path>          - Analyze specific file
+#   symbol <name>        - Find symbol usages
+#   search <query>       - Smart search
+
+cd "$(dirname "$0")/.." || exit 1
+
+case "$1" in
+    analyze|a)
+        python3 -m mcp_tools.cli analyze_codebase "${2:-.}"
+        ;;
+    large|l)
+        python3 -m mcp_tools.cli find_large_files . --min-lines "${2:-300}"
+        ;;
+    file|f)
+        if [ -z "$2" ]; then
+            echo "Usage: jtools file <path>"
+            exit 1
+        fi
+        python3 -m mcp_tools.cli analyze_file "$2"
+        ;;
+    symbol|s)
+        if [ -z "$2" ]; then
+            echo "Usage: jtools symbol <name>"
+            exit 1
+        fi
+        python3 -m mcp_tools.cli find_symbol "$2" .
+        ;;
+    search|grep|g)
+        if [ -z "$2" ]; then
+            echo "Usage: jtools search <query>"
+            exit 1
+        fi
+        python3 -m mcp_tools.cli smart_search "$2" .
+        ;;
+    *)
+        echo "Justice Tools - Codebase Analysis"
+        echo ""
+        echo "Usage: ./scripts/jtools <command> [args]"
+        echo ""
+        echo "Commands:"
+        echo "  analyze (a)         - Analyze entire codebase"
+        echo "  large (l) [min]     - Find large files (default: 300 lines)"
+        echo "  file (f) <path>     - Analyze specific file"
+        echo "  symbol (s) <name>   - Find symbol usages"
+        echo "  search (g) <query>  - Smart search"
+        echo ""
+        echo "Examples:"
+        echo "  ./scripts/jtools analyze"
+        echo "  ./scripts/jtools large 500"
+        echo "  ./scripts/jtools file backend/routes/auth.py"
+        echo "  ./scripts/jtools symbol CaseService"
+        echo "  ./scripts/jtools search '@router.post'"
+        ;;
+esac

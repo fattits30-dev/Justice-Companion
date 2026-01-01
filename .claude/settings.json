@@ -1,0 +1,27 @@
+{
+  "mcpServers": {
+    "justice-tools": {
+      "command": "python3",
+      "args": ["-m", "mcp_tools.server"],
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}"
+      }
+    }
+  },
+  "hooks": {
+    "enabled": true
+  },
+  "permissions": {
+    "allow": [
+      "Bash(git:*)",
+      "Bash(npm:*)",
+      "Bash(python:*)",
+      "Read",
+      "Write",
+      "Edit",
+      "Glob",
+      "Grep"
+    ]
+  }
+}
