@@ -359,7 +359,7 @@ class _PinInput extends StatefulWidget {
     required this.focusNode,
     this.enabled = true,
     this.onCompleted,
-    this.pinLength = 4,
+    this.pinLength = 6,
   });
 
   @override

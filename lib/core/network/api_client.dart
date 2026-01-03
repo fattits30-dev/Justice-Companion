@@ -228,11 +228,7 @@ class _RetryInterceptor extends Interceptor {
   final int maxRetries;
   final Duration retryDelay;
 
-  _RetryInterceptor(
-    this._dio, {
-    this.maxRetries = 3,
-    this.retryDelay = const Duration(seconds: 1),
-  });
+  _RetryInterceptor(this._dio, {this.maxRetries = 3, this.retryDelay = const Duration(seconds: 1)});
 
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) async {

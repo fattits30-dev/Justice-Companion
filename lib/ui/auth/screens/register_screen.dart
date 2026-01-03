@@ -393,19 +393,25 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     Widget? suffixIcon,
     String? Function(String?)? validator,
     void Function(String)? onSubmitted,
+    String? semanticLabel,
   }) {
-    return TextFormField(
-      controller: controller,
-      obscureText: obscureText,
-      enabled: enabled,
-      keyboardType: keyboardType,
-      validator: validator,
-      onFieldSubmitted: onSubmitted,
-      style: Theme.of(context).textTheme.bodyLarge,
-      decoration: InputDecoration(
-        labelText: label,
-        prefixIcon: Icon(icon, size: 20),
-        suffixIcon: suffixIcon,
+    return Semantics(
+      label: semanticLabel ?? label,
+      textField: true,
+      child: TextFormField(
+        key: Key('field_${label.toLowerCase().replaceAll(' ', '_')}'),
+        controller: controller,
+        obscureText: obscureText,
+        enabled: enabled,
+        keyboardType: keyboardType,
+        validator: validator,
+        onFieldSubmitted: onSubmitted,
+        style: Theme.of(context).textTheme.bodyLarge,
+        decoration: InputDecoration(
+          labelText: label,
+          prefixIcon: Icon(icon, size: 20),
+          suffixIcon: suffixIcon,
+        ),
       ),
     );
   }
@@ -415,45 +421,50 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     required VoidCallback onPressed,
     bool isLoading = false,
   }) {
-    return Container(
-      height: 56,
-      decoration: BoxDecoration(
-        gradient: AppTheme.primaryGradient,
-        borderRadius: BorderRadius.circular(14),
-        boxShadow: [
-          BoxShadow(
-            color: AppTheme.primary.withValues(alpha: 0.3),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: ElevatedButton(
-        onPressed: isLoading ? null : onPressed,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.transparent,
-          shadowColor: Colors.transparent,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
-          ),
+    return Semantics(
+      button: true,
+      label: label,
+      child: Container(
+        key: Key('button_${label.toLowerCase().replaceAll(' ', '_')}'),
+        height: 56,
+        decoration: BoxDecoration(
+          gradient: AppTheme.primaryGradient,
+          borderRadius: BorderRadius.circular(14),
+          boxShadow: [
+            BoxShadow(
+              color: AppTheme.primary.withValues(alpha: 0.3),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
         ),
-        child: isLoading
-            ? const SizedBox(
-                width: 24,
-                height: 24,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2.5,
-                  color: Color(0xFF1A1A1A),
+        child: ElevatedButton(
+          onPressed: isLoading ? null : onPressed,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.transparent,
+            shadowColor: Colors.transparent,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(14),
+            ),
+          ),
+          child: isLoading
+              ? const SizedBox(
+                  width: 24,
+                  height: 24,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2.5,
+                    color: Color(0xFF1A1A1A),
+                  ),
+                )
+              : Text(
+                  label,
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: const Color(0xFF1A1A1A),
+                  ),
                 ),
-              )
-            : Text(
-                label,
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: const Color(0xFF1A1A1A),
-                ),
-              ),
+        ),
       ),
     );
   }
