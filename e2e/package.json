@@ -6,6 +6,8 @@
     "scripts": {
         "test": "playwright test",
         "test:headed": "playwright test --headed",
+        "test:slow": "PLAYWRIGHT_SLOWMO=200 npx playwright test",
+        "test:headed-slow": "PLAYWRIGHT_SLOWMO=200 npx playwright test --headed",
         "install-browsers": "npx playwright install --with-deps",
         "test:debug": "playwright test --debug"
     },

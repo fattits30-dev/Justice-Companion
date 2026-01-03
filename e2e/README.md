@@ -12,6 +12,7 @@ Quick start (headed):
    - Install browsers if needed: `npx playwright install chromium` (or `npx playwright install --with-deps` if your environment supports it)
 3. Run headed tests locally:
    - npm run test:headed
+   - Slow/visual runs: `npm run test:headed-slow` or `npm run test:slow`. These set `PLAYWRIGHT_SLOWMO=200` by default (ms per action); set `PLAYWRIGHT_SLOWMO` directly to tune the speed.
 
 Notes:
 - For CI we include a `build-frontend` job that runs `flutter build web`, uploads the artifact and the `test` job runs inside the official Playwright Docker image (browsers preinstalled).

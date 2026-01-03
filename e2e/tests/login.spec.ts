@@ -43,5 +43,11 @@ test('login with seeded test user (via localStorage)', async ({ page, request })
 
 
     // Verify session keys are present in localStorage (robust across environments)
-    expect(ls.sessionId || ls.session_id || ls.session_json || ls.session).toBeTruthy();
+    const ls = await page.evaluate(() => {
+        return {
+            sessionId: localStorage.getItem('sessionId') || localStorage.getItem('session_id') || null,
+            session_json: localStorage.getItem('session_json') || localStorage.getItem('sessionJson') || localStorage.getItem('session') || null,
+        };
+    });
+    expect(ls.sessionId || ls.session_json).toBeTruthy();
 });

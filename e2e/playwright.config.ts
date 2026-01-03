@@ -11,6 +11,8 @@ export default defineConfig({
     use: {
         baseURL: process.env.E2E_BASE_URL || 'http://localhost:5173',
         headless: process.env.CI ? true : false, // run headless in CI
+        // Optional: set PLAYWRIGHT_SLOWMO (ms) to slow actions for visual debugging, e.g. PLAYWRIGHT_SLOWMO=200
+        slowMo: process.env.PLAYWRIGHT_SLOWMO ? Number(process.env.PLAYWRIGHT_SLOWMO) : 0,
         viewport: { width: 1280, height: 800 },
         actionTimeout: 10_000,
         trace: 'on-first-retry'
