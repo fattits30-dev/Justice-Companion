@@ -1,5 +1,7 @@
 # Fix Status Report
 
+> NOTE: This report refers to the legacy React/TypeScript frontend. The current frontend is Flutter (Dart).
+
 ## ✅ Completed Fixes
 
 ### 1. Frontend Linting
@@ -59,6 +61,7 @@ These require more complex fixes involving API responses and external dependenci
 - **Backend Tests**: Collection errors (needs environment fixes)
 
 ## Next Steps Recommendation
+> NOTE: The steps below apply to the legacy React frontend.
 1. Install missing type definitions: `npm install --save-dev @types/html2pdf.js`
 2. Fix PWA register types (create virtual:pwa-register.d.ts)
 3. Update repository null handling

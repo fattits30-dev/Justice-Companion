@@ -2,12 +2,12 @@
 
 This module provides a lightweight, fully in-process replacement for
 `UnifiedAIService` that does **not** talk to real AI providers. It is
-designed for use in automated tests (e.g. Playwright E2E) where we need
+designed for use in automated tests (e.g. integration/E2E) where we need
 stable, repeatable outputs and must avoid any external dependencies.
 
 Behavioural goals:
 - Produce deterministic legal-style responses for chat endpoints.
-- Include specific key phrases that existing E2E tests assert on.
+- Include specific key phrases that existing tests assert on.
 - Provide document analysis responses that match the
   `DocumentExtractionResponse` schema and surface `suggested_case_data`
   so the PWA can offer "Create Case from Analysis" actions.
@@ -43,7 +43,7 @@ class StubAIService:
       for document analysis.
 
     It is intentionally conservative: responses are short but contain the
-    legal terminology and phrases that existing Playwright tests expect.
+    legal terminology and phrases that existing tests expect.
     """
 
     def __init__(self, audit_logger=None) -> None:
@@ -67,7 +67,7 @@ class StubAIService:
         """Return a deterministic response based on the last user message.
 
         The concrete strings here are chosen to satisfy the assertions in
-        the existing Playwright tests (e.g. references to UK employment
+        the existing tests (e.g. references to UK employment
         law, ACAS, ET1 forms, and grievance procedures).
         """
 

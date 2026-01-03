@@ -1,4 +1,5 @@
 # Duplicate Files Scan Report
+> NOTE: Legacy React/TypeScript scan. The frontend is now Flutter (Dart); rerun for current state.
 **Date:** December 9, 2025  
 **Scope:** Justice Companion app directory  
 **Excluded:** node_modules, venv, serena_agent-0.1.4, dist, __pycache__

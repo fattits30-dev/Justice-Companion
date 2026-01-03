@@ -24,6 +24,12 @@ pypdf>=5.0.0  # PDF processing library - SECURITY UPDATE
 pdfplumber==0.11.2  # Plumb a PDF for detailed information about each text character, rectangle, and line.
 # pdfminer.six kept at version compatible with pdfplumber for now
 
+# OCR
+pytesseract==0.3.13  # Tesseract OCR bindings
+Pillow==10.4.0  # Image processing for OCR
+pdf2image==1.17.0  # Convert PDF pages to images
+opencv-python==4.10.0.84  # Image preprocessing for OCR
+
 # Environment and Configuration
 python-dotenv==1.1.0  # Reads key-value pairs from a .env file and can set them as environment variables
 

@@ -1,14 +1,16 @@
 # VS Code Extension Optimization Guide
 **Justice Companion Full-Stack Development**
 
+> NOTE: The frontend is now Flutter (Dart). React/TypeScript tooling sections are legacy and should be updated.
+
 ## Executive Summary
 
 This guide provides curated VS Code extension recommendations optimized for the Justice Companion project stack:
-- **Frontend**: React 18, TypeScript, Tailwind CSS, Vite
+- **Frontend**: Flutter (Dart), Riverpod
 - **Backend**: Python FastAPI, SQLAlchemy 2.0
-- **Testing**: Playwright, Vitest, Pytest
+- **Testing**: Flutter test, Pytest
 - **AI/ML**: PyTorch, Transformers, FAISS
-- **DevOps**: Docker, Git, PWA
+- **DevOps**: Docker, Git, web/mobile builds
 
 ---
 
@@ -23,24 +25,14 @@ This guide provides curated VS Code extension recommendations optimized for the 
 | **Pylance** | `ms-python.vscode-pylance` | Fast Python IntelliSense and type checking |
 | **Python Debugger** | `ms-python.debugpy` | Python debugging support |
 
-### TypeScript & React
+### Flutter & Dart
 | Extension | ID | Purpose |
 |-----------|-----|---------|
-| **ES7+ React/Redux Snippets** | `dsznajder.es7-react-js-snippets` | Speed up React development |
-| **Auto Rename Tag** | `formulahendry.auto-rename-tag` | Auto-rename paired HTML/JSX tags |
-| **Auto Close Tag** | `formulahendry.auto-close-tag` | Auto-close HTML/XML tags |
-
-### Tailwind CSS
-| Extension | ID | Purpose |
-|-----------|-----|---------|
-| **Tailwind CSS IntelliSense** | `bradlc.vscode-tailwindcss` | Autocomplete, syntax highlighting, linting |
-| **Tailwind Fold** | `stivo.tailwind-fold` | Fold long className attributes |
+| **Flutter** | `Dart-Code.flutter` | Flutter tooling, device selection, hot reload |
+| **Dart** | `Dart-Code.dart-code` | Dart language support and debugging |
 
 ### Testing
-| Extension | ID | Purpose |
-|-----------|-----|---------|
-| **Playwright Test for VSCode** | `ms-playwright.playwright` | Run/debug Playwright tests in UI |
-| **Vitest** | `vitest.explorer` | Run/debug Vitest tests inline |
+Use the Flutter and Python extensions for running Flutter tests and pytest.
 
 ### Git
 | Extension | ID | Purpose |

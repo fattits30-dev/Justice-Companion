@@ -12,6 +12,8 @@ $ErrorActionPreference = "SilentlyContinue"
 # Configuration
 $BACKEND_PORT = 8000
 $FRONTEND_PORT = 5176
+$FLUTTER_DEVICE = if ($env:FLUTTER_DEVICE) { $env:FLUTTER_DEVICE } else { "chrome" }
+$FLUTTER_WEB_HOST = $env:FLUTTER_WEB_HOST
 $PID_FILE = Join-Path $PSScriptRoot ".dev-pids.json"
 $PROJECT_ROOT = Split-Path $PSScriptRoot -Parent
 
@@ -127,10 +129,16 @@ function Start-Development {
     }
 
     Write-Status "Starting backend on port $BACKEND_PORT..." "INFO"
-    $backendProcess = Start-Process -FilePath "python" -ArgumentList "-m", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "$BACKEND_PORT", "--reload" -WorkingDirectory "$PROJECT_ROOT\backend" -PassThru -WindowStyle Hidden
+    $backendArgs = @("-m", "uvicorn", "backend.main:app", "--host", "0.0.0.0", "--port", "$BACKEND_PORT", "--reload")
+    $backendProcess = Start-Process -FilePath "python" -ArgumentList $backendArgs -WorkingDirectory $PROJECT_ROOT -PassThru -WindowStyle Hidden
 
-    Write-Status "Starting frontend on port $FRONTEND_PORT..." "INFO"
-    $frontendProcess = Start-Process -FilePath "npx" -ArgumentList "vite", "--host", "0.0.0.0", "--port", "$FRONTEND_PORT" -WorkingDirectory $PROJECT_ROOT -PassThru -WindowStyle Hidden
+    Write-Status "Starting frontend (Flutter) on port $FRONTEND_PORT..." "INFO"
+    Write-Status "Using Flutter device: $FLUTTER_DEVICE" "INFO"
+    $flutterArgs = @("run", "-d", $FLUTTER_DEVICE, "--web-port", "$FRONTEND_PORT")
+    if ($FLUTTER_WEB_HOST) {
+        $flutterArgs += @("--web-hostname", $FLUTTER_WEB_HOST)
+    }
+    $frontendProcess = Start-Process -FilePath "flutter" -ArgumentList $flutterArgs -WorkingDirectory $PROJECT_ROOT -PassThru -WindowStyle Hidden
 
     # Save PIDs
     $pids = @{

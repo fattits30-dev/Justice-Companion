@@ -230,7 +230,7 @@ def test_create_case_with_encryption(client, db_session):
 **Focus:** Complete user workflows
 
 **Tools:**
-- Playwright (existing E2E tests in frontend)
+- Flutter integration tests (if present)
 - pytest for backend workflows
 
 **Example:**

@@ -136,9 +136,9 @@ class TestPortManager(unittest.IsolatedAsyncioTestCase):
         """Test allocating all required ports."""
         allocations = await self.port_manager.allocate_all_ports()
 
-        # Check that vite-dev-server (required) is allocated
-        self.assertIn("vite-dev-server", allocations)
-        self.assertEqual(allocations["vite-dev-server"].status, "allocated")
+        # Check that flutter-dev-server (required) is allocated
+        self.assertIn("flutter-dev-server", allocations)
+        self.assertEqual(allocations["flutter-dev-server"].status, "allocated")
 
         # Non-required services should not be in allocations
         for service_name, allocation in allocations.items():
@@ -162,14 +162,14 @@ class TestPortManager(unittest.IsolatedAsyncioTestCase):
         """Test getting all allocated ports."""
         async def run_test():
             await self.port_manager.allocate_port("python-ai-service")
-            await self.port_manager.allocate_port("vite-dev-server")
+            await self.port_manager.allocate_port("flutter-dev-server")
 
             port_map = self.port_manager.get_allocated_ports()
 
             self.assertIn("python-ai-service", port_map)
-            self.assertIn("vite-dev-server", port_map)
+            self.assertIn("flutter-dev-server", port_map)
             self.assertGreater(port_map["python-ai-service"], 0)
-            self.assertGreater(port_map["vite-dev-server"], 0)
+            self.assertGreater(port_map["flutter-dev-server"], 0)
 
         asyncio.run(run_test())
 
@@ -190,7 +190,7 @@ class TestPortManager(unittest.IsolatedAsyncioTestCase):
         """Test releasing all ports."""
         async def run_test():
             await self.port_manager.allocate_port("python-ai-service")
-            await self.port_manager.allocate_port("vite-dev-server")
+            await self.port_manager.allocate_port("flutter-dev-server")
 
             self.port_manager.release_all_ports()
 
@@ -422,16 +422,16 @@ class TestDefaultPortConfigs(unittest.TestCase):
         """Test that default configurations are defined."""
         self.assertGreater(len(DEFAULT_PORT_CONFIGS), 0)
 
-    def test_vite_dev_server_config(self):
-        """Test vite-dev-server configuration."""
-        vite_config = next(
-            (c for c in DEFAULT_PORT_CONFIGS if c.service == "vite-dev-server"),
+    def test_flutter_dev_server_config(self):
+        """Test flutter-dev-server configuration."""
+        flutter_config = next(
+            (c for c in DEFAULT_PORT_CONFIGS if c.service == "flutter-dev-server"),
             None
         )
 
-        self.assertIsNotNone(vite_config)
-        self.assertEqual(vite_config.default_port, 5176)
-        self.assertTrue(vite_config.required)
+        self.assertIsNotNone(flutter_config)
+        self.assertEqual(flutter_config.default_port, 5176)
+        self.assertTrue(flutter_config.required)
 
     def test_python_ai_service_config(self):
         """Test python-ai-service configuration."""

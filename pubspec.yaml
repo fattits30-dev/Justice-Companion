@@ -1,0 +1,97 @@
+name: justice_companion
+description: "AI-Powered Civil Law Case Management"
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.10.4
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+
+  # UI
+  cupertino_icons: ^1.0.8
+  google_fonts: ^6.2.1
+  flutter_animate: ^4.5.2
+  shimmer: ^3.0.0
+  flutter_slidable: ^3.1.1
+  cached_network_image: ^3.4.1
+  flutter_markdown: ^0.7.4+3
+
+  # State Management
+  flutter_riverpod: ^2.6.1
+  riverpod_annotation: ^2.6.1
+
+  # Navigation
+  go_router: ^14.6.2
+
+  # Network
+  dio: ^5.7.0
+  connectivity_plus: ^6.1.0
+
+  # Database (SQLCipher for encryption)
+  sqflite_common_ffi: ^2.3.4
+  path_provider: ^2.1.4
+  path: ^1.9.0
+
+  # Security
+  flutter_secure_storage: ^9.2.2
+  encrypt: ^5.0.3
+  crypto: ^3.0.5
+
+  # Local Storage
+  shared_preferences: ^2.3.3
+
+  # PDF Generation
+  pdf: ^3.11.1
+  printing: ^5.13.3
+
+  # File Handling
+  file_picker: ^8.1.4
+  open_file: ^3.5.7
+  image_picker: ^1.1.2
+
+  # Forms
+  reactive_forms: ^17.0.1
+
+  # Utilities
+  freezed_annotation: ^2.4.4
+  json_annotation: ^4.9.0
+  equatable: ^2.0.5
+  dartz: ^0.10.1
+  uuid: ^4.5.1
+  collection: ^1.18.0
+  intl: ^0.20.2
+
+  # Platform Integration
+  url_launcher: ^6.3.1
+  share_plus: ^10.1.2
+  package_info_plus: ^8.1.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+  integration_test:
+    sdk: flutter
+
+  # Code Generation
+  build_runner: ^2.4.13
+  riverpod_generator: ^2.6.2
+  freezed: ^2.5.7
+  json_serializable: ^6.8.0
+
+  # Testing
+  mocktail: ^1.0.4
+
+flutter:
+  uses-material-design: true
+
+  # Assets will be added when needed
+  # assets:
+  #   - assets/images/
+  #   - assets/icons/
+  # Using google_fonts package for fonts (downloads at runtime)

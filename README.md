@@ -1,6 +1,6 @@
 # Justice Companion
 
-**AI-Powered Civil Law Case Management PWA** for UK legal matters.
+**AI-Powered Civil Law Case Management App** for UK legal matters.
 
 Provides **legal information** to help users explore their options - not legal advice.
 
@@ -45,38 +45,58 @@ Justice Companion says: *"Options to consider include filing a County Court clai
 
 | Layer | Technology |
 |-------|------------|
-| Frontend | React 18 + TypeScript + Vite + Tailwind |
-| PWA | vite-plugin-pwa (offline-capable, installable) |
+| Frontend | Flutter 3 + Dart (Android/iOS/Web) |
+| PWA | Flutter Web (installable, offline-capable) |
 | Backend | FastAPI (Python) + SQLAlchemy 2.0 |
-| AI | Configurable (HuggingFace, OpenAI, Anthropic, Google, Mistral) |
-| OCR | Tesseract + Pillow |
+| AI | Configurable (HuggingFace, OpenAI, Groq, Anthropic, Google, Mistral) |
+| OCR | Tesseract + pytesseract + Pillow + OpenCV |
 | Database | SQLite (local) / PostgreSQL (cloud) |
 | RAG | FAISS + sentence-transformers (hybrid search, reranking) |
 
 ## Quick Start
 
 ### Prerequisites
-- Node.js 18+
+- Flutter SDK (3.10+)
 - Python 3.10+
 - Tesseract OCR
+
+OCR features also require Python packages from `backend/requirements.txt` (pytesseract, Pillow, pdf2image, opencv-python).
 
 ### Installation
 
 ```bash
 git clone https://github.com/your-repo/justice-companion.git
 cd justice-companion
-npm install
-pip install -r requirements.txt
-npm run dev:full
+flutter pub get
+pip install -r backend/requirements.txt
+./scripts/dev.sh full
 ```
 
-Open http://localhost:5178
+Flutter will launch the app on your selected device (use `FLUTTER_DEVICE=chrome` for web).
+
+### Flutter Configuration (dart-define)
+
+The Flutter app reads configuration from compile-time defines:
+
+- `API_BASE_URL` (default: `http://localhost:8000`)
+- `USE_HF_AI` (default: `false`)
+- `HUGGINGFACE_TOKEN` (required if `USE_HF_AI=true`)
+
+Example:
+
+```bash
+flutter run -d chrome \
+  --dart-define=API_BASE_URL=http://localhost:8000 \
+  --dart-define=USE_HF_AI=true \
+  --dart-define=HUGGINGFACE_TOKEN=your_token_here
+```
 
 ## AI Provider Setup
 
 Configure in Settings:
 - **HuggingFace** - `https://router.huggingface.co/v1`
 - **OpenAI** - GPT models
+- **Groq** - Fast OpenAI-compatible models
 - **Anthropic** - Claude models
 - **Google** - Gemini models
 - **Mistral** - Mistral AI models
@@ -126,8 +146,7 @@ DATABASE_URL=sqlite:///./justice_companion.db
 ## Testing
 
 ```bash
-npm run test          # Frontend
-npm run e2e           # E2E tests
+flutter test          # Frontend
 pytest backend/ -v    # Backend
 ```
 

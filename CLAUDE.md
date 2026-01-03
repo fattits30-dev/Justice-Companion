@@ -56,10 +56,10 @@ mcp__sequential-thinking__sequentialthinking
 ### 3. Context7 MCP - Best Practices & Documentation
 
 **ALWAYS use Context7 for:**
-- Looking up React/TypeScript best practices
-- Checking Vite configuration options
+- Looking up Flutter/Dart best practices
+- Checking Flutter build configuration options
 - Finding correct API usage for libraries
-- Verifying Tailwind CSS classes
+- Verifying platform integration plugins
 - FastAPI/Python backend patterns
 
 **When to invoke:**
@@ -122,18 +122,18 @@ mcp__memory__search_nodes - Recall stored information
 
 ```
 Justice-Companion/
-├── src/                    # Frontend React/TypeScript
-│   ├── components/         # UI components
-│   ├── contexts/           # React contexts
-│   ├── domains/            # Domain logic
-│   ├── lib/                # Utilities & API
-│   └── pages/              # Route pages
+├── lib/                    # Flutter app
+│   ├── app/                # App shell, routing, theme
+│   ├── data/               # Data sources and repositories
+│   ├── domain/             # Domain entities and contracts
+│   └── ui/                 # Screens/widgets
 ├── backend/                # Python FastAPI
 │   ├── routes/             # API endpoints
 │   ├── services/           # Business logic
 │   └── models/             # Database models
 ├── scripts/                # Dev scripts (use these!)
-└── e2e/                    # Playwright tests
+├── android/ios/...         # Flutter platform targets
+└── test/                   # Flutter tests
 ```
 
 ## Development Commands
@@ -175,16 +175,16 @@ Justice-Companion/
 
 ## Code Quality Standards
 
-- TypeScript strict mode enabled
-- ESLint must pass (0 errors)
-- All components should have tests
-- No `any` types without justification
-- Use existing UI components from `src/components/ui/`
+- Dart analyzer must pass (flutter analyze)
+- Flutter lints must pass (0 errors)
+- All critical widgets should have tests
+- No `dynamic` types without justification
+- Use existing UI components from `lib/ui/` where possible
 
 ## Environment
 
 - **Platform:** Android/Termux
-- **Node:** v24.x
-- **Package Manager:** npm
+- **Flutter SDK:** 3.x
+- **Dart:** 3.x (via Flutter)
 - **Backend:** Python 3.12 (limited on Termux)
 - **CI/CD:** GitHub Actions (use for full tests/builds)

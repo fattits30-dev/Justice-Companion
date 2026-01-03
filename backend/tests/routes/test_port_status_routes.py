@@ -54,12 +54,12 @@ def mock_port_manager():
     ))
     manager.get_port_status = AsyncMock(return_value=[
         PortStatus(port=5050, service="python-ai-service", in_use=True),
-        PortStatus(port=5173, service="vite-dev-server", in_use=False),
+        PortStatus(port=5176, service="flutter-dev-server", in_use=False),
     ])
     manager.get_port = MagicMock(return_value=5050)
     manager.get_allocated_ports = MagicMock(return_value={
         "python-ai-service": 5050,
-        "vite-dev-server": 5173,
+        "flutter-dev-server": 5176,
     })
     manager.release_all_ports = MagicMock()
 

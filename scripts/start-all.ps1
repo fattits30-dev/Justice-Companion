@@ -1,6 +1,6 @@
 # Justice Companion - Start All Services
 # ========================================
-# Starts Frontend, Backend, and AI Service
+# Starts Flutter Frontend and FastAPI Backend
 #
 # Usage:
 #   .\start-all.ps1           # Start all services
@@ -15,11 +15,14 @@ param(
 )
 
 $ProjectRoot = Split-Path -Parent $PSScriptRoot
+$FrontendPort = if ($env:FLUTTER_WEB_PORT) { [int]$env:FLUTTER_WEB_PORT } else { 5176 }
+$FlutterDevice = if ($env:FLUTTER_DEVICE) { $env:FLUTTER_DEVICE } else { "chrome" }
+$FlutterWebHost = $env:FLUTTER_WEB_HOST
 
 function Stop-AllServices {
     Write-Host "`n🛑 Stopping all services..." -ForegroundColor Yellow
 
-    $ports = @(5173, 5174, 5175, 5176, 5177, 8000, 8001)
+    $ports = @(5173, 5174, 5175, 5176, 5177, 5178, 5179, 5180, 8000)
     foreach ($port in $ports) {
         $conn = Get-NetTCPConnection -LocalPort $port -ErrorAction SilentlyContinue
         if ($conn) {
@@ -36,9 +39,8 @@ function Show-Status {
     Write-Host "─────────────────────────────────────────" -ForegroundColor DarkGray
 
     $services = @(
-        @{ Name = "Frontend (React)"; Port = 5176; Emoji = "⚛️" },
-        @{ Name = "Backend (FastAPI)"; Port = 8000; Emoji = "🐍" },
-        @{ Name = "AI Service (HuggingFace)"; Port = 8001; Emoji = "🤖" }
+        @{ Name = "Frontend (Flutter)"; Port = $FrontendPort; Emoji = "🦋" },
+        @{ Name = "Backend (FastAPI)"; Port = 8000; Emoji = "🐍" }
     )
 
     foreach ($svc in $services) {
@@ -98,21 +100,23 @@ $env:PYTHONPATH = $ProjectRoot
 Start-Process -FilePath "python" -ArgumentList "-m", "uvicorn", "backend.main:app", "--reload", "--host", "0.0.0.0", "--port", "8000" -WorkingDirectory $ProjectRoot -WindowStyle Hidden
 Write-Host "   ✓ Backend starting on http://localhost:8000" -ForegroundColor Green
 
-# Start AI Service (if not disabled)
-if (-not $NoAI) {
-    Write-Host "🤖 Starting AI Service (HuggingFace)..." -ForegroundColor Yellow
-    Start-Process -FilePath "python" -ArgumentList "-m", "uvicorn", "main:app", "--reload", "--host", "0.0.0.0", "--port", "8001" -WorkingDirectory "$ProjectRoot\ai-service" -WindowStyle Hidden
-    Write-Host "   ✓ AI Service starting on http://localhost:8001" -ForegroundColor Green
-} else {
-    Write-Host "🤖 AI Service: " -NoNewline -ForegroundColor Yellow
-    Write-Host "Skipped (--NoAI flag)" -ForegroundColor DarkGray
+# Legacy flags (no separate AI service exists anymore)
+if ($NoAI) {
+    Write-Host "⚠️  -NoAI is legacy (no separate AI service). Ignoring." -ForegroundColor DarkYellow
+}
+if ($AIOnly) {
+    Write-Host "⚠️  -AIOnly is legacy; running backend only." -ForegroundColor DarkYellow
 }
 
-# Start Frontend (Vite) - unless AI only mode
+# Start Frontend (Flutter) - unless AI only mode
 if (-not $AIOnly) {
-    Write-Host "⚛️  Starting Frontend (Vite + React)..." -ForegroundColor Yellow
-    Start-Process -FilePath "pnpm" -ArgumentList "run", "dev" -WorkingDirectory $ProjectRoot -WindowStyle Hidden
-    Write-Host "   ✓ Frontend starting on http://localhost:5176" -ForegroundColor Green
+    Write-Host "🦋 Starting Frontend (Flutter)..." -ForegroundColor Yellow
+    $flutterArgs = @("run", "-d", $FlutterDevice, "--web-port", "$FrontendPort")
+    if ($FlutterWebHost) {
+        $flutterArgs += @("--web-hostname", $FlutterWebHost)
+    }
+    Start-Process -FilePath "flutter" -ArgumentList $flutterArgs -WorkingDirectory $ProjectRoot -WindowStyle Hidden
+    Write-Host "   ✓ Frontend starting on http://localhost:$FrontendPort" -ForegroundColor Green
 }
 
 # Wait for services to be ready
@@ -128,22 +132,14 @@ Write-Host "   Backend:    " -NoNewline
 if ($backendHealthy) { Write-Host "✓ Healthy" -ForegroundColor Green } 
 else { Write-Host "⏳ Starting..." -ForegroundColor Yellow }
 
-if (-not $NoAI) {
-    $aiHealthy = Test-ServiceHealth -Port 8001 -Endpoint "/health"
-    Write-Host "   AI Service: " -NoNewline
-    if ($aiHealthy) { Write-Host "✓ Healthy" -ForegroundColor Green }
-    else { Write-Host "⏳ Starting..." -ForegroundColor Yellow }
-}
-
 # Final message
 Write-Host @"
 
 ═══════════════════════════════════════════════════════
   🚀 Justice Companion is ready!
   
-  Frontend:   http://localhost:5176
+  Frontend:   http://localhost:$FrontendPort
   Backend:    http://localhost:8000
-  AI Service: http://localhost:8001
   
   To stop all services: .\scripts\start-all.ps1 -StopAll
 ═══════════════════════════════════════════════════════

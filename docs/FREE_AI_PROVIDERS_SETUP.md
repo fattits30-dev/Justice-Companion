@@ -100,7 +100,7 @@ async for chunk in stream:
      - `mistralai/Mistral-7B-Instruct-v0.3` (Apache 2.0 - 2 providers)
    - Temperature: 0.7
    - Max Tokens: 8000
-   - Endpoint: `https://api-inference.huggingface.co` (default)
+   - Endpoint: `https://router.huggingface.co/v1` (default)
    - Click "Save"
 
 3. **Test Streaming**:

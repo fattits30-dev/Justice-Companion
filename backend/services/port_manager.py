@@ -126,10 +126,10 @@ class PortManagerConfig:
 # Default port configuration for Justice Companion services
 DEFAULT_PORT_CONFIGS: List[PortConfig] = [
     PortConfig(
-        service="vite-dev-server",
+        service="flutter-dev-server",
         default_port=5176,
         range=(5173, 5180),
-        description="Vite development server",
+        description="Flutter web development server",
         required=True,
     ),
     PortConfig(
@@ -137,20 +137,6 @@ DEFAULT_PORT_CONFIGS: List[PortConfig] = [
         default_port=5050,
         range=(5050, 5060),
         description="Python AI document analysis service",
-        required=False,
-    ),
-    PortConfig(
-        service="electron-dev-api",
-        default_port=8080,
-        range=(8080, 8090),
-        description="Electron development API server",
-        required=False,
-    ),
-    PortConfig(
-        service="playwright-debug",
-        default_port=9323,
-        range=(9320, 9330),
-        description="Playwright debugger",
         required=False,
     ),
 ]
@@ -215,7 +201,7 @@ class PortManager:
                 )
             except Exception as exc:
                 logger.error(
-                    f"[PortManager] Failed to load config from {self.config.port_config_path}: {e}",
+                    f"[PortManager] Failed to load config from {self.config.port_config_path}: {exc}",
                     exc_info=True,
                 )
                 self._load_default_configs()
@@ -656,7 +642,7 @@ class PortManager:
             )
         except Exception as exc:
             logger.error(
-                f"[PortManager] Failed to save configuration to {config_path}: {e}", exc_info=True
+                f"[PortManager] Failed to save configuration to {config_path}: {exc}", exc_info=True
             )
             raise
 
@@ -680,14 +666,17 @@ class PortManager:
         Example:
             >>> env_vars = port_manager.get_environment_variables()
             >>> print(env_vars)
-            {'PYTHON_AI_SERVICE_PORT': '5050', 'VITE_DEV_SERVER_PORT': '5176'}
+            {'PYTHON_AI_SERVICE_PORT': '5050', 'FLUTTER_WEB_PORT': '5176'}
         """
         env = {}
 
         with self._lock:
             for service, allocation in self.allocated_ports.items():
                 if allocation.status == "allocated":
-                    env_key = service.upper().replace("-", "_") + "_PORT"
+                    if service == "flutter-dev-server":
+                        env_key = "FLUTTER_WEB_PORT"
+                    else:
+                        env_key = service.upper().replace("-", "_") + "_PORT"
                     env[env_key] = str(allocation.allocated_port)
 
         return env

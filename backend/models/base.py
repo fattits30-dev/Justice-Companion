@@ -82,8 +82,8 @@ def get_database_url() -> str:
         return database_url
 
     # Local development (SQLite)
-    # IMPORTANT: Use same database as Electron app (justice.db in project root)
-    database_path = os.getenv("DATABASE_PATH", "justice.db")
+    # IMPORTANT: Keep default aligned with repo docs and example env files
+    database_path = os.getenv("DATABASE_PATH", "justice_companion.db")
     return f"sqlite:///{database_path}"
 
 # Get database URL

@@ -1,10 +1,10 @@
 # Justice Companion App Development Tasks
 
 ## Project Overview
-- **Frontend:** React 18 + TypeScript + Vite (http://localhost:5178)
+- **Frontend:** Flutter (Dart) (http://localhost:5176)
 - **Backend:** FastAPI + Python 3.11 (http://localhost:8000)
-- **Database:** SQLite (justice.db)
-- **Status:** 🟢 Fully Operational (100% test pass rate)
+- **Database:** SQLite (justice_companion.db)
+- **Status:** Needs verification after Flutter migration
 
 ## Development Tasks
 
@@ -15,7 +15,7 @@
 - [ ] 4. Identify development priorities
 
 ### Phase 2: Code Analysis & Enhancement
-- [ ] 5. Analyze frontend components (React/TypeScript)
+- [ ] 5. Analyze Flutter screens/widgets
 - [ ] 6. Review backend API endpoints (FastAPI)
 - [ ] 7. Examine database models and relationships
 - [ ] 8. Test current functionality
@@ -29,7 +29,7 @@
 ### Phase 4: Testing & Quality Assurance
 - [ ] 13. Run existing test suite
 - [ ] 14. Add new tests for new features
-- [ ] 15. Verify cross-browser compatibility
+- [ ] 15. Verify web + mobile target behavior
 - [ ] 16. Ensure all functionality works properly
 
 ### Phase 5: Documentation & Deployment

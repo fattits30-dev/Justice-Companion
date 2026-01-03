@@ -312,7 +312,7 @@ async def seed_test_user(
     http_request: Request,
     auth_service: AuthenticationService = Depends(get_auth_service),
 ):
-    """Create or reset the deterministic Playwright E2E user."""
+    """Create or reset the deterministic integration test user."""
 
     if not _are_test_routes_enabled():
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Not found")
@@ -994,4 +994,3 @@ async def reset_password(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Password reset failed: {str(exc)}",
         ) from exc
-

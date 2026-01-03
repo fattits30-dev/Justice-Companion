@@ -42,7 +42,7 @@ AI_PROVIDER_METADATA: Dict[str, AIProviderMetadata] = {
     ),
     "qwen": AIProviderMetadata(
         name="Qwen",
-        default_endpoint="https://api-inference.huggingface.co/models/Qwen",
+        default_endpoint="https://router.huggingface.co/v1",
         supports_streaming=True,
         default_model="Qwen/Qwen2.5-72B-Instruct",
         max_context_tokens=32768,
@@ -115,6 +115,19 @@ AI_PROVIDER_METADATA: Dict[str, AIProviderMetadata] = {
         default_model="llama3",
         max_context_tokens=8192,
         available_models=["llama3", "mistral", "gemma", "qwen2", "phi3"],
+    ),
+    "groq": AIProviderMetadata(
+        name="Groq",
+        default_endpoint="https://api.groq.com/openai/v1",
+        supports_streaming=True,
+        default_model="llama-3.3-70b-versatile",
+        max_context_tokens=128000,
+        available_models=[
+            "llama-3.3-70b-versatile",
+            "llama-3.1-8b-instant",
+            "mixtral-8x7b-32768",
+            "gemma2-9b-it",
+        ],
     ),
 }
 

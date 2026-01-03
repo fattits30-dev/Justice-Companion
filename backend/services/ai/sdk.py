@@ -12,6 +12,7 @@ Supported Providers:
 - Anthropic (Claude 3.5, Claude 3)
 - Hugging Face Inference API
 - Qwen (via HuggingFace)
+- Groq
 - Google Gemini
 - Cohere
 - Together AI
@@ -90,6 +91,7 @@ class AIProviderType(str, Enum):
     ANTHROPIC = "anthropic"
     HUGGINGFACE = "huggingface"
     QWEN = "qwen"
+    GROQ = "groq"
     GOOGLE = "google"
     COHERE = "cohere"
     TOGETHER = "together"
@@ -188,7 +190,7 @@ class ProviderCapabilities(BaseModel):
 AI_PROVIDER_METADATA: Dict[AIProviderType, Dict[str, Any]] = {
     AIProviderType.HUGGINGFACE: {
         "name": "Hugging Face",
-        "default_endpoint": "https://api-inference.huggingface.co",
+        "default_endpoint": "https://router.huggingface.co/v1",
         "supports_streaming": True,
         "default_model": "meta-llama/Meta-Llama-3.1-70B-Instruct",
         "max_context_tokens": 128000,
@@ -198,6 +200,13 @@ AI_PROVIDER_METADATA: Dict[AIProviderType, Dict[str, Any]] = {
         "default_endpoint": "https://api.openai.com/v1",
         "supports_streaming": True,
         "default_model": "gpt-4-turbo",
+        "max_context_tokens": 128000,
+    },
+    AIProviderType.GROQ: {
+        "name": "Groq",
+        "default_endpoint": "https://api.groq.com/openai/v1",
+        "supports_streaming": True,
+        "default_model": "llama-3.3-70b-versatile",
         "max_context_tokens": 128000,
     },
     AIProviderType.ANTHROPIC: {
@@ -258,7 +267,7 @@ AI_PROVIDER_METADATA: Dict[AIProviderType, Dict[str, Any]] = {
     },
     AIProviderType.QWEN: {
         "name": "Qwen",
-        "default_endpoint": "https://api-inference.huggingface.co",
+        "default_endpoint": "https://router.huggingface.co/v1",
         "supports_streaming": True,
         "default_model": "Qwen/Qwen2.5-72B-Instruct",
         "max_context_tokens": 32768,

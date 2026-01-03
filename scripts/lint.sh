@@ -21,17 +21,23 @@ success() { echo -e "${GREEN}[OK]${NC} $*"; }
 warn() { echo -e "${YELLOW}[WARN]${NC} $*"; }
 error() { echo -e "${RED}[ERROR]${NC} $*" >&2; }
 
-# Detect package manager
-detect_package_manager() {
-    if command -v pnpm &>/dev/null && [ -f "pnpm-lock.yaml" ]; then
-        echo "pnpm"
-    elif command -v npm &>/dev/null; then
-        echo "npm"
-    elif command -v yarn &>/dev/null && [ -f "yarn.lock" ]; then
-        echo "yarn"
+# Detect Flutter
+detect_flutter() {
+    if [ -n "${FLUTTER_EXECUTABLE:-}" ]; then
+        echo "$FLUTTER_EXECUTABLE"
+    elif command -v flutter &>/dev/null; then
+        echo "flutter"
     else
-        error "No package manager found. Install npm, pnpm, or yarn."
-        exit 1
+        echo ""
+    fi
+}
+
+# Detect Dart
+detect_dart() {
+    if command -v dart &>/dev/null; then
+        echo "dart"
+    else
+        echo ""
     fi
 }
 
@@ -51,27 +57,37 @@ detect_python() {
 # Parse arguments
 MODE="${1:-all}"  # frontend, backend, all, fix
 
-PKG_MGR=$(detect_package_manager)
 PYTHON_CMD=$(detect_python)
+FLUTTER_CMD=$(detect_flutter)
+DART_CMD=$(detect_dart)
 
 info "Running linters..."
-info "Package manager: $PKG_MGR"
+[ -n "$FLUTTER_CMD" ] && info "Flutter: $FLUTTER_CMD"
 
 LINT_ERRORS=0
 
 run_frontend_lint() {
     local fix_mode="${1:-false}"
 
-    info "Linting frontend (ESLint + TypeScript)..."
-
-    if [ "$fix_mode" = "true" ]; then
-        $PKG_MGR run lint:fix || LINT_ERRORS=$((LINT_ERRORS + 1))
-    else
-        $PKG_MGR run lint || LINT_ERRORS=$((LINT_ERRORS + 1))
+    if [ -z "$FLUTTER_CMD" ]; then
+        warn "Flutter not found. Skipping frontend linting."
+        return 0
     fi
 
-    info "Type checking (TypeScript)..."
-    $PKG_MGR run typecheck || LINT_ERRORS=$((LINT_ERRORS + 1))
+    info "Linting frontend (Flutter analyze)..."
+    $FLUTTER_CMD analyze || LINT_ERRORS=$((LINT_ERRORS + 1))
+
+    if [ -n "$DART_CMD" ]; then
+        if [ "$fix_mode" = "true" ]; then
+            info "Formatting Dart files..."
+            $DART_CMD format .
+        else
+            info "Checking Dart formatting..."
+            $DART_CMD format --output=none --set-exit-if-changed . || LINT_ERRORS=$((LINT_ERRORS + 1))
+        fi
+    else
+        warn "Dart not found. Skipping Dart format checks."
+    fi
 }
 
 run_backend_lint() {
@@ -99,13 +115,7 @@ run_backend_lint() {
 }
 
 run_format_check() {
-    info "Checking code formatting (Prettier)..."
-    if command -v npx &>/dev/null; then
-        npx prettier --check "src/**/*.{ts,tsx,js,jsx,json,css,md}" 2>/dev/null || {
-            warn "Some files need formatting. Run: npm run format"
-            LINT_ERRORS=$((LINT_ERRORS + 1))
-        }
-    fi
+    return 0
 }
 
 case "$MODE" in
@@ -123,12 +133,11 @@ case "$MODE" in
     fix)
         info "Running linters with auto-fix..."
         run_frontend_lint true
-        $PKG_MGR run format || true
         ;;
     *)
         echo "Usage: $0 [frontend|backend|all|fix]"
         echo ""
-        echo "  frontend  - Lint frontend (ESLint + TypeScript)"
+        echo "  frontend  - Lint frontend (Flutter analyze + Dart format)"
         echo "  backend   - Lint backend (flake8 + mypy)"
         echo "  all       - Lint everything (default)"
         echo "  fix       - Auto-fix frontend issues + format"

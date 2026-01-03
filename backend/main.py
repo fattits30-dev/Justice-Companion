@@ -2,8 +2,8 @@
 Justice Companion FastAPI Backend
 Main application entry point.
 
-This backend replaces the Node.js Electron IPC handlers with HTTP REST API.
-The Electron frontend will make HTTP requests to this backend instead of using IPC.
+This backend replaces the legacy Electron IPC handlers with HTTP REST API.
+The Flutter frontend makes HTTP requests to this backend instead of IPC.
 """
 
 import json
@@ -264,14 +264,14 @@ class ResponseWrapperMiddleware(BaseHTTPMiddleware):
 app.add_middleware(ResponseWrapperMiddleware)
 
 
-# CORS configuration for frontend (Electron + PWA)
-# Cloud-ready: Supports both local development and production PWA
+# CORS configuration for Flutter web frontend
+# Cloud-ready: Supports both local development and production web builds
 def get_allowed_origins() -> list:
     """
     Get allowed CORS origins from environment.
 
-    Development: Allow localhost for Electron app
-    Production: Allow specific PWA domain
+    Development: Allow localhost for Flutter web app
+    Production: Allow specific web domain
     """
 
     allowed_origins_env = os.getenv("ALLOWED_ORIGINS", "")
@@ -285,25 +285,16 @@ def get_allowed_origins() -> list:
             if origin.strip()
         ]
     else:
-        # Development: Default to localhost for Electron app + Docker testing
-        origins = [
-            "http://localhost:5176",  # Vite dev server
-            "http://localhost:5177",  # Vite dev server (fallback port)
-            "http://localhost:5173",  # Vite dev server (alternate port)
-            "http://localhost:5178",
-            "http://localhost:5176",
-            "http://127.0.0.1:5176",
-            "http://localhost:5178",
-            "http://127.0.0.1:5178",  # Vite dev server (e2e port)
-            "http://127.0.0.1:5176",  # Localhost IPv4
-            "http://127.0.0.1:5177",  # Localhost IPv4 (fallback)
-            "http://127.0.0.1:5173",  # Localhost IPv4 (alternate)
-            "http://127.0.0.1:5178",  # Localhost IPv4 (e2e port)
-        ]
+        # Development: Default to localhost for Flutter web dev server + Docker testing
+        # Flutter can use --web-port to bind within this range.
+        origins = []
+        for port in range(5173, 5181):
+            origins.append(f"http://localhost:{port}")
+            origins.append(f"http://127.0.0.1:{port}")
 
-        # Add Docker host IP origins for local testing (ports 5176-5180)
+        # Add Docker host IP origins for local testing (ports 5173-5180)
         docker_host_ip = "172.26.160.1"
-        for docker_port in range(5176, 5181):
+        for docker_port in range(5173, 5181):
             origins.append(f"http://{docker_host_ip}:{docker_port}")
 
     print(f"CORS allowed origins: {origins}")

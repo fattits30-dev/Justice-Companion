@@ -15,33 +15,30 @@ in a pure HTTP/REST backend because:
 
 FRONTEND ALTERNATIVES:
 ======================
-When migrating from Electron IPC to HTTP backend, use these alternatives:
+When migrating from Electron IPC to an HTTP backend, use these alternatives:
 
 **File Open Dialog:**
-- HTML: <input type="file" multiple>
-- React: <input type="file" onChange={handleFileSelect} />
-- Libraries: react-dropzone, react-file-picker
+- Flutter (mobile/desktop): file_picker or image_picker
+- Flutter web: FilePicker.platform.pickFiles or dart:html FileUploadInputElement
 
 **File Save Dialog:**
-- Browser download: <a href={fileBlob} download="filename.ext">
-- JavaScript: URL.createObjectURL() + programmatic <a> click
-- Libraries: file-saver, downloadjs
+- Flutter: file_saver or share_plus for saving/exporting files
+- Flutter web: AnchorElement(download: ...) with a Blob URL
 
-**Example React Component:**
-```tsx
-// Replace IPC dialog call:
-// const { filePaths } = await window.electron.dialog.showOpenDialog(options)
+**Example Flutter (web) snippet:**
+```dart
+import 'package:file_picker/file_picker.dart';
 
-// With HTML file input:
-<input
-  type="file"
-  multiple
-  accept=".pdf,.docx"
-  onChange={(e) => {
-    const files = Array.from(e.target.files || []);
-    handleFilesSelected(files);
-  }}
-/>
+final result = await FilePicker.platform.pickFiles(
+  allowMultiple: true,
+  type: FileType.custom,
+  allowedExtensions: ['pdf', 'docx'],
+);
+
+if (result != null) {
+  final files = result.files;
+  // Handle selected files.
+}
 ```
 
 These endpoints return HTTP 501 Not Implemented with explanatory error messages.
@@ -180,7 +177,7 @@ def create_not_implemented_response(feature: str, alternatives: List[str]) -> JS
             "message": f"{feature} requires Electron desktop environment and cannot be implemented in HTTP backend",
             "reason": "Native OS dialogs require direct access to window managers and GUI APIs",
             "alternatives": alternatives,
-            "recommendation": "Use HTML file input elements or browser download APIs instead",
+            "recommendation": "Use Flutter file picker and download/export APIs instead",
         },
     )
 
@@ -199,9 +196,9 @@ def create_not_implemented_response(feature: str, alternatives: List[str]) -> JS
                         "error": "Not Implemented",
                         "message": "File open dialog requires Electron desktop environment",
                         "alternatives": [
-                            "Use HTML <input type='file' multiple>",
-                            "Use react-dropzone library",
-                            "Use File API: document.createElement('input')",
+                            "Use Flutter file_picker",
+                            "Use Flutter image_picker",
+                            "Use dart:html FileUploadInputElement on web",
                         ],
                     }
                 }
@@ -226,33 +223,28 @@ async def show_open_dialog(request: OpenDialogRequest):
     ```
 
     **Frontend Migration Guide:**
-    Replace Electron IPC calls with HTML file input:
+    Replace Electron IPC calls with Flutter file picker:
 
-    ```tsx
+    ```dart
     // OLD (Electron IPC):
-    const { filePaths, canceled } = await window.electron.dialog.showOpenDialog({
-        title: "Select Files",
-        filters: [{ name: "Documents", extensions: ["pdf", "docx"] }],
-        properties: ["openFile", "multiSelections"]
-    });
+    // const { filePaths } = await window.electron.dialog.showOpenDialog(options);
 
-    // NEW (HTML5 File API):
-    <input
-        type="file"
-        multiple
-        accept=".pdf,.docx"
-        onChange={(e) => {
-            const files = Array.from(e.target.files || []);
-            const filePaths = files.map(f => f.name);
-            handleFilesSelected(files);
-        }}
-    />
+    // NEW (Flutter):
+    final result = await FilePicker.platform.pickFiles(
+      allowMultiple: true,
+      type: FileType.custom,
+      allowedExtensions: ['pdf', 'docx'],
+    );
+    if (result != null) {
+      final files = result.files;
+      // Handle selected files.
+    }
     ```
 
-    **Recommended Libraries:**
-    - react-dropzone: Drag-and-drop file uploads with styling
-    - react-file-picker: Material UI file picker
-    - filepond: Beautiful file upload component
+    **Recommended Packages:**
+    - file_picker: Cross-platform file picker
+    - image_picker: Camera/gallery file access
+    - file_saver: Save/export files on desktop/web
 
     **Args:**
         request: Dialog configuration (title, filters, properties, etc.)
@@ -263,11 +255,11 @@ async def show_open_dialog(request: OpenDialogRequest):
     return create_not_implemented_response(
         feature="File open dialog (dialog.showOpenDialog)",
         alternatives=[
-            "Use HTML <input type='file' multiple> element",
-            "Use react-dropzone library for drag-and-drop uploads",
-            "Use browser File API: document.createElement('input')",
-            "For directories: Use <input webkitdirectory> (Chromium-based browsers)",
-            "For full file system access: Use File System Access API (Chrome 86+)",
+            "Use Flutter file_picker for file selection",
+            "Use image_picker for camera/gallery access",
+            "Use FileUploadInputElement on Flutter web",
+            "For directories on web: use file_picker with directory support (where available)",
+            "For advanced web access: File System Access API (Chromium-based browsers)",
         ],
     )
 
@@ -284,9 +276,9 @@ async def show_open_dialog(request: OpenDialogRequest):
                         "error": "Not Implemented",
                         "message": "File save dialog requires Electron desktop environment",
                         "alternatives": [
-                            "Use browser download: <a download='filename.ext'>",
-                            "Use file-saver library: saveAs(blob, filename)",
-                            "Use File System Access API (Chrome 86+)",
+                            "Use Flutter file_saver or share_plus",
+                            "Use AnchorElement(download: ...) on Flutter web",
+                            "Use File System Access API (Chromium-based browsers)",
                         ],
                     }
                 }
@@ -311,36 +303,31 @@ async def show_save_dialog(request: SaveDialogRequest):
     ```
 
     **Frontend Migration Guide:**
-    Replace Electron IPC calls with browser download APIs:
+    Replace Electron IPC calls with Flutter export APIs:
 
-    ```tsx
+    ```dart
     // OLD (Electron IPC):
-    const { filePath, canceled } = await window.electron.dialog.showSaveDialog({
-        title: "Save Export",
-        defaultPath: "export.json",
-        filters: [{ name: "JSON", extensions: ["json"] }]
-    });
+    // const { filePath } = await window.electron.dialog.showSaveDialog(options);
 
-    // NEW (Browser Download):
-    import { saveAs } from 'file-saver';
+    // NEW (Flutter):
+    import 'dart:convert';
+    import 'package:file_saver/file_saver.dart';
 
-    const blob = new Blob([jsonData], { type: 'application/json' });
-    saveAs(blob, 'export.json');
-
-    // OR (vanilla JS):
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'export.json';
-    a.click();
-    URL.revokeObjectURL(url);
+    final bytes = utf8.encode(jsonData);
+    await FileSaver.instance.saveFile(
+      name: 'export',
+      bytes: bytes,
+      ext: 'json',
+      mimeType: MimeType.json,
+    );
     ```
 
-    **Recommended Libraries:**
-    - file-saver: Simple saveAs() function for blobs
-    - downloadjs: Trigger browser downloads
-    - StreamSaver.js: Stream large files without memory limits
-    - File System Access API: Full filesystem access (Chrome 86+)
+    For Flutter web, you can also use dart:html AnchorElement with a Blob URL.
+
+    **Recommended Packages:**
+    - file_saver: Save/export files across platforms
+    - share_plus: Share files from mobile/desktop
+    - printing: PDF export workflows (optional)
 
     **Args:**
         request: Dialog configuration (title, defaultPath, filters, etc.)
@@ -351,11 +338,10 @@ async def show_save_dialog(request: SaveDialogRequest):
     return create_not_implemented_response(
         feature="File save dialog (dialog.showSaveDialog)",
         alternatives=[
-            "Use browser download: <a href={blobUrl} download='filename.ext'>",
-            "Use file-saver library: saveAs(blob, filename)",
-            "Use downloadjs library for simple downloads",
-            "Use StreamSaver.js for large file downloads (>100MB)",
-            "Use File System Access API for full filesystem access (Chrome 86+)",
+            "Use file_saver to save bytes on desktop/mobile/web",
+            "Use share_plus to export files from mobile",
+            "Use AnchorElement(download: ...) on Flutter web",
+            "Use File System Access API for full filesystem access (Chromium-based browsers)",
         ],
     )
 
@@ -384,19 +370,17 @@ async def get_ui_capabilities():
     """
     Get information about available UI capabilities in HTTP backend.
 
-    This endpoint helps frontend code detect whether it's running in Electron
-    (with native dialog support) or HTTP backend (browser-only APIs).
+    This endpoint helps frontend code detect whether native dialogs are supported
+    or if it should fall back to Flutter/web file APIs.
 
-    **Usage in Frontend:**
-    ```tsx
-    const { data: capabilities } = await fetch('/dialog/capabilities');
+    **Usage in Frontend (Flutter):**
+    ```dart
+    final capabilities = await apiClient.get<Map<String, dynamic>>('/dialog/capabilities');
 
-    if (capabilities.native_dialogs) {
-        // Use Electron IPC
-        window.electron.dialog.showOpenDialog(options);
+    if (capabilities['native_dialogs'] == true) {
+      // Use platform-native dialogs if available.
     } else {
-        // Use HTML file input
-        inputElement.click();
+      // Use file_picker or web download APIs.
     }
     ```
 
@@ -409,33 +393,32 @@ async def get_ui_capabilities():
         "file_upload": True,
         "file_download": True,
         "supported_features": [
-            "html_file_input",
-            "browser_download",
-            "file_api",
+            "flutter_file_picker",
+            "flutter_file_saver",
+            "web_download",
             "blob_api",
-            "drag_drop_upload",
         ],
         "recommended_libraries": [
             {
-                "name": "react-dropzone",
-                "purpose": "File upload with drag-and-drop",
-                "url": "https://react-dropzone.js.org/",
+                "name": "file_picker",
+                "purpose": "Cross-platform file picker",
+                "url": "https://pub.dev/packages/file_picker",
             },
             {
-                "name": "file-saver",
-                "purpose": "Browser file downloads",
-                "url": "https://github.com/eligrey/FileSaver.js",
+                "name": "file_saver",
+                "purpose": "Save/export files across platforms",
+                "url": "https://pub.dev/packages/file_saver",
             },
             {
-                "name": "StreamSaver.js",
-                "purpose": "Large file downloads (>100MB)",
-                "url": "https://github.com/jimmywarting/StreamSaver.js",
+                "name": "share_plus",
+                "purpose": "Share/export files from mobile/desktop",
+                "url": "https://pub.dev/packages/share_plus",
             },
         ],
         "browser_apis": {
             "file_input": {
-                "description": "HTML <input type='file'>",
-                "support": "All browsers",
+                "description": "dart:html FileUploadInputElement",
+                "support": "Flutter web only",
                 "multiple_files": True,
                 "folder_selection": "Chromium only (webkitdirectory)",
             },
@@ -445,14 +428,13 @@ async def get_ui_capabilities():
                 "url": "https://developer.mozilla.org/en-US/docs/Web/API/File_System_Access_API",
             },
             "download_api": {
-                "description": "Programmatic downloads via <a download>",
-                "support": "All browsers",
+                "description": "Programmatic downloads via AnchorElement(download: ...)",
+                "support": "Flutter web only",
             },
         },
         "migration_notes": [
-            "Replace dialog.showOpenDialog() with HTML file input",
-            "Replace dialog.showSaveDialog() with browser download",
-            "Use File System Access API for advanced file operations (Chrome 86+)",
-            "Consider react-dropzone for better UX",
+            "Replace dialog.showOpenDialog() with file_picker",
+            "Replace dialog.showSaveDialog() with file_saver or share_plus",
+            "Use File System Access API for advanced web file operations",
         ],
     }

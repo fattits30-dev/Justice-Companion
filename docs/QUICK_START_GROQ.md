@@ -13,10 +13,10 @@
 
 1. **Start the app**:
    ```bash
-   npm run dev:full
+   ./scripts/dev.sh full
    ```
 
-2. **Open**: http://localhost:5173
+2. **Open** the Flutter app (use `FLUTTER_DEVICE=chrome` for web).
 
 3. **Go to Settings** → AI Service Settings
 
@@ -99,12 +99,12 @@ Same as Groq - send a message and watch streaming work!
 
 ### "Backend not running"
 ```bash
-npm run dev:backend
+./scripts/dev.sh backend
 ```
 
 ### "Frontend not running"
 ```bash
-npm run dev
+./scripts/dev.sh frontend
 ```
 
 ### "Groq API key invalid"
@@ -113,7 +113,7 @@ npm run dev
 - Regenerate key at https://console.groq.com/keys
 
 ### "Still seeing .value error"
-- Restart backend: `npm run dev:backend`
+- Restart backend: `./scripts/dev.sh backend`
 - Clear browser cache (Ctrl+Shift+Delete)
 - Check backend logs for provider routing
 

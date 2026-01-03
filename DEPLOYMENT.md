@@ -1,6 +1,6 @@
 # Justice Companion - Deployment Guide
 
-This guide covers deploying Justice Companion PWA to production environments.
+This guide covers deploying the Justice Companion Flutter web app and backend to production environments.
 
 ## Table of Contents
 
@@ -16,7 +16,7 @@ This guide covers deploying Justice Companion PWA to production environments.
 ## Prerequisites
 
 - Python 3.10+
-- Node.js 18+
+- Flutter SDK 3.x (for web/mobile builds)
 - PostgreSQL 14+ (recommended for production) or SQLite (development)
 - Tesseract OCR
 - Reverse proxy (nginx, Caddy, or cloud load balancer)
@@ -247,20 +247,21 @@ export DATABASE_URL="sqlite:///./justice_companion.db"
 1. **Install dependencies:**
    ```bash
    sudo apt update
-   sudo apt install python3.10 python3-pip nodejs npm tesseract-ocr
+   sudo apt install python3.10 python3-pip tesseract-ocr
    ```
+   Install the Flutter SDK (for web build) from https://docs.flutter.dev/get-started/install.
 
 2. **Clone and setup:**
    ```bash
    git clone https://github.com/your-repo/justice-companion.git
    cd justice-companion
-   npm install
+   flutter pub get
    pip install -r backend/requirements.txt
    ```
 
 3. **Build frontend:**
    ```bash
-   npm run build
+   flutter build web
    ```
 
 4. **Create systemd service:**

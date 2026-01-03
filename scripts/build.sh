@@ -21,62 +21,65 @@ success() { echo -e "${GREEN}[OK]${NC} $*"; }
 warn() { echo -e "${YELLOW}[WARN]${NC} $*"; }
 error() { echo -e "${RED}[ERROR]${NC} $*" >&2; }
 
-# Detect package manager
-detect_package_manager() {
-    if command -v pnpm &>/dev/null && [ -f "pnpm-lock.yaml" ]; then
-        echo "pnpm"
-    elif command -v npm &>/dev/null; then
-        echo "npm"
-    elif command -v yarn &>/dev/null && [ -f "yarn.lock" ]; then
-        echo "yarn"
+# Detect Flutter
+detect_flutter() {
+    if [ -n "${FLUTTER_EXECUTABLE:-}" ]; then
+        echo "$FLUTTER_EXECUTABLE"
+    elif command -v flutter &>/dev/null; then
+        echo "flutter"
     else
-        error "No package manager found. Install npm, pnpm, or yarn."
-        exit 1
+        echo ""
     fi
 }
 
-PKG_MGR=$(detect_package_manager)
+MODE="${1:-web}"  # web, apk, appbundle, ios, macos, linux, windows
+FLUTTER_CMD=$(detect_flutter)
 
-info "Building Justice Companion..."
-info "Package manager: $PKG_MGR"
-
-# Clean previous build
-if [ -d "dist" ]; then
-    info "Cleaning previous build..."
-    rm -rf dist
-fi
-
-# Run TypeScript compilation
-info "Running TypeScript compilation..."
-$PKG_MGR run typecheck || {
-    error "TypeScript errors found. Fix them before building."
-    exit 1
-}
-
-# Build with Vite
-info "Building production bundle with Vite..."
-export CI=true
-$PKG_MGR run build
-
-# Verify build output
-if [ -d "dist" ]; then
-    BUILD_SIZE=$(du -sh dist | cut -f1)
-    FILE_COUNT=$(find dist -type f | wc -l | tr -d ' ')
-
-    success "Build completed successfully!"
-    echo ""
-    info "Build output: dist/"
-    info "Total size: $BUILD_SIZE"
-    info "Files: $FILE_COUNT"
-    echo ""
-
-    # List main files
-    info "Main build files:"
-    ls -lh dist/*.html 2>/dev/null || true
-    ls -lh dist/assets/*.js 2>/dev/null | head -5 || true
-else
-    error "Build failed - dist/ directory not created"
+if [ -z "$FLUTTER_CMD" ]; then
+    error "Flutter not found. Install Flutter and ensure it is on PATH."
     exit 1
 fi
 
-success "Production build ready in dist/"
+info "Building Justice Companion ($MODE)..."
+info "Flutter: $FLUTTER_CMD"
+
+case "$MODE" in
+    web)
+        $FLUTTER_CMD build web
+        if [ -d "build/web" ]; then
+            BUILD_SIZE=$(du -sh build/web | cut -f1)
+            FILE_COUNT=$(find build/web -type f | wc -l | tr -d ' ')
+            success "Build completed successfully!"
+            info "Build output: build/web/"
+            info "Total size: $BUILD_SIZE"
+            info "Files: $FILE_COUNT"
+        else
+            error "Build failed - build/web/ directory not created"
+            exit 1
+        fi
+        ;;
+    apk)
+        $FLUTTER_CMD build apk --release
+        ;;
+    appbundle)
+        $FLUTTER_CMD build appbundle --release
+        ;;
+    ios)
+        $FLUTTER_CMD build ios --release
+        ;;
+    macos)
+        $FLUTTER_CMD build macos --release
+        ;;
+    linux)
+        $FLUTTER_CMD build linux --release
+        ;;
+    windows)
+        $FLUTTER_CMD build windows --release
+        ;;
+    *)
+        echo "Usage: $0 [web|apk|appbundle|ios|macos|linux|windows]"
+        exit 1
+        ;;
+esac
+
+success "Build finished."

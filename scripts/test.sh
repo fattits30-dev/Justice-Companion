@@ -21,17 +21,14 @@ success() { echo -e "${GREEN}[OK]${NC} $*"; }
 warn() { echo -e "${YELLOW}[WARN]${NC} $*"; }
 error() { echo -e "${RED}[ERROR]${NC} $*" >&2; }
 
-# Detect package manager
-detect_package_manager() {
-    if command -v pnpm &>/dev/null && [ -f "pnpm-lock.yaml" ]; then
-        echo "pnpm"
-    elif command -v npm &>/dev/null; then
-        echo "npm"
-    elif command -v yarn &>/dev/null && [ -f "yarn.lock" ]; then
-        echo "yarn"
+# Detect Flutter
+detect_flutter() {
+    if [ -n "${FLUTTER_EXECUTABLE:-}" ]; then
+        echo "$FLUTTER_EXECUTABLE"
+    elif command -v flutter &>/dev/null; then
+        echo "flutter"
     else
-        error "No package manager found. Install npm, pnpm, or yarn."
-        exit 1
+        echo ""
     fi
 }
 
@@ -51,17 +48,19 @@ detect_python() {
 # Parse arguments
 MODE="${1:-frontend}"  # frontend, backend, e2e, all
 
-PKG_MGR=$(detect_package_manager)
 PYTHON_CMD=$(detect_python)
+FLUTTER_CMD=$(detect_flutter)
 
 info "Running tests..."
-info "Package manager: $PKG_MGR"
+[ -n "$FLUTTER_CMD" ] && info "Flutter: $FLUTTER_CMD"
 
 run_frontend_tests() {
-    info "Running frontend unit tests (Vitest)..."
-    export CI=true
-    export NODE_ENV=test
-    $PKG_MGR run test:run
+    if [ -z "$FLUTTER_CMD" ]; then
+        warn "Flutter not found. Skipping frontend tests."
+        return 0
+    fi
+    info "Running frontend tests (Flutter)..."
+    $FLUTTER_CMD test
     success "Frontend tests completed"
 }
 
@@ -84,13 +83,17 @@ run_backend_tests() {
 }
 
 run_e2e_tests() {
-    info "Running e2e tests (Playwright)..."
-    warn "Note: e2e tests require browsers. May not work on Android/Termux."
-    $PKG_MGR run e2e || {
-        warn "e2e tests failed or skipped (common on mobile/headless environments)"
+    if [ -z "$FLUTTER_CMD" ]; then
+        warn "Flutter not found. Skipping e2e tests."
         return 0
-    }
-    success "E2E tests completed"
+    fi
+    if [ -d "integration_test" ]; then
+        info "Running integration tests (Flutter)..."
+        $FLUTTER_CMD test integration_test
+        success "Integration tests completed"
+    else
+        warn "No integration_test/ directory found. Skipping e2e tests."
+    fi
 }
 
 case "$MODE" in
@@ -111,9 +114,9 @@ case "$MODE" in
     *)
         echo "Usage: $0 [frontend|backend|e2e|all]"
         echo ""
-        echo "  frontend  - Run Vitest unit tests (default)"
+        echo "  frontend  - Run Flutter tests (default)"
         echo "  backend   - Run pytest backend tests"
-        echo "  e2e       - Run Playwright e2e tests"
+        echo "  e2e       - Run Flutter integration tests"
         echo "  all       - Run frontend + backend tests"
         exit 1
         ;;

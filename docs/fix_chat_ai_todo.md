@@ -1,4 +1,5 @@
 # Justice Companion - Fix Chat AI Responses
+> NOTE: Legacy report from the React era. Update metrics and test counts for Flutter as needed.
 ## Status: 18/20 items completed (90%)
 
 ### 🎯 SUCCESS: Major Breakthrough Achieved!
@@ -9,7 +10,7 @@
 - [x] 2. Understand core features and architecture
 - [x] 3. Review recent fixes and improvements
 - [x] 4. Identify development priorities
-- [x] 5. Analyze frontend components (React/TypeScript)
+- [x] 5. Analyze Flutter screens/widgets
 - [x] 6. Review backend API endpoints (FastAPI)
 - [x] 7. Examine database models and relationships
 - [x] 8. Test current functionality

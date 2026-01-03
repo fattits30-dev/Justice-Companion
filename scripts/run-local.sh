@@ -1,17 +1,16 @@
 #!/bin/bash
-# Run Justice Companion in local-first mode for testing
+# Run Justice Companion locally on the current device
 
-cd /data/data/com.termux/files/home/Justice-Companion
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
-# Ensure local mode is enabled
-if [ ! -f .env.local ]; then
-  echo "VITE_LOCAL_MODE=true" > .env.local
-  echo "Created .env.local with local mode enabled"
-fi
+cd "$PROJECT_ROOT"
 
-echo "Starting Justice Companion in LOCAL-FIRST mode..."
-echo "Access at: http://localhost:5173"
+export FLUTTER_WEB_PORT="${FLUTTER_WEB_PORT:-5176}"
+
+echo "Starting Justice Companion (Flutter) locally..."
+echo "Access at: http://localhost:${FLUTTER_WEB_PORT}"
 echo "Press Ctrl+C to stop"
 echo ""
 
-npm run dev -- --host
+./scripts/dev.sh frontend

@@ -1,5 +1,7 @@
 # Justice Companion - Project Instructions
 
+> NOTE: The frontend is Flutter (Dart). React/Vite/TypeScript instructions below are legacy unless explicitly updated.
+
 ## CRITICAL: SERENA MCP FIRST - ALWAYS
 
 **BEFORE doing ANY work on this project, you MUST:**
@@ -133,13 +135,12 @@ mcp__serena__write_memory("refactoring-[name]", "# What Changed\n...")
 
 MANDATORY queries BEFORE:
 
-- Writing React components (hooks, patterns)
+- Writing Flutter widgets (state, navigation, lifecycle)
+- Using Riverpod providers or codegen
 - Using FastAPI decorators or features
 - Working with SQLAlchemy 2.0 (breaking changes from 1.x!)
-- Writing Vitest tests
-- Using TypeScript features
-- Implementing Tailwind classes
-- Configuring Vite/PWA
+- Using Dart async/streams
+- Configuring Flutter build targets
 - Debugging library-related errors
 
 ### Two-Step Pattern
@@ -163,15 +164,11 @@ mcp__context7__get-library-docs(
 
 | Technology | Library ID | Common Topics |
 |------------|------------|---------------|
-| React 18 | `/facebook/react` | "hooks", "context", "suspense", "concurrent" |
-| TypeScript | `/microsoft/TypeScript` | "types", "generics", "decorators" |
+| Flutter | `/flutter/flutter` | "widgets", "navigation", "platform" |
+| Dart | `/dart-lang/sdk` | "async", "streams", "collections" |
+| Riverpod | `/rrousselGit/riverpod` | "providers", "state", "codegen" |
 | FastAPI | `/tiangolo/fastapi` | "routing", "dependencies", "async", "websockets" |
 | SQLAlchemy 2.0 | `/sqlalchemy/sqlalchemy` | "async orm", "select", "relationships", "migrations" |
-| Vitest | `/vitest-dev/vitest` | "testing", "mocking", "coverage" |
-| Tailwind CSS | `/tailwindlabs/tailwindcss` | "utilities", "responsive", "dark-mode" |
-| Vite | `/vitejs/vite` | "plugins", "build", "configuration" |
-| vite-plugin-pwa | `/vite-pwa/vite-plugin-pwa` | "offline", "service-worker", "manifest" |
-| TSyringe | `/microsoft/tsyringe` | "dependency-injection", "decorators" |
 
 ### Critical: SQLAlchemy 2.0 Breaking Changes
 
@@ -210,9 +207,9 @@ user = result.scalar_one_or_none()
 **Before writing frontend code:**
 ```
 1. mcp__serena__read_memory("justice-companion-architecture")
-2. mcp__context7__get-library-docs("/facebook/react", topic="hooks")
-3. mcp__context7__get-library-docs("/microsoft/TypeScript", topic="types")
-4. Write code with current React 18 patterns
+2. mcp__context7__get-library-docs("/flutter/flutter", topic="widgets")
+3. mcp__context7__get-library-docs("/rrousselGit/riverpod", topic="providers")
+4. Write code with current Flutter patterns
 5. mcp__serena__write_memory("frontend-pattern-[name]", documentation)
 ```
 
@@ -228,16 +225,33 @@ user = result.scalar_one_or_none()
 
 ### Error Prevention Examples
 
-**React Class Components (Deprecated):**
-```typescript
-// ❌ WITHOUT Context7 - Outdated React 17 pattern
-class MyComponent extends React.Component {
-  componentDidMount() { }
+**Flutter Widget State (Current):**
+```dart
+// ❌ WITHOUT docs - mutable state in a StatelessWidget
+class Counter extends StatelessWidget {
+  int count = 0;
+
+  @override
+  Widget build(BuildContext context) {
+    return Text('Count: $count');
+  }
 }
 
-// ✅ WITH Context7 - Current React 18 pattern
-function MyComponent() {
-  useEffect(() => { }, []);
+// ✅ WITH docs - use StatefulWidget for mutable state
+class Counter extends StatefulWidget {
+  const Counter({super.key});
+
+  @override
+  State<Counter> createState() => _CounterState();
+}
+
+class _CounterState extends State<Counter> {
+  int count = 0;
+
+  @override
+  Widget build(BuildContext context) {
+    return Text('Count: $count');
+  }
 }
 ```
 
@@ -276,7 +290,7 @@ export class ProfileService {
 2. **Query before Phase 3** - TSyringe patterns MUST be verified
 3. **Cache in Serena memory** - Save verified patterns for reuse
 4. **Update architecture memory** - Document pattern changes
-5. **Check breaking changes** - Especially SQLAlchemy, React, FastAPI
+5. **Check breaking changes** - Especially SQLAlchemy, Flutter, FastAPI
 
 ### Performance Note
 
@@ -348,11 +362,11 @@ mcp__github__create_pull_request(
     body="## Summary
 - Added timeline export to PDF and CSV formats
 - Backend endpoint with proper authentication
-- Frontend UI with export button in timeline view
+- Frontend UI with export button in timeline view (Flutter)
 
 ## Changes
 - `backend/routes/timeline.py`: New export endpoint
-- `src/views/timeline/TimelineView.tsx`: Export button component
+- `lib/ui/timeline/timeline_view.dart`: Export button widget
 - Tests updated for both frontend and backend
 
 ## Test Plan
@@ -375,12 +389,12 @@ mcp__serena__write_memory(
 
 ## Implementation
 - Backend: FastAPI endpoint with Depends(get_profile_service)
-- Frontend: React component with export hook
+- Frontend: Flutter widget with export action
 - Formats: PDF (reportlab), CSV (pandas)
 
 ## Files Modified
 - backend/routes/timeline.py
-- src/views/timeline/TimelineView.tsx
+- lib/ui/timeline/timeline_view.dart
 - backend/services/export_service.py
 
 ## PR
@@ -605,7 +619,7 @@ Phase 2 Progress: 15/20 services migrated
 
 - [ ] Manual test 1
 - [ ] Manual test 2
-- [ ] All tests passing (npm run test)
+- [ ] All tests passing (`./scripts/test.sh all`)
 
 ## Related
 
@@ -693,11 +707,11 @@ mcp__serena__think_about_whether_you_are_done()
 
 ## Project Overview
 
-**AI-Powered Civil Law Case Management PWA** - Provides legal INFORMATION (not advice) to help users manage UK civil law matters.
+**AI-Powered Civil Law Case Management App** - Provides legal INFORMATION (not advice) to help users manage UK civil law matters.
 
-**Project Type:** Progressive Web App (PWA) - **NOT** Electron
+**Project Type:** Flutter app (web + mobile + desktop)
 **Backend:** FastAPI (Python) with centralized DI (Phase 2 complete)
-**Frontend:** React 18 + TypeScript (manual singletons - needs Phase 3 DI)
+**Frontend:** Flutter (Dart) with Riverpod providers
 **Database:** Single unified schema - `backend.models.profile.UserProfile` only
 
 ## Current Architecture State
@@ -713,9 +727,9 @@ All backend routes use centralized dependencies from `backend/dependencies.py`:
 
 **Pattern:** Function-based dependencies with `Depends()` injection
 
-### ⏳ Frontend DI (Phase 3 PENDING)
-Current: Manual singleton pattern (`export const profileService = new ProfileService()`)
-Target: TSyringe container with `@singleton()` decorator
+### ✅ Frontend State Management
+Current: Riverpod providers in `lib/providers/`
+Target: Keep provider boundaries consistent and avoid ad-hoc singletons
 
 ### Database Schema (Phase 1 Discovery)
 **Single unified model** - NO table merge needed:
@@ -743,10 +757,10 @@ AI responses must:
 
 | Layer | Technology |
 |-------|------------|
-| Frontend | React 18 + TypeScript + Vite + Tailwind |
-| PWA | vite-plugin-pwa (offline-capable, installable) |
+| Frontend | Flutter (Dart) + Riverpod |
+| Web | Flutter web (PWA optional) |
 | Backend | FastAPI (Python) + SQLAlchemy 2.0 |
-| AI | Configurable (HuggingFace, OpenAI, Anthropic, Google, Mistral) |
+| AI | Configurable (OpenAI, Groq, Hugging Face) |
 | OCR/Images | Tesseract + Pillow |
 | Database | SQLite (local) / PostgreSQL (cloud) |
 | RAG | FAISS + sentence-transformers (hybrid search) |
@@ -783,23 +797,19 @@ encryption_service.encrypt("sensitive_data")
 encryption_service.decrypt(encrypted_bytes)
 ```
 
-### Frontend (React + TypeScript) - Needs Phase 3
+### Frontend (Flutter + Riverpod)
 
-**Current Pattern (manual singleton):**
-```typescript
-export const profileService = new ProfileService();
-```
-
-**Target Pattern (TSyringe DI):**
-```typescript
-import { singleton } from "tsyringe";
-
-@singleton()
-export class ProfileService { }
-
-// Usage
-import { container } from "@/di/container";
-const profileService = container.resolve(ProfileService);
+**Current Pattern (provider-based):**
+```dart
+final authRepositoryProvider = Provider<AuthRepository>((ref) {
+  final remote = ref.watch(authRemoteDataSourceProvider);
+  final local = ref.watch(authLocalDataSourceProvider);
+  return AuthRepositoryImpl(
+    remoteDataSource: remote,
+    localDataSource: local,
+    secureStorage: ref.watch(secureStorageProvider),
+  );
+});
 ```
 
 ## Serena MCP Best Practices for This App
@@ -872,20 +882,20 @@ mcp__serena__edit_memory(
 ## Running the App
 
 ```bash
-npm run dev:full    # Frontend + backend (concurrent)
-npm run dev         # Frontend only (port 5173)
-npm run dev:backend # Backend only (port 8000)
+./scripts/dev.sh full     # Frontend + backend
+./scripts/dev.sh frontend # Frontend only (Flutter)
+./scripts/dev.sh backend  # Backend only (port 8000)
 ```
 
 ## Testing
 
 ```bash
 # Frontend
-npm run test        # Vitest (1912 passing)
-npm run e2e         # Playwright
+./scripts/test.sh frontend # Flutter tests
+./scripts/test.sh e2e      # Flutter integration tests
 
 # Backend
-pytest backend/ -v  # (923 passing, 386 pre-existing failures)
+pytest backend/ -v
 ```
 
 ## Security

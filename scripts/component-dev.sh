@@ -1,9 +1,6 @@
 #!/usr/bin/env bash
-# Justice Companion - Component Development Script
+# Justice Companion - Widget Test Helper
 # Cross-platform: Linux, macOS, Windows (Git Bash), Android/Termux
-#
-# This script helps you work on UI components in isolation without needing
-# the backend running. Perfect for Android/Termux development.
 
 set -euo pipefail
 
@@ -25,257 +22,110 @@ success() { echo -e "${GREEN}[OK]${NC} $*"; }
 warn() { echo -e "${YELLOW}[WARN]${NC} $*"; }
 header() { echo -e "\n${CYAN}=== $* ===${NC}\n"; }
 
-# Detect package manager
-detect_package_manager() {
-    if command -v pnpm &>/dev/null && [ -f "pnpm-lock.yaml" ]; then
-        echo "pnpm"
-    elif command -v npm &>/dev/null; then
-        echo "npm"
+detect_flutter() {
+    if [ -n "${FLUTTER_EXECUTABLE:-}" ]; then
+        echo "$FLUTTER_EXECUTABLE"
+    elif command -v flutter &>/dev/null; then
+        echo "flutter"
     else
-        echo "npm"
+        echo ""
     fi
 }
 
-PKG_MGR=$(detect_package_manager)
+FLUTTER_CMD=$(detect_flutter)
 
 show_help() {
-    echo "Component Development Helper"
+    echo "Widget Test Helper"
     echo ""
-    echo "Usage: $0 <command> [options]"
+    echo "Usage: $0 <command> [path]"
     echo ""
     echo "Commands:"
-    echo "  test [path]     Run component tests (default: all UI components)"
-    echo "  watch [path]    Watch mode - rerun tests on file changes"
-    echo "  lint [path]     Lint components"
-    echo "  list            List all components and their test status"
-    echo "  new <name>      Create a new component with test file"
+    echo "  test [path]     Run widget/unit tests (default: all)"
+    echo "  watch [path]    Watch mode (if supported by flutter test)"
+    echo "  lint            Run flutter analyze"
+    echo "  list            List test files"
     echo ""
     echo "Examples:"
-    echo "  $0 test                           # Test all UI components"
-    echo "  $0 test src/components/ui/Button  # Test Button component"
-    echo "  $0 watch                          # Watch all UI component tests"
-    echo "  $0 watch Button                   # Watch Button tests only"
-    echo "  $0 lint                           # Lint all components"
-    echo "  $0 list                           # Show component test coverage"
-    echo "  $0 new MyComponent                # Create new component"
+    echo "  $0 test"
+    echo "  $0 test test/widget_test.dart"
+    echo "  $0 watch test/unit"
+    echo "  $0 lint"
+    echo "  $0 list"
     echo ""
+}
+
+ensure_flutter() {
+    if [ -z "$FLUTTER_CMD" ]; then
+        warn "Flutter not found. Install Flutter and ensure it is on PATH."
+        exit 1
+    fi
 }
 
 run_tests() {
-    local path="${1:-src/components/ui/}"
-    header "Running Component Tests"
-    info "Path: $path"
-
-    # Handle shorthand component names
-    if [[ ! "$path" =~ "/" ]]; then
-        # It's just a component name, search for it
-        local found=$(find src/components -name "${path}*.tsx" ! -name "*.test.tsx" | head -1)
-        if [ -n "$found" ]; then
-            path="${found%.tsx}"
-        fi
+    local path="${1:-}"
+    header "Running Flutter Tests"
+    ensure_flutter
+    if [ -n "$path" ]; then
+        info "Path: $path"
+        $FLUTTER_CMD test "$path"
+    else
+        $FLUTTER_CMD test
     fi
-
-    npx vitest run "$path" --reporter=verbose
+    success "Tests completed"
 }
 
 watch_tests() {
-    local path="${1:-src/components/ui/}"
-    header "Watch Mode - Component Tests"
-    info "Path: $path"
-    info "Press 'q' to quit, 'a' to run all tests"
-    echo ""
-
-    # Handle shorthand component names
-    if [[ ! "$path" =~ "/" ]]; then
-        local found=$(find src/components -name "${path}*.tsx" ! -name "*.test.tsx" | head -1)
-        if [ -n "$found" ]; then
-            path="${found%.tsx}"
+    local path="${1:-}"
+    header "Watch Mode - Flutter Tests"
+    ensure_flutter
+    if $FLUTTER_CMD test --help 2>&1 | grep -q -- "--watch"; then
+        if [ -n "$path" ]; then
+            $FLUTTER_CMD test --watch "$path"
+        else
+            $FLUTTER_CMD test --watch
         fi
+    else
+        warn "Watch mode not supported by this Flutter version. Running once."
+        run_tests "$path"
     fi
-
-    npx vitest "$path"
 }
 
 lint_components() {
-    local path="${1:-src/components/}"
-    header "Linting Components"
-    $PKG_MGR run lint -- "$path"
+    header "Running flutter analyze"
+    ensure_flutter
+    $FLUTTER_CMD analyze
 }
 
 list_components() {
-    header "Component Test Coverage"
-
-    echo -e "${CYAN}UI Components:${NC}"
-    for file in src/components/ui/*.tsx; do
-        [ -f "$file" ] || continue
-        [[ "$file" == *.test.tsx ]] && continue
-
-        local name=$(basename "$file" .tsx)
-        local test_file="${file%.tsx}.test.tsx"
-
-        if [ -f "$test_file" ]; then
-            echo -e "  ${GREEN}✓${NC} $name"
-        else
-            echo -e "  ${RED}✗${NC} $name ${YELLOW}(no tests)${NC}"
-        fi
-    done
-
-    echo ""
-    echo -e "${CYAN}Auth Components:${NC}"
-    for file in src/components/auth/*.tsx; do
-        [ -f "$file" ] || continue
-        [[ "$file" == *.test.tsx ]] && continue
-
-        local name=$(basename "$file" .tsx)
-        local test_file="${file%.tsx}.test.tsx"
-
-        if [ -f "$test_file" ]; then
-            echo -e "  ${GREEN}✓${NC} $name"
-        else
-            echo -e "  ${RED}✗${NC} $name ${YELLOW}(no tests)${NC}"
-        fi
-    done
-
-    echo ""
-    echo -e "${CYAN}Other Components:${NC}"
-    for file in src/components/*.tsx; do
-        [ -f "$file" ] || continue
-        [[ "$file" == *.test.tsx ]] && continue
-
-        local name=$(basename "$file" .tsx)
-        local test_file="${file%.tsx}.test.tsx"
-
-        if [ -f "$test_file" ]; then
-            echo -e "  ${GREEN}✓${NC} $name"
-        else
-            echo -e "  ${RED}✗${NC} $name ${YELLOW}(no tests)${NC}"
-        fi
-    done
-}
-
-create_component() {
-    local name="$1"
-
-    if [ -z "$name" ]; then
-        echo "Error: Component name required"
-        echo "Usage: $0 new ComponentName"
-        exit 1
+    header "Test Files"
+    if [ -d "test" ]; then
+        find test -name "*_test.dart" | sed 's|^./||'
+    else
+        warn "No test/ directory found."
     fi
-
-    local component_file="src/components/ui/${name}.tsx"
-    local test_file="src/components/ui/${name}.test.tsx"
-
-    if [ -f "$component_file" ]; then
-        warn "Component $component_file already exists"
-        exit 1
-    fi
-
-    header "Creating Component: $name"
-
-    # Create component file
-    cat > "$component_file" << EOF
-import { forwardRef, HTMLAttributes } from "react";
-import { clsx } from "clsx";
-
-export interface ${name}Props extends HTMLAttributes<HTMLDivElement> {
-  variant?: "default" | "primary";
 }
 
-export const ${name} = forwardRef<HTMLDivElement, ${name}Props>(
-  ({ variant = "default", className, children, ...props }, ref) => {
-    const variantStyles = {
-      default: "bg-gray-800 text-white",
-      primary: "bg-primary-500 text-white",
-    };
+COMMAND="${1:-help}"
+PATH_ARG="${2:-}"
 
-    return (
-      <div
-        ref={ref}
-        className={clsx(
-          "rounded-lg p-4",
-          variantStyles[variant],
-          className
-        )}
-        {...props}
-      >
-        {children}
-      </div>
-    );
-  }
-);
-
-${name}.displayName = "${name}";
-EOF
-
-    success "Created $component_file"
-
-    # Create test file
-    cat > "$test_file" << EOF
-/// <reference types="vitest/globals" />
-import { render, screen } from "@testing-library/react";
-import { createRef } from "react";
-
-import { ${name} } from "./${name}";
-
-describe("${name}", () => {
-  it("renders children", () => {
-    render(<${name}>Hello</${name}>);
-    expect(screen.getByText("Hello")).toBeInTheDocument();
-  });
-
-  it("applies default variant", () => {
-    render(<${name} data-testid="component">Test</${name}>);
-    expect(screen.getByTestId("component")).toHaveClass("bg-gray-800");
-  });
-
-  it("applies primary variant", () => {
-    render(<${name} variant="primary" data-testid="component">Test</${name}>);
-    expect(screen.getByTestId("component")).toHaveClass("bg-primary-500");
-  });
-
-  it("merges custom className", () => {
-    render(<${name} className="custom" data-testid="component">Test</${name}>);
-    expect(screen.getByTestId("component")).toHaveClass("custom");
-  });
-
-  it("forwards ref", () => {
-    const ref = createRef<HTMLDivElement>();
-    render(<${name} ref={ref}>Test</${name}>);
-    expect(ref.current).toBeInstanceOf(HTMLDivElement);
-  });
-});
-EOF
-
-    success "Created $test_file"
-
-    echo ""
-    info "Run tests with: $0 test $name"
-    info "Watch tests with: $0 watch $name"
-}
-
-# Main command dispatch
-case "${1:-help}" in
+case "$COMMAND" in
     test)
-        run_tests "${2:-}"
+        run_tests "$PATH_ARG"
         ;;
     watch)
-        watch_tests "${2:-}"
+        watch_tests "$PATH_ARG"
         ;;
     lint)
-        lint_components "${2:-}"
+        lint_components
         ;;
     list)
         list_components
-        ;;
-    new)
-        create_component "${2:-}"
         ;;
     help|--help|-h)
         show_help
         ;;
     *)
-        echo "Unknown command: $1"
-        echo ""
+        warn "Unknown command: $COMMAND"
         show_help
         exit 1
         ;;

@@ -25,8 +25,8 @@ ERRORS=0
 WARNINGS=0
 
 check_pass() { success "$1"; }
-check_fail() { fail "$1"; ((ERRORS++)); }
-check_warn() { warn "$1"; ((WARNINGS++)); }
+check_fail() { fail "$1"; ERRORS=$((ERRORS + 1)); }
+check_warn() { warn "$1"; WARNINGS=$((WARNINGS + 1)); }
 
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
@@ -34,22 +34,22 @@ echo "       Justice Companion - Project Health Check"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
 
-# 1. Check Node.js
-info "Checking Node.js..."
-if command -v node &>/dev/null; then
-    NODE_VERSION=$(node --version)
-    check_pass "Node.js: $NODE_VERSION"
+# 1. Check Flutter
+info "Checking Flutter..."
+if command -v flutter &>/dev/null; then
+    FLUTTER_VERSION=$(flutter --version | head -n 1)
+    check_pass "Flutter: $FLUTTER_VERSION"
 else
-    check_fail "Node.js not found"
+    check_fail "Flutter not found"
 fi
 
-# 2. Check npm
-info "Checking npm..."
-if command -v npm &>/dev/null; then
-    NPM_VERSION=$(npm --version)
-    check_pass "npm: v$NPM_VERSION"
+# 2. Check Dart
+info "Checking Dart..."
+if command -v dart &>/dev/null; then
+    DART_VERSION=$(dart --version 2>&1)
+    check_pass "Dart: $DART_VERSION"
 else
-    check_fail "npm not found"
+    check_warn "Dart not found (Flutter usually provides it)"
 fi
 
 # 3. Check Python (optional)
@@ -73,62 +73,29 @@ else
     check_warn "Git not found"
 fi
 
-# 5. Check package.json
-info "Checking package.json..."
-if [ -f "package.json" ]; then
-    check_pass "package.json exists"
+# 5. Check pubspec.yaml
+info "Checking pubspec.yaml..."
+if [ -f "pubspec.yaml" ]; then
+    check_pass "pubspec.yaml exists"
 else
-    check_fail "package.json not found"
+    check_fail "pubspec.yaml not found"
 fi
 
-# 6. Check node_modules
-info "Checking dependencies..."
-if [ -d "node_modules" ]; then
-    MODULE_COUNT=$(ls node_modules | wc -l | tr -d ' ')
-    check_pass "node_modules: $MODULE_COUNT packages"
+# 6. Check .dart_tool
+info "Checking Flutter dependencies..."
+if [ -d ".dart_tool" ]; then
+    check_pass ".dart_tool exists (deps installed)"
 else
-    check_fail "node_modules not found - run 'npm install'"
+    check_warn ".dart_tool not found - run 'flutter pub get'"
 fi
 
-# 7. Check TypeScript
-info "Checking TypeScript config..."
-if [ -f "tsconfig.json" ]; then
-    check_pass "tsconfig.json exists"
-else
-    check_fail "tsconfig.json not found"
-fi
-
-# 8. Check Vite
-info "Checking Vite config..."
-if [ -f "vite.config.ts" ] || [ -f "vite.config.mts" ]; then
-    check_pass "Vite config exists"
-else
-    check_fail "Vite config not found"
-fi
-
-# 9. Check ESLint
-info "Checking ESLint config..."
-if [ -f "eslint.config.js" ] || [ -f "eslint.config.mjs" ]; then
-    check_pass "ESLint config exists"
-else
-    check_warn "ESLint config not found"
-fi
-
-# 10. Check Husky hooks
-info "Checking Git hooks..."
-if [ -d ".husky" ] && [ -f ".husky/pre-commit" ]; then
-    check_pass "Husky pre-commit hook configured"
-else
-    check_warn "Husky hooks not set up"
-fi
-
-# 11. Check source directories
+# 7. Check source directories
 info "Checking project structure..."
-if [ -d "src" ]; then
-    SRC_FILES=$(find src -name "*.ts" -o -name "*.tsx" | wc -l | tr -d ' ')
-    check_pass "src/: $SRC_FILES TypeScript files"
+if [ -d "lib" ]; then
+    DART_FILES=$(find lib -name "*.dart" | wc -l | tr -d ' ')
+    check_pass "lib/: $DART_FILES Dart files"
 else
-    check_fail "src/ directory not found"
+    check_fail "lib/ directory not found"
 fi
 
 if [ -d "backend" ]; then
@@ -138,7 +105,35 @@ else
     check_warn "backend/ directory not found"
 fi
 
-# 12. Check scripts
+# 8. Check env config
+info "Checking .env configuration..."
+ENV_FILE=""
+if [ -f ".env" ]; then
+    ENV_FILE=".env"
+elif [ -f "backend/.env" ]; then
+    ENV_FILE="backend/.env"
+fi
+
+if [ -n "$ENV_FILE" ]; then
+    if grep -q "^ENCRYPTION_KEY_BASE64=" "$ENV_FILE"; then
+        check_pass "ENCRYPTION_KEY_BASE64 set in $ENV_FILE"
+    else
+        check_warn "ENCRYPTION_KEY_BASE64 not found in $ENV_FILE"
+    fi
+else
+    check_warn "No .env file found (backend requires ENCRYPTION_KEY_BASE64)"
+fi
+
+# 9. Check OCR binary
+info "Checking Tesseract OCR..."
+if command -v tesseract &>/dev/null; then
+    TESSERACT_VERSION=$(tesseract --version | head -n 1)
+    check_pass "Tesseract: $TESSERACT_VERSION"
+else
+    check_warn "Tesseract not found (OCR features unavailable)"
+fi
+
+# 10. Check scripts
 info "Checking dev scripts..."
 SCRIPTS=("dev.sh" "test.sh" "build.sh" "lint.sh")
 for script in "${SCRIPTS[@]}"; do
@@ -149,20 +144,16 @@ for script in "${SCRIPTS[@]}"; do
     fi
 done
 
-# 13. Quick lint check
+# 11. Quick lint check
 info "Running quick lint check..."
-if npm run lint &>/dev/null; then
-    check_pass "Lint check passed"
+if command -v flutter &>/dev/null; then
+    if flutter analyze &>/dev/null; then
+        check_pass "Flutter analyze OK"
+    else
+        check_warn "Flutter analyze had issues (run './scripts/lint.sh')"
+    fi
 else
-    check_warn "Lint check had issues (run 'npm run lint' for details)"
-fi
-
-# 14. TypeScript check
-info "Running TypeScript check..."
-if npm run typecheck &>/dev/null; then
-    check_pass "TypeScript compilation OK"
-else
-    check_fail "TypeScript errors found (run 'npm run typecheck' for details)"
+    check_warn "Flutter not found; skipped analyze"
 fi
 
 # Summary

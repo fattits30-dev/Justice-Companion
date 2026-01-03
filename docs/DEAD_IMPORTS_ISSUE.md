@@ -1,4 +1,5 @@
-# 🧹 Cleanup: Remove 218 Dead Imports Across Codebase
+# 🧹 Cleanup: Remove Dead Imports Across Codebase
+> NOTE: Legacy React-era report. The frontend is now Flutter (Dart); rerun scans for current numbers.
 
 ## Summary
 
@@ -19,17 +20,12 @@ Automated scan found **218 unused imports** across **62 files** in the codebase.
 
 ## Scripts Available
 
-Two cleanup scripts have been created:
-
 ```bash
-# TypeScript/React dead imports
-node scripts/find-dead-imports.mjs src --fix
+# Flutter/Dart unused imports
+flutter analyze
 
 # Python dead imports (backend)
 python scripts/find-dead-imports-python.py backend --fix
-
-# Python dead imports (ai-service)
-python scripts/find-dead-imports-python.py ai-service --fix
 ```
 
 Running with `--fix` will:

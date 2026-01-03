@@ -39,12 +39,18 @@ from backend.services.ai.models import (
     CaseAnalysisRequest,
     CaseAnalysisResponse,
     ChatMessage,
+    DocumentContext,
+    DocumentType,
     DocumentDraftRequest,
     DocumentDraftResponse,
     DocumentExtractionResponse,
     EvidenceAnalysisRequest,
     EvidenceAnalysisResponse,
+    EvidenceSummary,
+    LegalCaseType,
     ParsedDocument,
+    TimelineEvent,
+    UKJurisdiction,
     UserProfile,
 )
 from backend.services.ai.providers import AI_PROVIDER_METADATA, create_provider_client

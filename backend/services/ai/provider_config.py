@@ -7,8 +7,8 @@ Features:
 - Provider configuration persistence in database
 - Active provider selection per user
 - Configuration validation
-- Support for 10 AI providers (OpenAI, Anthropic, Hugging Face, Qwen,
-    Google, Cohere, Together, Anyscale, Mistral, Perplexity)
+    - Support for AI providers (OpenAI, Groq, Anthropic, Hugging Face, Qwen,
+    Google, Cohere, Together, Anyscale, Mistral, Perplexity, Emberton, Ollama)
 - Comprehensive audit logging
 - Thread-safe operations
 
@@ -192,7 +192,7 @@ AI_PROVIDER_METADATA: Dict[AIProviderType, AIProviderMetadata] = {
     ),
     AIProviderType.HUGGINGFACE: AIProviderMetadata(
         name="Hugging Face",
-        default_endpoint="https://api-inference.huggingface.co",
+        default_endpoint="https://router.huggingface.co/v1",
         supports_streaming=True,
         default_model="meta-llama/Llama-3.3-70B-Instruct",  # Updated: 11 inference providers!
         max_context_tokens=128000,
@@ -206,7 +206,7 @@ AI_PROVIDER_METADATA: Dict[AIProviderType, AIProviderMetadata] = {
     ),
     AIProviderType.QWEN: AIProviderMetadata(
         name="Qwen",
-        default_endpoint="https://api-inference.huggingface.co",
+        default_endpoint="https://router.huggingface.co/v1",
         supports_streaming=True,
         default_model="Qwen/Qwen2.5-72B-Instruct",
         max_context_tokens=32000,

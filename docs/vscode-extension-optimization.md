@@ -1,16 +1,18 @@
 # VS Code Extension Optimization Plan
 
+> NOTE: The frontend is Flutter (Dart). React/Vite references below were legacy and are updated here.
+
 ## Task Overview
 Analyze current development setup and optimize VS Code extensions for maximum productivity
 
 ## Current Project Analysis
-- **Project Type**: Full-stack web application (React + Backend services)
+- **Project Type**: Full-stack application (Flutter frontend + Python backend)
 - **Tech Stack**:
-  - Frontend: TypeScript, React, Vite, Tailwind CSS
+  - Frontend: Flutter (Dart)
   - Backend: Python, FastAPI
-  - Testing: Playwright, Vitest, Pytest
+  - Testing: Flutter test, Pytest
   - Deployment: Docker, multiple platforms
-  - Languages**: TypeScript/JavaScript, Python
+  - Languages: Dart, Python
 
 ## Optimization Steps
 - [ ] 1. Analyze current project structure and tech stack
@@ -21,7 +23,7 @@ Analyze current development setup and optimize VS Code extensions for maximum pr
 
 ## Extension Categories to Consider
 - [ ] Core Development Extensions
-- [ ] Language-Specific Extensions (TypeScript/Python)
+- [ ] Language-Specific Extensions (Dart/Python)
 - [ ] Code Quality & Linting
 - [ ] Testing & Debugging
 - [ ] Git & Version Control

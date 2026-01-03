@@ -1,82 +1,57 @@
 # How to Achieve 100% File Usage Verification
 
-## Current Status: ~95% Verified ✅
+## Current Status: Needs Re-Verification
 
-**What's Confirmed Working:**
+This checklist is updated for the Flutter + FastAPI stack. Run the commands
+below to verify usage and coverage before declaring 100% confidence.
 
-- ✅ All TypeScript compiles (0 errors)
-- ✅ App runs without crashes
-- ✅ 105/151 E2E tests passing
-- ✅ All imports resolve correctly
-- ✅ No unused npm dependencies
-- ✅ All major features functional
+## 1. Frontend (Flutter/Dart)
 
-## To Reach 100% Verification:
-
-### 1. **Frontend (TypeScript/React)**
-
-#### Install unused code detection:
+### Baseline checks
 
 ```bash
-npm install -D eslint-plugin-unused-imports
-npm install -D ts-prune
-npm install -D knip
+flutter analyze
+dart format --set-exit-if-changed .
+flutter test
 ```
 
-#### Run analysis:
+### Optional unused dependency checks
 
 ```bash
-# Find unused exports
-npx ts-prune --error
+# Optional: add a dependency validator
+dart pub global activate dependency_validator
+dependency_validator
 
-# Find unused imports
-npx eslint . --ext .ts,.tsx --rule 'unused-imports/no-unused-imports: error'
-
-# Comprehensive unused code detection
-npx knip
+# Optional: metrics tooling
+dart pub global activate dart_code_metrics
+dart_code_metrics:metrics lib
 ```
 
-### 2. **Backend (Python/FastAPI)**
-
-#### Install analysis tools:
+## 2. Backend (Python/FastAPI)
 
 ```bash
-pip install vulture  # Dead code detection
-pip install pylint   # Unused imports
-pip install coverage # Code coverage
-```
+pip install vulture pylint coverage
 
-#### Run analysis:
-
-```bash
-# Find dead Python code
 vulture backend/ --min-confidence 80
-
-# Check unused imports
 pylint backend/ --disable=all --enable=unused-import
-
-# Generate coverage report
 pytest --cov=backend --cov-report=html
 ```
 
-### 3. **Runtime Code Coverage**
+## 3. Runtime Code Coverage
 
-#### Frontend:
+### Frontend
 
 ```bash
-npm install -D @vitest/coverage-v8
-npm run test:coverage
+flutter test --coverage
 ```
 
-#### Backend:
+### Backend
 
 ```bash
 pytest --cov=backend --cov-report=term-missing
 ```
 
-**Goal:** Identify which lines of code are NEVER executed.
-
-### 4. **API Endpoint Usage Tracking**
+## 4. API Endpoint Usage Tracking
 
 Create middleware to log all API calls:
 
@@ -95,74 +70,49 @@ async def track_endpoint_usage(request, call_next):
     return await call_next(request)
 ```
 
-Run app for 1 day, then check which endpoints were never called.
+Run the app for a full usage cycle and identify endpoints never called.
 
-### 5. **Dependency Graph Analysis**
+## 5. Dependency Graph Analysis
 
 ```bash
-# Install tools
-npm install -D madge
-pip install pydeps
-
-# Generate dependency graphs
-npx madge --image frontend-deps.svg src/
+dart pub deps --style=compact > dart-deps.txt
 pydeps backend --only backend -o backend-deps.svg
-
-# Find orphaned files (no incoming dependencies)
-npx madge --orphans src/
 ```
 
-### 6. **Bundle Analysis**
+## 6. Build Artifact Review
 
 ```bash
-# Check what's actually bundled
-npm run build
-npx vite-bundle-visualizer dist/
-
-# If a file isn't in the bundle, it's not used
+flutter build web
+ls -la build/web
 ```
 
-## Expected Results:
+Check that expected Dart assets and web output are present. For Android builds:
 
-### Files That Will Be Confirmed Unused:
+```bash
+flutter build apk --debug
+```
 
-- Old migration scripts (`src/db/migrate.ts`)
-- Test utilities not used by all tests
-- Commented-out code files
-- Legacy `.js` files (replaced by `.ts`)
-- Backup/archive directories
-
-### Files That Might SEEM Unused But Are Used:
-
-- Entry points (`src/main.tsx`, `backend/main.py`)
-- Config files (`vite.config.ts`, `playwright.config.ts`)
-- Type definition files (`.d.ts`)
-- Test setup files
-- Environment-specific files
-
-## Action Plan for 100%:
+## Action Plan for 100%
 
 ### Phase 1: Automated Analysis (1 hour)
 
 ```bash
-# Run all detection tools
-npx ts-prune > unused-exports.txt
-npx knip > unused-files.txt
+flutter analyze
+flutter test --coverage
 vulture backend/ > dead-python-code.txt
-npx madge --orphans src/ > orphan-files.txt
+dependency_validator > unused-dart-deps.txt
 ```
 
 ### Phase 2: Manual Review (2 hours)
 
 - Review each flagged file
-- Determine if false positive (entry points, configs)
+- Determine if false positive (entry points, generated files, configs)
 - Confirm if truly unused
 - Delete or move to `_dead_code/`
 
 ### Phase 3: Coverage Testing (3 hours)
 
-- Run full E2E test suite with coverage
-- Run all unit tests with coverage
+- Run integration tests with coverage
 - Identify code never executed
 - Add tests or remove unused code
 
@@ -170,26 +120,18 @@ npx madge --orphans src/ > orphan-files.txt
 
 - Deploy with endpoint usage tracking
 - Monitor which API routes are called
-- Check which frontend routes are visited
 - Remove unused endpoints after analysis
 
-## Final Verification Checklist:
+## Final Verification Checklist
 
-- [ ] All TypeScript compiles without errors ✅ (Already done)
-- [ ] All imports resolve correctly ✅ (Already done)
-- [ ] No unused npm dependencies ✅ (Already done)
-- [ ] ts-prune shows no unused exports
-- [ ] knip shows no unused files
+- [ ] Flutter analyze clean
+- [ ] Dart format clean
+- [ ] Flutter tests green (unit + integration)
+- [ ] dependency_validator shows no unused Dart deps (optional)
 - [ ] vulture shows no dead Python code
-- [ ] 100% test coverage on critical paths
+- [ ] Coverage reports confirm critical paths
 - [ ] All API endpoints called at least once
-- [ ] Bundle analysis confirms all files included
-- [ ] Dependency graph shows no orphans
 
-## Estimated Time to 100%:
+## Estimated Time to 100%
 
-**6-8 hours** of additional analysis and cleanup
-
-## Current Confidence Level:
-
-**95%** - All critical files verified, edge cases remain
+6-8 hours of additional analysis and cleanup

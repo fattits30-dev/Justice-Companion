@@ -58,6 +58,7 @@ def create_provider_client(
             "anyscale",
             "mistral",
             "perplexity",
+            "groq",
             "google",
             "cohere",
             "emberton",

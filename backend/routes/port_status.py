@@ -31,6 +31,7 @@ AUTHENTICATION REQUIRED for write operations (process kill).
 """
 
 import logging
+import os
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -78,14 +79,14 @@ class PortInfo(BaseModel):
     Information about a service port.
 
     Attributes:
-        service: Service name (e.g., 'vite-dev-server', 'python-ai-service')
+        service: Service name (e.g., 'flutter-dev-server', 'python-ai-service')
         port: Port number (1-65535)
         status: Port status ('allocated', 'in_use', 'available', 'error')
         pid: Optional process ID using the port
         in_use: Whether port is currently in use
     """
 
-    service: str = Field(..., description="Service name (e.g., 'vite', 'python-backend')")
+    service: str = Field(..., description="Service name (e.g., 'flutter-dev-server', 'python-backend')")
     port: int = Field(..., ge=1, le=65535, description="Port number")
     status: str = Field(..., description="Port status (e.g., 'allocated', 'in_use', 'available')")
     pid: Optional[int] = Field(None, description="Process ID using the port (if available)")
@@ -332,7 +333,7 @@ async def get_port_status(
         Response: {
             "ports": [
                 {
-                    "service": "vite-dev-server",
+                    "service": "flutter-dev-server",
                     "port": 5176,
                     "status": "in_use",
                     "pid": 12345,
@@ -507,7 +508,7 @@ async def restart_services():
         ```
     """
     # TODO: Implement actual service restart logic
-    # TODO: Integrate with ProcessManager to restart Vite, Electron, etc.
+    # TODO: Integrate with ProcessManager to restart Flutter web server, desktop, etc.
 
     logger.info("[PortStatus] Restart services requested (placeholder)")
 
@@ -521,7 +522,7 @@ async def get_service_port(
     Get port for a specific service.
 
     Args:
-        service: Service name (e.g., 'vite-dev-server', 'python-ai-service', 'electron-dev-api')
+        service: Service name (e.g., 'flutter-dev-server', 'python-ai-service')
 
     Returns:
         ServicePortResponse with port number allocated to the service
@@ -909,10 +910,10 @@ async def get_backend_status(port_manager: PortManager = Depends(get_port_manage
         )
 
     except Exception as exc:
-        logger.error(f"[PortStatus] Error checking backend status: {e}", exc_info=True)
+        logger.error(f"[PortStatus] Error checking backend status: {exc}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to check backend status: {str(e)}",
+            detail=f"Failed to check backend status: {str(exc)}",
         )
 
 @router.get("/frontend/status", response_model=ServiceStatusResponse)
@@ -920,7 +921,7 @@ async def get_frontend_status(port_manager: PortManager = Depends(get_port_manag
     """
     Check frontend dev server port status.
 
-    Checks if the Vite development server port (default: 5173) is available
+    Checks if the Flutter web development server port (default: 5176) is available
     or in use. Useful for development workflow validation.
 
     Returns:
@@ -931,15 +932,15 @@ async def get_frontend_status(port_manager: PortManager = Depends(get_port_manag
         GET /port/frontend/status
         Response: {
             "service": "frontend",
-            "port": 5173,
+            "port": 5176,
             "in_use": true,
             "available": false,
-            "message": "Frontend dev server is running on port 5173"
+            "message": "Frontend dev server is running on port 5176"
         }
         ```
     """
     try:
-        frontend_port = 5173  # Default Vite port
+        frontend_port = int(os.getenv("FLUTTER_WEB_PORT", "5176"))
 
         # Check if port is available
         available = await port_manager.is_port_available(frontend_port)
@@ -960,8 +961,8 @@ async def get_frontend_status(port_manager: PortManager = Depends(get_port_manag
         )
 
     except Exception as exc:
-        logger.error(f"[PortStatus] Error checking frontend status: {e}", exc_info=True)
+        logger.error(f"[PortStatus] Error checking frontend status: {exc}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to check frontend status: {str(e)}",
+            detail=f"Failed to check frontend status: {str(exc)}",
         )

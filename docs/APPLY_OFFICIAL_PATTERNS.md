@@ -112,7 +112,7 @@ async for chunk in stream:
 
 After applying the change:
 
-1. **Start backend**: `npm run dev:backend`
+1. **Start backend**: `./scripts/dev.sh backend`
 2. **Test Anthropic streaming** with a configured Anthropic API key
 3. **Verify text streams correctly** without errors
 

@@ -69,7 +69,6 @@ And same for the `chat()` method around line ~543.
 
 After applying fix:
 
-1. Start backend: `npm run dev:backend`
+1. Start backend: `./scripts/dev.sh backend`
 2. Send a chat message from frontend
 3. Verify streaming works without `.value` error
-

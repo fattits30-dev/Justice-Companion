@@ -1,7 +1,0 @@
-#!/bin/sh
-
-# Run lint-staged for TypeScript/CSS/JSON files
-npx lint-staged
-
-# Run TypeScript type checking
-npm run typecheck

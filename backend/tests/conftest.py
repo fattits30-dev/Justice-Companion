@@ -13,6 +13,8 @@ Every test automatically gets a clean database state.
 
 import os
 import base64
+from datetime import datetime, timedelta, timezone
+from uuid import uuid4
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine, event
@@ -24,6 +26,9 @@ from unittest.mock import Mock
 from backend.main import app
 from backend.models.base import Base, get_db
 from backend.services.rate_limit_service import RateLimitService, RateLimitResult
+from backend.models.case import Case, CaseStatus, CaseType
+from backend.models.session import Session as SessionModel
+from backend.models.user import User
 from backend.services.security.encryption import EncryptionService
 
 # Set encryption key for tests (required by backend)
@@ -198,6 +203,62 @@ def test_case_data():
         "case_type": "employment",
         "status": "active",
     }
+
+
+@pytest.fixture
+def test_user(db_session, test_user_data):
+    """Create a test user in the database."""
+    user = User(
+        username=test_user_data["username"],
+        email=test_user_data["email"],
+        password_hash="hashed_password",
+        password_salt="test_salt_value",
+        role="user",
+        is_active=True,
+        created_at=datetime.now(timezone.utc),
+    )
+    db_session.add(user)
+    db_session.commit()
+    db_session.refresh(user)
+    return user
+
+
+@pytest.fixture
+def session_id(db_session, test_user):
+    """Create a valid session for the test user."""
+    session = SessionModel(
+        id=str(uuid4()),
+        user_id=test_user.id,
+        expires_at=datetime.now(timezone.utc) + timedelta(days=1),
+        ip_address="127.0.0.1",
+        user_agent="pytest",
+    )
+    db_session.add(session)
+    db_session.commit()
+    return session.id
+
+
+@pytest.fixture
+def auth_headers(session_id):
+    """Provide Authorization headers for authenticated requests."""
+    return {"Authorization": f"Bearer {session_id}"}
+
+
+@pytest.fixture
+def case_id(db_session, test_user):
+    """Create a test case owned by the test user."""
+    case = Case(
+        title="Test Case",
+        description="Test case description",
+        case_type=CaseType.EMPLOYMENT,
+        status=CaseStatus.ACTIVE,
+        user_id=test_user.id,
+        created_at=datetime.now(timezone.utc),
+    )
+    db_session.add(case)
+    db_session.commit()
+    db_session.refresh(case)
+    return case.id
 
 
 # ============================================================================
