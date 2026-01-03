@@ -1,0 +1,15 @@
+{
+    "name": "justice-companion-e2e",
+    "version": "0.1.0",
+    "private": true,
+    "type": "module",
+    "scripts": {
+        "test": "playwright test",
+        "test:headed": "playwright test --headed",
+        "install-browsers": "npx playwright install --with-deps",
+        "test:debug": "playwright test --debug"
+    },
+    "devDependencies": {
+        "@playwright/test": "^1.57.0"
+    }
+}
