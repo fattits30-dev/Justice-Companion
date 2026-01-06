@@ -11,7 +11,7 @@ psycopg2-binary==2.9.9  # PostgreSQL adapter for Python
 asyncpg==0.29.0  # Async PostgreSQL driver
 
 # Async HTTP client
-aiohttp==3.12.14  # Async HTTP client
+aiohttp==3.13.3  # Async HTTP client
 
 # Security and Hashing
 passlib==1.7.4  # Password hashing library
