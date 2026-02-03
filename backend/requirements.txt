@@ -20,7 +20,7 @@ authlib>=1.3.3  # Secure JOSE/JWT toolkit replacing vulnerable python-jose/ecdsa
 cryptography==45.0.7  # Cryptographic recipes and primitives
 
 # PDF and Document Processing
-pypdf>=5.0.0  # PDF processing library - SECURITY UPDATE
+pypdf>=6.6.2  # PDF processing library - SECURITY UPDATE
 pdfplumber==0.11.2  # Plumb a PDF for detailed information about each text character, rectangle, and line.
 # pdfminer.six kept at version compatible with pdfplumber for now
 
