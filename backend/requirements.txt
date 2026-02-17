@@ -17,7 +17,7 @@ aiohttp==3.12.14  # Async HTTP client
 passlib==1.7.4  # Password hashing library
 bcrypt==4.1.3  # Modern password hashing for your software and your servers
 authlib>=1.3.3  # Secure JOSE/JWT toolkit replacing vulnerable python-jose/ecdsa stack - SECURITY UPDATE
-cryptography==45.0.7  # Cryptographic recipes and primitives
+cryptography==46.0.5  # Cryptographic recipes and primitives
 
 # PDF and Document Processing
 pypdf>=5.0.0  # PDF processing library - SECURITY UPDATE
